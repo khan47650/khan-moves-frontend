@@ -108,7 +108,8 @@ export default function HomePage() {
         ></div>
 
         {/* Overlay */}
-        <div className="absolute inset-0 bg-linear-to-r from-black/80 via-[#C0392B]/70 to-black/50"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/70 to-black/45"></div>
+        <div className="absolute inset-0 bg-[#C0392B]/25 mix-blend-multiply"></div>
         {/* Decorative circles */}
         <div className="absolute right-0 top-0 w-48 h-48 bg-[#F1C40F] opacity-5 rounded-full -mr-24 -mt-24"></div>
         <div className="absolute right-16 bottom-0 w-40 h-40 bg-white opacity-3 rounded-full -mb-20"></div>
