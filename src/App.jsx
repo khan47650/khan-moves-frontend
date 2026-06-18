@@ -9,8 +9,8 @@ import ConfirmationPage from './pages/ConfirmationPage';
 import ContactPage from './pages/ContactPage';
 import TermsPage from './pages/TermsPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import SignIn from './pages/Signin';
-import SignUp from './pages/Signup';
+import SignIn from "./pages/SignIn";
+import SignUp from './pages/SignUp';
 
 function AnimatedRoutes({ bookingData, setBookingData, avNumber, setAVNumber }) {
   const location = useLocation();
