@@ -15,7 +15,7 @@ import {
 import { FaBuilding, FaCouch, FaStar, FaQuoteLeft } from 'react-icons/fa';
 import homeVan from '../assets/home_van.jpeg';
 import { motion } from 'framer-motion';
-import QuoteServiceDropDown from '../components/QuoteServiceDropdown';
+import QuoteServiceDropDown from '../components/QuoteServiceDropDown';
 
 export default function HomePage() {
   const navigate = useNavigate();
