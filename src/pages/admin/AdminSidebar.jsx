@@ -18,7 +18,7 @@ export default function AdminSidebar({ activeSection, setActiveSection, isSideba
     return (
         <>
             {/* Sidebar */}
-            <aside className={`w-64 bg-white shadow-lg border-r border-gray-200 overflow-y-auto fixed md:static top-16 left-0 h-[calc(100vh-64px)] z-40 transition-transform duration-300 md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            <aside className={`w-64 bg-white shadow-lg border-r border-gray-200 overflow-y-auto fixed md:sticky top-16 left-0 h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] z-40 transition-transform duration-300 md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}>
                 <nav className="p-4 space-y-2">
                     {tabs.map(({ id, label, icon: Icon }) => (
@@ -29,8 +29,8 @@ export default function AdminSidebar({ activeSection, setActiveSection, isSideba
                                 setIsSidebarOpen(false);
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-left ${activeSection === id
-                                    ? 'bg-[#C0392B] text-white font-semibold'
-                                    : 'text-gray-700 hover:bg-gray-100'
+                                ? 'bg-[#C0392B] text-white font-semibold'
+                                : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                         >
                             <Icon size={20} />
