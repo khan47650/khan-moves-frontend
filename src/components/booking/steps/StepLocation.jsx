@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiMapPin, FiArrowRight } from 'react-icons/fi';
-import PostcodeInput from '../../PostcodeInput';
+import PostCodeInput from '../../PostCodeInput';
 
 export default function StepLocation({ data, onChange, errors }) {
   const handlePickupChange = (field, value) =>
