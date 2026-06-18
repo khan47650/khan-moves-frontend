@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 import StepIndicator from './StepIndicator';
 import StepServiceType from './steps/StepServiceType';
@@ -11,9 +11,10 @@ import { generateAVNumber } from '../../utils/generateAVNumber';
 
 export default function BookingWizard({ setBookingData, setAVNumber }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    serviceType: '',
+    serviceType: location.state?.serviceType || '',
     pickup: {
       address: '',
       postcode: '',
@@ -194,11 +195,10 @@ export default function BookingWizard({ setBookingData, setAVNumber }) {
             <button
               onClick={handleBack}
               disabled={currentStep === 1}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${
-                currentStep === 1
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${currentStep === 1
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+                }`}
             >
               <FiArrowLeft size={18} /> Back
             </button>

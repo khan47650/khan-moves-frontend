@@ -59,6 +59,7 @@ export default function Header() {
               ))}
 
               <button
+                onClick={() => navigate('/signin')}
                 className="text-sm cursor-pointer font-medium text-white/90 hover:text-white transition duration-300
                   relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-0.5
                   after:w-0 after:bg-[#F1C40F] after:transition-all after:duration-300 hover:after:w-full"
@@ -125,7 +126,7 @@ export default function Header() {
                 ))}
 
                 <button
-                  // onClick={() => { navigate('/signin'); setIsOpen(false); }}
+                  onClick={() => navigate('/signin')}
                   className="w-full text-left px-4 py-2.5 text-sm font-medium text-white/85
                     hover:text-white hover:bg-white/10 rounded-xl transition-colors duration-150"
                 >

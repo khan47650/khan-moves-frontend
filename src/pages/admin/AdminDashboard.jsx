@@ -1,0 +1,58 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { isAdminAuthed } from '../../utils/adminAuth';
+import AdminHeader from './AdminHeader';
+import AdminSidebar from './AdminSidebar';
+import Requests from './sections/Requests';
+import Jobs from './sections/Jobs';
+import Invoice from './sections/Invoice';
+import Tools from './sections/Tools';
+import Drivers from './sections/Drivers';
+import Earnings from './sections/Earnings';
+import Expenses from './sections/Expenses';
+
+export default function AdminDashboard() {
+    const navigate = useNavigate();
+    const [activeSection, setActiveSection] = useState('requests');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        if (!isAdminAuthed()) navigate('/signin');
+    }, [navigate]);
+
+    const renderSection = () => {
+        switch (activeSection) {
+            case 'requests':
+                return <Requests />;
+            case 'jobs':
+                return <Jobs />;
+            case 'invoice':
+                return <Invoice />;
+            case 'tools':
+                return <Tools />;
+            case 'drivers':
+                return <Drivers />;
+            case 'earnings':
+                return <Earnings />;
+            case 'expenses':
+                return <Expenses />;
+            default:
+                return <Requests />;
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+            <AdminHeader isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+
+            <div className="flex grow">
+                <AdminSidebar activeSection={activeSection} setActiveSection={setActiveSection} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+                <main className="grow overflow-auto">
+                    <div className="p-6 sm:p-8">
+                        {renderSection()}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+}

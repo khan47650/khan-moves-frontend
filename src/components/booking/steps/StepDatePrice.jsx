@@ -1,7 +1,93 @@
-import React, { useMemo } from 'react';
-import { FiCalendar, FiClock, FiUser, FiMail, FiPhone } from 'react-icons/fi';
-import { calculatePrice } from '../../../utils/priceCalculator';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  FiCalendar,
+  FiClock,
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiChevronDown,
+  FiSunrise,
+  FiSun,
+  FiCheckCircle,
+  FiMessageSquare,
+  FiInfo,
+} from 'react-icons/fi';
 
+/* ---- Reusable dropdown (time slot) ---- */
+function Dropdown({ options, value, onSelect }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const selected = options.find((o) => o.value === value) || null;
+  const SelIcon = selected?.icon;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 bg-white text-left transition hover:shadow-sm focus:outline-none ${open ? 'border-[#C0392B]' : 'border-gray-200 hover:border-gray-300'
+          }`}
+      >
+        {SelIcon && <SelIcon size={20} className="text-[#C0392B] shrink-0" />}
+        <span className="grow">
+          <span className="block font-semibold text-sm text-[#1a1a1a]">
+            {selected ? selected.label : 'Select a time'}
+          </span>
+          {selected?.sub && (
+            <span className="block text-xs text-gray-500">{selected.sub}</span>
+          )}
+        </span>
+        <FiChevronDown
+          size={18}
+          className={`text-gray-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''
+            }`}
+        />
+      </button>
+
+      {open && (
+        <ul className="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
+          {options.map((opt) => {
+            const Icon = opt.icon;
+            const isSel = opt.value === value;
+            return (
+              <li key={opt.value}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelect(opt.value);
+                    setOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${isSel ? 'bg-red-50' : 'hover:bg-gray-50'
+                    }`}
+                >
+                  <Icon size={18} className={`shrink-0 ${isSel ? 'text-[#C0392B]' : 'text-gray-400'}`} />
+                  <span className="grow">
+                    <span className={`block font-semibold text-sm ${isSel ? 'text-[#C0392B]' : 'text-[#1a1a1a]'}`}>
+                      {opt.label}
+                    </span>
+                    {opt.sub && <span className="block text-xs text-gray-500">{opt.sub}</span>}
+                  </span>
+                  {isSel && <FiCheckCircle size={16} className="text-[#C0392B] shrink-0" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ---- Step ---- */
 export default function StepDatePrice({ data, onChange, errors }) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -10,28 +96,23 @@ export default function StepDatePrice({ data, onChange, errors }) {
   const isWeekend = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDay();
-    return day === 5 || day === 6 || day === 0; // Friday, Saturday, Sunday
+    return day === 5 || day === 6 || day === 0; // Fri, Sat, Sun
   };
 
-  const pricing = useMemo(() => {
-    return calculatePrice(data);
-  }, [data]);
-
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value;
-    onChange('date', selectedDate);
-  };
+  const timeOptions = [
+    { value: 'morning', label: 'Morning', sub: '08:00 - 12:00', icon: FiSunrise },
+    { value: 'afternoon', label: 'Afternoon', sub: '12:00 - 17:00', icon: FiSun },
+    { value: 'flexible', label: 'Flexible', sub: "We'll confirm the best slot", icon: FiClock },
+  ];
 
   return (
     <div>
-      <h3 className="text-xl font-bold text-[#1a1a1a] mb-8">
-        When & Who?
-      </h3>
+      <h3 className="text-xl font-bold text-[#1a1a1a] mb-8">When & Who?</h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* LEFT SIDE: Date & Time */}
-        <div>
-          <h4 className="font-semibold text-[#C0392B] mb-6">Moving Date & Time</h4>
+        {/* LEFT: Date & Time */}
+        <div className="rounded-xl border-2 border-gray-100 border-t-4 border-t-[#C0392B] p-5 bg-white">
+          <h4 className="font-semibold text-[#C0392B] mb-6">Moving Date &amp; Time</h4>
 
           {/* Date */}
           <div className="mb-6">
@@ -43,57 +124,34 @@ export default function StepDatePrice({ data, onChange, errors }) {
               type="date"
               min={minDate}
               value={data.date}
-              onChange={handleDateChange}
+              onChange={(e) => onChange('date', e.target.value)}
               className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent ${errors.date ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
-            {errors.date && (
-              <p className="text-red-600 text-sm mt-1">{errors.date}</p>
-            )}
+            {errors.date && <p className="text-red-600 text-sm mt-1">{errors.date}</p>}
             {data.date && isWeekend(data.date) && (
-              <p className="text-amber-600 text-sm mt-2">
-                ⚠️ <strong>Weekend rate:</strong> +15% on prices (higher demand)
+              <p className="text-amber-600 text-sm mt-2 flex items-center gap-1">
+                <FiInfo size={14} /> Weekends are busier — we recommend booking early.
               </p>
             )}
           </div>
 
-          {/* Time Slot */}
+          {/* Time Slot dropdown */}
           <div>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-3 items-center gap-2">
+            <label className="text-sm font-semibold text-[#1a1a1a] mb-2 flex items-center gap-2">
               <FiClock size={16} className="text-[#C0392B]" />
               Preferred time
             </label>
-            <div className="space-y-2">
-              {[
-                { id: 'morning', label: 'Morning (08:00 - 12:00)', price: '£0' },
-                { id: 'afternoon', label: 'Afternoon (12:00 - 17:00)', price: '£0' },
-                { id: 'flexible', label: 'Flexible (We\'ll confirm)', price: '-£15' },
-              ].map((slot) => (
-                <button
-                  key={slot.id}
-                  onClick={() => onChange('timeSlot', slot.id)}
-                  className={`w-full p-4 rounded-lg border-2 transition text-left flex justify-between items-center ${data.timeSlot === slot.id
-                    ? 'border-[#C0392B] bg-red-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                    }`}
-                >
-                  <span
-                    className={`font-semibold ${data.timeSlot === slot.id
-                      ? 'text-[#C0392B]'
-                      : 'text-[#1a1a1a]'
-                      }`}
-                  >
-                    {slot.label}
-                  </span>
-                  <span className="text-sm text-gray-600">{slot.price}</span>
-                </button>
-              ))}
-            </div>
+            <Dropdown
+              options={timeOptions}
+              value={data.timeSlot}
+              onSelect={(v) => onChange('timeSlot', v)}
+            />
           </div>
         </div>
 
-        {/* RIGHT SIDE: Customer Details */}
-        <div>
+        {/* RIGHT: Customer Details */}
+        <div className="rounded-xl border-2 border-gray-100 border-t-4 border-t-[#F1C40F] p-5 bg-white">
           <h4 className="font-semibold text-[#F1C40F] mb-6">Your Details</h4>
 
           {/* Name */}
@@ -155,7 +213,8 @@ export default function StepDatePrice({ data, onChange, errors }) {
 
           {/* Special Instructions */}
           <div>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+            <label className="text-sm font-semibold text-[#1a1a1a] mb-2 flex items-center gap-2">
+              <FiMessageSquare size={16} className="text-[#F1C40F]" />
               Special Instructions (Optional)
             </label>
             <textarea
@@ -169,61 +228,13 @@ export default function StepDatePrice({ data, onChange, errors }) {
         </div>
       </div>
 
-      {/* Price Summary */}
-      <div className="bg-linear-to-br from-[#F1C40F] to-yellow-200 rounded-lg p-6 mb-6">
-        <h4 className="font-bold text-[#1a1a1a] text-lg mb-4">Price Summary</h4>
-
-        <div className="space-y-3 mb-4">
-          <div className="flex justify-between text-[#1a1a1a]">
-            <span>Base Price:</span>
-            <span className="font-semibold">£{pricing.basePrice}</span>
-          </div>
-
-          {data.items.length > 0 && (
-            <div className="flex justify-between text-[#1a1a1a]">
-              <span>Volume Charge ({((data.items.reduce((sum, i) => sum + (i.volume || 0) * i.quantity, 0)) / 1000).toFixed(1)}m³):</span>
-              <span className="font-semibold">£{pricing.volumeCharge}</span>
-            </div>
-          )}
-
-          {data.pickup.floorLevel !== 'ground' && (
-            <div className="flex justify-between text-[#1a1a1a]">
-              <span>Floor Level Surcharge:</span>
-              <span className="font-semibold">£{pricing.floorSurcharge}</span>
-            </div>
-          )}
-
-          {!data.pickup.hasParking && (
-            <div className="flex justify-between text-[#1a1a1a]">
-              <span>No Parking (Pickup):</span>
-              <span className="font-semibold">£{pricing.parkingSurcharge}</span>
-            </div>
-          )}
-
-          {data.date && isWeekend(data.date) && (
-            <div className="flex justify-between text-[#1a1a1a]">
-              <span>Weekend Rate (+15%):</span>
-              <span className="font-semibold">£{pricing.weekendSurcharge}</span>
-            </div>
-          )}
-
-          {data.timeSlot === 'flexible' && (
-            <div className="flex justify-between text-green-700">
-              <span>Flexible Time Discount:</span>
-              <span className="font-semibold">-£{pricing.flexibleDiscount}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="pt-4 border-t-2 border-[#1a1a1a] border-opacity-20">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-bold text-[#1a1a1a]">Total Estimate:</span>
-            <span className="text-3xl font-bold text-[#C0392B]">£{pricing.totalPrice}</span>
-          </div>
-          <p className="text-xs text-[#1a1a1a] text-opacity-70 mt-2">
-            💡 Final price may vary based on actual job complexity
-          </p>
-        </div>
+      {/* Info note */}
+      <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-400 rounded flex items-start gap-2">
+        <FiInfo size={18} className="text-blue-500 mt-0.5 shrink-0" />
+        <p className="text-sm text-blue-800">
+          <strong>What happens next?</strong> Once you submit, our team will review your move
+          details and email you a personalised quote shortly — no payment needed now.
+        </p>
       </div>
 
       {/* Terms Agreement */}
@@ -231,7 +242,14 @@ export default function StepDatePrice({ data, onChange, errors }) {
         <label className="flex items-start gap-3 cursor-pointer">
           <input type="checkbox" className="mt-1 w-4 h-4 text-[#C0392B]" required />
           <span className="text-sm text-gray-700">
-            I agree to Khan Moves' <a href="/terms" className="text-[#C0392B] font-semibold hover:underline">Terms & Conditions</a> and <a href="#privacy" className="text-[#C0392B] font-semibold hover:underline">Privacy Policy</a>
+            I agree to Khan Moves'{' '}
+            <a href="/terms" className="text-[#C0392B] font-semibold hover:underline">
+              Terms &amp; Conditions
+            </a>{' '}
+            and{' '}
+            <a href="#privacy" className="text-[#C0392B] font-semibold hover:underline">
+              Privacy Policy
+            </a>
           </span>
         </label>
       </div>

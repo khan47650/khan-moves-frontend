@@ -1,22 +1,13 @@
 import React from 'react';
-import { FiMapPin, FiArrowDown } from 'react-icons/fi';
+import { FiMapPin, FiArrowRight } from 'react-icons/fi';
+import PostcodeInput from '../../PostcodeInput';
 
 export default function StepLocation({ data, onChange, errors }) {
-  const handlePickupChange = (field, value) => {
-    onChange('pickup', {
-      ...data.pickup,
-      [field]: value,
-    });
-  };
+  const handlePickupChange = (field, value) =>
+    onChange('pickup', { ...data.pickup, [field]: value });
 
-  const handleDeliveryChange = (field, value) => {
-    onChange('delivery', {
-      ...data.delivery,
-      [field]: value,
-    });
-  };
-
-  const ukPostcodeRegex = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
+  const handleDeliveryChange = (field, value) =>
+    onChange('delivery', { ...data.delivery, [field]: value });
 
   return (
     <div>
@@ -24,99 +15,94 @@ export default function StepLocation({ data, onChange, errors }) {
         Where are we picking up and delivering?
       </h3>
 
-      {/* Pickup Location */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <FiMapPin size={20} className="text-[#C0392B]" />
-          <h4 className="text-lg font-semibold text-[#1a1a1a]">Pickup Location</h4>
-        </div>
-
-        <div className="space-y-4">
-          {/* Address */}
-          <div>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
-              Full Address
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., 123 Main Street, Birmingham"
-              value={data.pickup.address}
-              onChange={(e) => handlePickupChange('address', e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent"
-            />
+      {/* Two-column layout: Pickup (left) ↔ Delivery (right) */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-6 items-stretch">
+        {/* Pickup Location */}
+        <div className="rounded-xl border-2 border-gray-100 border-t-4 border-t-[#C0392B] p-5 bg-white">
+          <div className="flex items-center gap-2 mb-5">
+            <FiMapPin size={20} className="text-[#C0392B]" />
+            <h4 className="text-lg font-semibold text-[#1a1a1a]">Pickup Location</h4>
           </div>
 
-          {/* Postcode */}
-          <div>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
-              Postcode
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., B1 1AA"
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                Full Address
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 123 Main Street, Birmingham"
+                value={data.pickup.address}
+                onChange={(e) => handlePickupChange('address', e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent"
+              />
+            </div>
+
+            <PostcodeInput
+              label="Postcode"
               value={data.pickup.postcode}
-              onChange={(e) =>
-                handlePickupChange('postcode', e.target.value.toUpperCase())
+              onChange={(pc) => handlePickupChange('postcode', pc)}
+              onResolved={(d) =>
+                onChange('pickup', {
+                  ...data.pickup,
+                  postcode: d.postcode,
+                  town: d.district,
+                  region: d.region,
+                  lat: d.lat,
+                  lng: d.lng,
+                })
               }
-              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent ${errors.pickupPostcode ? 'border-red-500' : 'border-gray-300'
-                }`}
-            />
-            {errors.pickupPostcode && (
-              <p className="text-red-600 text-sm mt-1">{errors.pickupPostcode}</p>
-            )}
-            <p className="text-xs text-gray-500 mt-1">Format: e.g., B1 1AA, SW1A 1AA</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Arrow Divider */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-[#F1C40F] rounded-full p-2">
-          <FiArrowDown size={24} className="text-[#C0392B]" />
-        </div>
-      </div>
-
-      {/* Delivery Location */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <FiMapPin size={20} className="text-[#F1C40F]" />
-          <h4 className="text-lg font-semibold text-[#1a1a1a]">Delivery Location</h4>
-        </div>
-
-        <div className="space-y-4">
-          {/* Address */}
-          <div>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
-              Full Address
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., 456 Park Avenue, London"
-              value={data.delivery.address}
-              onChange={(e) => handleDeliveryChange('address', e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent"
+              placeholder="e.g., B1 1AA"
+              error={errors.pickupPostcode}
             />
           </div>
+        </div>
 
-          {/* Postcode */}
-          <div>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
-              Postcode
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., SW1A 1AA"
+        {/* Connector arrow (desktop par beech me, mobile par hidden) */}
+        <div className="hidden md:flex items-center justify-center">
+          <div className="bg-[#F1C40F] rounded-full p-2">
+            <FiArrowRight size={24} className="text-[#C0392B]" />
+          </div>
+        </div>
+
+        {/* Delivery Location */}
+        <div className="rounded-xl border-2 border-gray-100 border-t-4 border-t-[#F1C40F] p-5 bg-white">
+          <div className="flex items-center gap-2 mb-5">
+            <FiMapPin size={20} className="text-[#F1C40F]" />
+            <h4 className="text-lg font-semibold text-[#1a1a1a]">Delivery Location</h4>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                Full Address
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., 456 Park Avenue, London"
+                value={data.delivery.address}
+                onChange={(e) => handleDeliveryChange('address', e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent"
+              />
+            </div>
+
+            <PostcodeInput
+              label="Postcode"
               value={data.delivery.postcode}
-              onChange={(e) =>
-                handleDeliveryChange('postcode', e.target.value.toUpperCase())
+              onChange={(pc) => handleDeliveryChange('postcode', pc)}
+              onResolved={(d) =>
+                onChange('delivery', {
+                  ...data.delivery,
+                  postcode: d.postcode,
+                  town: d.district,
+                  region: d.region,
+                  lat: d.lat,
+                  lng: d.lng,
+                })
               }
-              className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent ${errors.deliveryPostcode ? 'border-red-500' : 'border-gray-300'
-                }`}
+              placeholder="e.g., SW1A 1AA"
+              error={errors.deliveryPostcode}
             />
-            {errors.deliveryPostcode && (
-              <p className="text-red-600 text-sm mt-1">{errors.deliveryPostcode}</p>
-            )}
-            <p className="text-xs text-gray-500 mt-1">Format: e.g., SW1A 1AA, B1 1AA</p>
           </div>
         </div>
       </div>

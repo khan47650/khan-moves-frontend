@@ -11,15 +11,18 @@ export default function StepItemSelection({ items, onChange, error }) {
     return item ? item.quantity : 0;
   };
 
+  // kitne items is category se select hue (badge ke liye)
+  const categoryCount = (cat) =>
+    items
+      .filter((it) => itemInventory[cat]?.some((inv) => inv.name === it.name))
+      .reduce((sum, it) => sum + it.quantity, 0);
+
   const handleAddItem = (itemData) => {
     const existingItem = items.find((i) => i.name === itemData.name);
-
     if (existingItem) {
       onChange(
         items.map((i) =>
-          i.name === itemData.name
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
+          i.name === itemData.name ? { ...i, quantity: i.quantity + 1 } : i
         )
       );
     } else {
@@ -29,13 +32,10 @@ export default function StepItemSelection({ items, onChange, error }) {
 
   const handleRemoveItem = (itemName) => {
     const existingItem = items.find((i) => i.name === itemName);
-
     if (existingItem && existingItem.quantity > 1) {
       onChange(
         items.map((i) =>
-          i.name === itemName
-            ? { ...i, quantity: i.quantity - 1 }
-            : i
+          i.name === itemName ? { ...i, quantity: i.quantity - 1 } : i
         )
       );
     } else {
@@ -43,8 +43,14 @@ export default function StepItemSelection({ items, onChange, error }) {
     }
   };
 
-  const totalVolume = items.reduce((sum, item) => sum + (item.volume || 0) * item.quantity, 0);
+  const totalVolume = items.reduce(
+    (sum, item) => sum + (item.volume || 0) * item.quantity,
+    0
+  );
   const totalCubicMeters = (totalVolume / 1000).toFixed(2);
+
+  const prettyCat = (c) =>
+    c.charAt(0).toUpperCase() + c.slice(1).replace('-', ' ');
 
   return (
     <div>
@@ -62,43 +68,84 @@ export default function StepItemSelection({ items, onChange, error }) {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Categories */}
-        <div>
+        {/* Left: Categories — DESKTOP sidebar only */}
+        <div className="hidden lg:block">
           <h4 className="font-semibold text-[#1a1a1a] mb-3">Categories</h4>
           <div className="space-y-2 sticky top-4">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`w-full p-3 rounded-lg text-left font-semibold transition capitalize ${selectedCategory === category
-                  ? 'bg-[#C0392B] text-white'
-                  : 'bg-gray-100 text-[#1a1a1a] hover:bg-gray-200'
-                  }`}
-              >
-                {category.replace('-', ' ')}
-              </button>
-            ))}
+            {categories.map((category) => {
+              const count = categoryCount(category);
+              return (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`w-full p-3 rounded-lg text-left font-semibold transition capitalize flex items-center justify-between ${selectedCategory === category
+                      ? 'bg-[#C0392B] text-white'
+                      : 'bg-gray-100 text-[#1a1a1a] hover:bg-gray-200'
+                    }`}
+                >
+                  <span>{category.replace('-', ' ')}</span>
+                  {count > 0 && (
+                    <span
+                      className={`text-xs font-bold rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center ${selectedCategory === category
+                          ? 'bg-white text-[#C0392B]'
+                          : 'bg-[#C0392B] text-white'
+                        }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Middle: Items */}
+        {/* Right: Items (+ MOBILE category pill-bar on top) */}
         <div className="lg:col-span-2">
+          {/* MOBILE category pills — horizontal scroll, sticky */}
+          <div className="lg:hidden sticky top-0 z-10 bg-white -mx-1 px-1 pt-1 pb-3 mb-2 border-b border-gray-100">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {categories.map((category) => {
+                const count = categoryCount(category);
+                const active = selectedCategory === category;
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition capitalize flex items-center gap-2 ${active
+                        ? 'bg-[#C0392B] text-white'
+                        : 'bg-gray-100 text-[#1a1a1a] hover:bg-gray-200'
+                      }`}
+                  >
+                    {category.replace('-', ' ')}
+                    {count > 0 && (
+                      <span
+                        className={`text-xs font-bold rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center ${active ? 'bg-white text-[#C0392B]' : 'bg-[#C0392B] text-white'
+                          }`}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <h4 className="font-semibold text-[#1a1a1a] mb-4">
-            {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1).replace('-', ' ')}
+            {prettyCat(selectedCategory)}
           </h4>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+
+          {/* items: mobile par page ke saath scroll, desktop par andar scroll */}
+          <div className="space-y-3 lg:max-h-96 lg:overflow-y-auto">
             {itemInventory[selectedCategory]?.map((item, idx) => (
               <div
                 key={idx}
                 className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition flex items-start justify-between"
               >
-                <div className="flex-1">
-                  <h5 className="font-semibold text-[#1a1a1a] text-sm">
-                    {item.name}
-                  </h5>
-                  <p className="text-xs text-gray-600 mt-1">
-                    ~{item.volume}L per item
-                  </p>
+                <div className="flex-1 pr-3">
+                  <h5 className="font-semibold text-[#1a1a1a] text-sm">{item.name}</h5>
+                  <p className="text-xs text-gray-600 mt-1">~{item.volume}L per item</p>
                 </div>
 
                 {getItemCount(item.name) === 0 ? (
