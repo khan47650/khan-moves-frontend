@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiChevronDown, FiPackage, FiCheck } from 'react-icons/fi';
 
-export default function QuoteServiceDropdown({ options, value, onChange, label }) {
+export default function QuoteServiceDropDown({ options, value, onChange, label }) {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
 
