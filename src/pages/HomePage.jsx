@@ -284,7 +284,7 @@ export default function HomePage() {
             <div className="p-8">
               <h3 className="font-bold text-xl text-[#1a1a1a] mb-6">What are you moving?</h3>
 
-              <QuoteServiceDropdown
+              <QuoteServiceDropDown
                 options={quoteOptions}
                 value={selectedQuote}
                 onChange={setSelectedQuote}
