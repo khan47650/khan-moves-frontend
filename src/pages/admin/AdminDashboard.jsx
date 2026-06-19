@@ -5,6 +5,7 @@ import AdminHeader from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
 import Requests from './sections/Requests';
 import Jobs from './sections/Jobs';
+import JobsHistory from './sections/JobsHistory';
 import Invoice from './sections/Invoice';
 import Tools from './sections/Tools';
 import Drivers from './sections/Drivers';
@@ -26,6 +27,8 @@ export default function AdminDashboard() {
                 return <Requests />;
             case 'jobs':
                 return <Jobs />;
+            case 'jobsHistory':
+                return <JobsHistory />;
             case 'invoice':
                 return <Invoice />;
             case 'tools':

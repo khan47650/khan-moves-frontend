@@ -1,13 +1,14 @@
 import React from 'react';
 import {
     FiInbox, FiLayers, FiFileText, FiTool,
-    FiUsers, FiTrendingUp, FiCreditCard
+    FiUsers, FiTrendingUp, FiCreditCard, FiArchive
 } from 'react-icons/fi';
 
 export default function AdminSidebar({ activeSection, setActiveSection, isSidebarOpen, setIsSidebarOpen }) {
     const tabs = [
         { id: 'requests', label: 'Requests', icon: FiInbox },
         { id: 'jobs', label: 'Jobs', icon: FiLayers },
+        { id: 'jobsHistory', label: 'Jobs History', icon: FiArchive },
         { id: 'invoice', label: 'Invoice', icon: FiFileText },
         { id: 'drivers', label: 'Drivers', icon: FiUsers },
         { id: 'earnings', label: 'Earnings', icon: FiTrendingUp },
