@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiMapPin, FiLoader, FiCheckCircle } from 'react-icons/fi';
 
-export default function PostcodeInput({
+export default function PostCodeInput({
     label = 'Postcode',
     value = '',
     onChange,       // (postcode) => void

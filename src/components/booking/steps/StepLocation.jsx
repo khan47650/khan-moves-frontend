@@ -38,7 +38,7 @@ export default function StepLocation({ data, onChange, errors }) {
               />
             </div>
 
-            <PostcodeInput
+            <PostCodeInput
               label="Postcode"
               value={data.pickup.postcode}
               onChange={(pc) => handlePickupChange('postcode', pc)}
@@ -86,7 +86,7 @@ export default function StepLocation({ data, onChange, errors }) {
               />
             </div>
 
-            <PostcodeInput
+            <PostCodeInput
               label="Postcode"
               value={data.delivery.postcode}
               onChange={(pc) => handleDeliveryChange('postcode', pc)}
