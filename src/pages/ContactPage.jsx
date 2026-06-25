@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiPhone, FiMail, FiMapPin, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { FiPhone, FiMail, FiMapPin, FiClock, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -51,28 +51,20 @@ export default function ContactPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="w-full"
+      className="w-full bg-[#F5F1ED]"
     >
-      {/* ── Premium Page Header ── */}
-      <section className="relative bg-[#C0392B] text-white py-20 md:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-br from-[#C0392B] via-[#a93226] to-[#7d241b]" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#F1C40F] opacity-10 rounded-full blur-3xl" />
+      {/* HEADER */}
+      <section className="relative bg-[#DC2626] text-white py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-linear-to-br from-[#DC2626] to-red-700" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-yellow-400 opacity-5 rounded-full blur-3xl" />
         <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-white opacity-5 rounded-full blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-block text-xs font-bold tracking-[0.25em] text-[#F1C40F] uppercase mb-4"
+            className="inline-block text-xs font-bold tracking-[0.25em] text-yellow-400 uppercase mb-4"
           >
             We're Here to Help
           </motion.span>
@@ -81,26 +73,27 @@ export default function ContactPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold mb-5 leading-tight"
+            className="text-4xl md:text-5xl font-bold mb-4 leading-tight"
           >
-            Get in <span className="text-[#F1C40F]">Touch</span>
+            Get in Touch
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-gray-100/90 max-w-2xl mx-auto"
+            className="text-lg text-gray-100 max-w-2xl mx-auto"
           >
             Have questions? We'd love to hear from you. Contact us anytime.
           </motion.p>
         </div>
       </section>
 
-      {/* ── Contact Content ── */}
-      <section className="py-16 md:py-24 bg-white">
+      {/* CONTACT CONTENT */}
+      <section className="py-16 md:py-20 bg-[#F5F1ED]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
             {/* Left: Contact Info */}
             <motion.div
               variants={container}
@@ -108,7 +101,7 @@ export default function ContactPage() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
             >
-              <motion.h2 variants={itemVariant} className="text-2xl font-bold text-[#1a1a1a] mb-8">
+              <motion.h2 variants={itemVariant} className="text-2xl font-bold text-gray-900 mb-8">
                 Contact Information
               </motion.h2>
 
@@ -117,14 +110,14 @@ export default function ContactPage() {
                 variants={itemVariant}
                 whileHover={{ x: 6 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="mb-7 flex items-start gap-4 group"
+                className="mb-8 flex items-start gap-4 group"
               >
-                <div className="bg-[#C0392B] p-3 rounded-xl shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300">
+                <div className="bg-[#DC2626] p-3 rounded-xl shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300">
                   <FiPhone size={24} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#1a1a1a] mb-1">Call Us</h3>
-                  <a href="tel:01215556666" className="text-[#C0392B] font-semibold hover:underline">
+                  <h3 className="font-bold text-gray-900 mb-1">Call Us</h3>
+                  <a href="tel:01215556666" className="text-[#DC2626] font-semibold hover:underline">
                     0121 555 6666
                   </a>
                   <p className="text-sm text-gray-600 mt-1">Mon-Sun: 08:00 - 20:00 (UK Time)</p>
@@ -136,16 +129,16 @@ export default function ContactPage() {
                 variants={itemVariant}
                 whileHover={{ x: 6 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="mb-7 flex items-start gap-4 group"
+                className="mb-8 flex items-start gap-4 group"
               >
-                <div className="bg-[#F1C40F] p-3 rounded-xl shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <FiMail size={24} className="text-[#1a1a1a]" />
+                <div className="bg-yellow-400 p-3 rounded-xl shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <FiMail size={24} className="text-gray-900" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#1a1a1a] mb-1">Email</h3>
-
-                  <a href="mailto:info@khanmoves.co.uk"
-                    className="text-[#C0392B] font-semibold hover:underline break-all"
+                  <h3 className="font-bold text-gray-900 mb-1">Email</h3>
+                  <a
+                    href="mailto:info@khanmoves.co.uk"
+                    className="text-[#DC2626] font-semibold hover:underline break-all"
                   >
                     info@khanmoves.co.uk
                   </a>
@@ -158,13 +151,13 @@ export default function ContactPage() {
                 variants={itemVariant}
                 whileHover={{ x: 6 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="mb-7 flex items-start gap-4 group"
+                className="mb-8 flex items-start gap-4 group"
               >
-                <div className="bg-green-100 p-3 rounded-xl shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <FiMapPin size={24} className="text-green-600" />
+                <div className="bg-red-100 p-3 rounded-xl shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <FiMapPin size={24} className="text-[#DC2626]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#1a1a1a] mb-1">Address</h3>
+                  <h3 className="font-bold text-gray-900 mb-1">Address</h3>
                   <p className="text-gray-700">
                     Khan Moves Limited
                     <br />
@@ -181,11 +174,11 @@ export default function ContactPage() {
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 className="flex items-start gap-4 group"
               >
-                <div className="bg-blue-100 p-3 rounded-xl shrink-0 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <FiClock size={24} className="text-blue-600" />
+                <div className="bg-red-50 p-3 rounded-xl shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300">
+                  <FiClock size={24} className="text-[#DC2626]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#1a1a1a] mb-1">Business Hours</h3>
+                  <h3 className="font-bold text-gray-900 mb-1">Business Hours</h3>
                   <p className="text-gray-700 text-sm">
                     Monday - Sunday
                     <br />
@@ -225,11 +218,11 @@ export default function ContactPage() {
               ) : (
                 <form
                   onSubmit={handleSubmit}
-                  className="space-y-6 bg-white p-8 rounded-2xl border border-gray-100 shadow-sm"
+                  className="space-y-6 bg-white p-8 rounded-2xl border border-gray-300 shadow-md"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Full Name
                       </label>
                       <input
@@ -239,12 +232,12 @@ export default function ContactPage() {
                         onChange={handleInputChange}
                         placeholder="John Doe"
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent transition"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-transparent transition"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Email Address
                       </label>
                       <input
@@ -254,13 +247,13 @@ export default function ContactPage() {
                         onChange={handleInputChange}
                         placeholder="john@example.com"
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent transition"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-transparent transition"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Phone Number
                     </label>
                     <input
@@ -269,12 +262,12 @@ export default function ContactPage() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="0121 555 6666"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent transition"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-transparent transition"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Subject
                     </label>
                     <input
@@ -284,12 +277,12 @@ export default function ContactPage() {
                       onChange={handleInputChange}
                       placeholder="How can we help?"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent transition"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-transparent transition"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Message
                     </label>
                     <textarea
@@ -299,7 +292,7 @@ export default function ContactPage() {
                       placeholder="Tell us more about your inquiry..."
                       required
                       rows="5"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent resize-none transition"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DC2626] focus:border-transparent resize-none transition"
                     />
                   </div>
 
@@ -308,7 +301,7 @@ export default function ContactPage() {
                     disabled={loading}
                     whileHover={{ scale: loading ? 1 : 1.02 }}
                     whileTap={{ scale: loading ? 1 : 0.98 }}
-                    className="w-full bg-[#C0392B] text-white font-bold py-3.5 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full bg-[#DC2626] hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -316,7 +309,9 @@ export default function ContactPage() {
                         Sending...
                       </>
                     ) : (
-                      'Send Message'
+                      <>
+                        Send Message <FiArrowRight size={18} />
+                      </>
                     )}
                   </motion.button>
                 </form>
@@ -326,25 +321,25 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* ── Map Section ── */}
-      <section className="py-12 bg-gray-100">
+      {/* MAP SECTION */}
+      <section className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="bg-linear-to-br from-gray-200 to-gray-300 rounded-2xl h-96 flex items-center justify-center overflow-hidden relative"
+            className="bg-linear-to-br from-gray-200 to-gray-300 rounded-2xl h-80 flex items-center justify-center overflow-hidden relative border border-gray-400"
           >
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#C0392B] opacity-5 rounded-full blur-3xl" />
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-[#DC2626] opacity-5 rounded-full blur-3xl" />
             <div className="text-center relative z-10">
               <motion.div
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <FiMapPin size={48} className="text-[#C0392B] mx-auto mb-3" />
+                <FiMapPin size={48} className="text-[#DC2626] mx-auto mb-3" />
               </motion.div>
-              <p className="text-gray-700 font-semibold">
+              <p className="text-gray-800 font-semibold">
                 Located in Birmingham, Operating Nationwide
               </p>
             </div>

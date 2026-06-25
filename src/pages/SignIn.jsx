@@ -30,7 +30,7 @@ export default function SignIn() {
 
     return (
         <AuthShell
-            heading={<>Welcome back to <span className="text-[#F1C40F]">Khan Moves</span></>}
+            heading={<>Welcome back to <span className="text-yellow-400">Khan Moves</span></>}
             subheading="Sign in to manage bookings, quotes and your removals operations."
             features={[
                 'Manage all bookings in one place',
@@ -38,8 +38,8 @@ export default function SignIn() {
                 'UK-wide removals dashboard',
             ]}
         >
-            <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Sign in</h1>
-            <p className="text-gray-500 mb-8">Enter your credentials to access your account.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign in</h1>
+            <p className="text-gray-600 mb-8">Enter your credentials to access your account.</p>
 
             {error && (
                 <div className="mb-5 flex items-center gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
@@ -49,7 +49,7 @@ export default function SignIn() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">Email address</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Email address</label>
                     <div className="relative">
                         <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -58,13 +58,13 @@ export default function SignIn() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="admin@khanmoves.co.uk"
                             required
-                            className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#C0392B] outline-none transition"
+                            className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-300 focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626] outline-none transition"
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">Password</label>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
                     <div className="relative">
                         <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
@@ -73,12 +73,12 @@ export default function SignIn() {
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
                             required
-                            className="w-full pl-10 pr-11 py-3 rounded-lg border-2 border-gray-200 focus:border-[#C0392B] outline-none transition"
+                            className="w-full pl-10 pr-11 py-3 rounded-lg border-2 border-gray-300 focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626] outline-none transition"
                         />
                         <button
                             type="button"
                             onClick={() => setShowPw((s) => !s)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C0392B]"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#DC2626] transition"
                         >
                             {showPw ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                         </button>
@@ -87,9 +87,9 @@ export default function SignIn() {
 
                 <div className="flex items-center justify-between text-sm">
                     <label className="flex items-center gap-2 text-gray-600 cursor-pointer">
-                        <input type="checkbox" className="w-4 h-4 accent-[#C0392B]" /> Remember me
+                        <input type="checkbox" className="w-4 h-4 accent-[#DC2626] rounded" /> Remember me
                     </label>
-                    <button type="button" className="text-[#C0392B] font-semibold hover:underline">
+                    <button type="button" className="text-[#DC2626] font-semibold hover:underline transition">
                         Forgot password?
                     </button>
                 </div>
@@ -97,15 +97,15 @@ export default function SignIn() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#C0392B] text-white font-bold py-3 rounded-lg hover:bg-red-800 transition flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="w-full bg-[#DC2626] hover:bg-red-700 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                     {loading ? 'Signing in…' : <>Sign in <FiArrowRight size={18} /></>}
                 </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6">
+            <p className="text-center text-sm text-gray-600 mt-6">
                 Don't have an account?{' '}
-                <Link to="/signup" className="text-[#C0392B] font-semibold hover:underline">Sign up</Link>
+                <Link to="/signup" className="text-[#DC2626] font-semibold hover:underline transition">Sign up</Link>
             </p>
 
         </AuthShell>

@@ -25,7 +25,6 @@ export default function ServicesPage() {
         'Packaging and wrapping included',
         'Safe transport across UK',
       ],
-      color: 'from-red-500 to-red-600',
     },
     {
       id: 'office',
@@ -38,7 +37,6 @@ export default function ServicesPage() {
         'Professional handling',
         'Team coordination available',
       ],
-      color: 'from-blue-500 to-blue-600',
     },
     {
       id: 'furniture',
@@ -51,7 +49,6 @@ export default function ServicesPage() {
         'Flexible scheduling',
         'Courier delivery available',
       ],
-      color: 'from-yellow-500 to-amber-600',
     },
     {
       id: 'parcels',
@@ -64,7 +61,6 @@ export default function ServicesPage() {
         'Signature on delivery',
         'Weather-protected transport',
       ],
-      color: 'from-green-500 to-green-600',
     },
     {
       id: 'vehicle',
@@ -77,7 +73,6 @@ export default function ServicesPage() {
         'Secure packaging',
         'Fast delivery available',
       ],
-      color: 'from-purple-500 to-purple-600',
     },
     {
       id: 'pallets',
@@ -90,11 +85,9 @@ export default function ServicesPage() {
         'Forklift available',
         'Nationwide coverage',
       ],
-      color: 'from-indigo-500 to-indigo-600',
     },
   ];
 
-  /* ── Animation Variants ── */
   const fadeUp = {
     hidden: { opacity: 0, y: 40 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
@@ -104,7 +97,7 @@ export default function ServicesPage() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.12, delayChildren: 0.1 },
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
     },
   };
 
@@ -123,30 +116,20 @@ export default function ServicesPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="w-full"
+      className="w-full bg-[#F5F1ED]"
     >
-      {/* ── Premium Page Header ── */}
-      <section className="relative bg-[#C0392B] text-white py-20 md:py-28 overflow-hidden">
-        {/* Decorative gradient glows */}
-        <div className="absolute inset-0 bg-linear-to-br from-[#C0392B] via-[#a93226] to-[#7d241b]" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#F1C40F] opacity-10 rounded-full blur-3xl" />
+      {/* HEADER */}
+      <section className="relative bg-[#DC2626] text-white py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-linear-to-br from-[#DC2626] to-red-700" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-yellow-400 opacity-5 rounded-full blur-3xl" />
         <div className="absolute -bottom-32 -left-20 w-80 h-80 bg-white opacity-5 rounded-full blur-3xl" />
-        {/* Subtle grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }}
-        />
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-block text-xs font-bold tracking-[0.25em] text-[#F1C40F] uppercase mb-4"
+            className="inline-block text-xs font-bold tracking-[0.25em] text-yellow-400 uppercase mb-4"
           >
             What We Offer
           </motion.span>
@@ -155,32 +138,31 @@ export default function ServicesPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold mb-5 leading-tight"
+            className="text-4xl md:text-5xl font-bold mb-4 leading-tight"
           >
-            Our <span className="text-[#F1C40F]">Services</span>
+            Our Services
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-gray-100/90 max-w-2xl mx-auto"
+            className="text-lg text-gray-100 max-w-2xl mx-auto"
           >
-            From small furniture moves to complete house relocations, we've got you
-            covered across the UK.
+            From small furniture moves to complete house relocations, we've got you covered across the UK.
           </motion.p>
         </div>
       </section>
 
-      {/* ── Services Grid ── */}
-      <section className="py-16 md:py-24 bg-white">
+      {/* SERVICES GRID */}
+      <section className="py-16 md:py-20 bg-[#F5F1ED]">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             variants={container}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.15 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {services.map((service) => {
               const Icon = service.icon;
@@ -190,22 +172,22 @@ export default function ServicesPage() {
                   variants={cardVariant}
                   whileHover={{ y: -8 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="group rounded-2xl overflow-hidden border border-gray-200 bg-white
-                    shadow-sm hover:shadow-2xl transition-shadow duration-300 h-full flex flex-col"
+                  className="group rounded-2xl overflow-hidden border border-gray-300 bg-white
+                    shadow-sm hover:shadow-xl transition-shadow duration-300 h-full flex flex-col"
                 >
-                  {/* Colored Header */}
-                  <div className={`bg-linear-to-br ${service.color} h-28 flex items-end p-6 relative overflow-hidden`}>
+                  {/* Header with Icon */}
+                  <div className="bg-linear-to-br from-[#DC2626] to-red-700 h-24 flex items-end p-6 relative overflow-hidden">
                     <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full
                       group-hover:scale-150 transition-transform duration-500" />
                     <Icon
-                      size={42}
+                      size={40}
                       className="text-white relative z-10 group-hover:scale-110 transition-transform duration-300"
                     />
                   </div>
 
                   {/* Content */}
                   <div className="p-6 flex flex-col grow">
-                    <h3 className="text-xl font-bold text-[#1a1a1a] mb-2">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
                       {service.title}
                     </h3>
                     <p className="text-gray-600 mb-6 text-sm">{service.description}</p>
@@ -220,10 +202,9 @@ export default function ServicesPage() {
                     </ul>
 
                     <button
-                      onClick={() => navigate('/booking')}
-                      className="w-full bg-[#C0392B] text-white font-bold py-2.5 rounded-lg
-                        hover:bg-red-800 transition-all duration-300 flex items-center justify-center gap-2
-                        group/btn"
+                      onClick={() => navigate('/booking', { state: { serviceType: service.id } })}
+                      className="w-full bg-[#DC2626] hover:bg-red-700 text-white font-bold py-2.5 rounded-lg
+                        transition-all duration-300 flex items-center justify-center gap-2 group/btn"
                     >
                       Get Quote
                       <FiArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
@@ -236,15 +217,15 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* ── Why Choose Us ── */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      {/* WHY CHOOSE US */}
+      <section className="py-16 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <motion.h2
             variants={fadeUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-[#1a1a1a] mb-12 text-center"
+            className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center"
           >
             Why Choose Khan Moves?
           </motion.h2>
@@ -266,21 +247,21 @@ export default function ServicesPage() {
                 key={idx}
                 variants={cardVariant}
                 whileHover={{ y: -6 }}
-                className="bg-white p-6 rounded-2xl text-center border border-gray-100
-                  shadow-sm hover:shadow-xl transition-shadow duration-300"
+                className="bg-[#F5F1ED] p-6 rounded-2xl text-center border border-gray-300
+                  shadow-sm hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="text-4xl mb-3">{benefit.icon}</div>
-                <h3 className="font-bold text-[#1a1a1a] mb-2">{benefit.title}</h3>
-                <p className="text-gray-600 text-sm">{benefit.description}</p>
+                <div className="text-4xl mb-4">{benefit.icon}</div>
+                <h3 className="font-bold text-gray-900 mb-2">{benefit.title}</h3>
+                <p className="text-gray-700 text-sm">{benefit.description}</p>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </section>
 
-      {/* ── CTA Section ── */}
-      <section className="relative py-16 md:py-24 bg-[#C0392B] text-white overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-72 h-72 bg-[#F1C40F] opacity-10 rounded-full blur-3xl" />
+      {/* CTA SECTION */}
+      <section className="relative py-16 md:py-20 bg-[#DC2626] text-white overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-72 h-72 bg-yellow-400 opacity-5 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -right-16 w-80 h-80 bg-white opacity-5 rounded-full blur-3xl" />
 
         <motion.div
@@ -290,20 +271,20 @@ export default function ServicesPage() {
           viewport={{ once: true }}
           className="max-w-4xl mx-auto px-6 text-center relative z-10"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Ready to Start Your <span className="text-[#F1C40F]">Move?</span>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Ready to Start Your Move?
           </h2>
-          <p className="text-lg md:text-xl text-gray-100/90 mb-8">
+          <p className="text-lg text-gray-100 mb-8">
             Get an instant quote now and book your move in minutes.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.96 }}
             onClick={() => navigate('/booking')}
-            className="inline-flex items-center gap-2 bg-[#F1C40F] text-[#1a1a1a] font-bold
-              px-10 py-4 rounded-lg hover:bg-yellow-300 transition-colors text-lg shadow-lg shadow-yellow-500/20"
+            className="inline-flex items-center gap-2 bg-yellow-400 text-[#1a1a1a] font-bold
+              px-10 py-3 rounded-lg hover:bg-yellow-500 transition-colors text-base shadow-lg"
           >
-            Get Free Quote <FiArrowRight size={20} />
+            Get Free Quote <FiArrowRight size={18} />
           </motion.button>
         </motion.div>
       </section>
