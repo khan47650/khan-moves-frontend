@@ -4,8 +4,8 @@ import { FiMapPin, FiLoader, FiCheckCircle } from 'react-icons/fi';
 export default function PostCodeInput({
     label = 'Postcode',
     value = '',
-    onChange,       // (postcode) => void
-    onResolved,     // (details) => void  -> { postcode, town, district, region, country, lat, lng }
+    onChange,
+    onResolved,
     placeholder = 'e.g. B1 1AA',
     error,
 }) {
@@ -19,7 +19,6 @@ export default function PostCodeInput({
 
     useEffect(() => setQuery(value), [value]);
 
-    // bahar click karne par dropdown band
     useEffect(() => {
         const handler = (e) => {
             if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
@@ -28,7 +27,6 @@ export default function PostCodeInput({
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    // type karte hi autocomplete (debounced)
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         const q = query.trim();
@@ -54,7 +52,6 @@ export default function PostCodeInput({
         return () => clearTimeout(debounceRef.current);
     }, [query]);
 
-    // poora postcode lookup -> area name
     const lookup = async (pc) => {
         try {
             setLoading(true);
@@ -102,7 +99,8 @@ export default function PostCodeInput({
 
     return (
         <div className="relative" ref={boxRef}>
-            <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">{label}</label>
+            {/* Label OUTSIDE input - neutral color */}
+            <label className="block text-sm font-medium text-gray-600 mb-2">{label}</label>
             <div className="relative">
                 <FiMapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -111,11 +109,11 @@ export default function PostCodeInput({
                     onChange={handleChange}
                     onFocus={() => suggestions.length && setOpen(true)}
                     placeholder={placeholder}
-                    className={`w-full pl-10 pr-10 py-3 rounded-lg border-2 outline-none transition ${error ? 'border-red-400' : 'border-gray-200 focus:border-[#C0392B]'
+                    className={`w-full pl-10 pr-10 py-3 rounded-lg border outline-none transition text-sm font-medium text-[#1a1a1a] placeholder:text-gray-400 placeholder:font-normal bg-white ${error ? 'border-red-400' : 'border-gray-200 focus:border-gray-400'
                         }`}
                 />
                 {loading && (
-                    <FiLoader className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C0392B] animate-spin" size={18} />
+                    <FiLoader className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 animate-spin" size={18} />
                 )}
                 {!loading && resolved && (
                     <FiCheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600" size={18} />
@@ -128,7 +126,7 @@ export default function PostCodeInput({
                         <li
                             key={pc}
                             onClick={() => handleSelect(pc)}
-                            className="px-4 py-2 text-sm cursor-pointer hover:bg-red-50 hover:text-[#C0392B] flex items-center gap-2"
+                            className="px-4 py-2 text-sm cursor-pointer hover:bg-gray-50 hover:text-[#1a1a1a] flex items-center gap-2"
                         >
                             <FiMapPin size={14} className="text-gray-400" /> {pc}
                         </li>

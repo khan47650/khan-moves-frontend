@@ -1,18 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  FiHelpCircle,
-  FiChevronDown,
-  FiHome,
-  FiLayers,
-  FiCheckCircle,
-  FiXCircle,
-  FiChevronsUp,
-  FiMapPin,
-} from 'react-icons/fi';
-import { FaParking } from 'react-icons/fa';
+import { FiChevronDown, FiArrowRight, FiCheck } from 'react-icons/fi';
 
-/* ---- Reusable premium dropdown ---- */
-function Dropdown({ label, hint, questionIcon: QIcon, options, value, onSelect, accent = 'red' }) {
+/* ---------- Neutral Dropdown ---------- */
+function Dropdown({ label, options, value, onSelect, placeholder = 'Select floor' }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -24,47 +14,31 @@ function Dropdown({ label, hint, questionIcon: QIcon, options, value, onSelect, 
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const accentMap = {
-    red: { border: 'border-[#C0392B]', text: 'text-[#C0392B]', bg: 'bg-red-50' },
-    yellow: { border: 'border-[#F1C40F]', text: 'text-[#1a1a1a]', bg: 'bg-yellow-50' },
-  };
-  const a = accentMap[accent];
-
   const selected = options.find((o) => o.value === value) || null;
-  const SelIcon = selected?.icon;
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 mb-2">
-        {QIcon && <QIcon size={16} className={a.text} />}
-        <label className="text-sm font-semibold text-[#1a1a1a]">{label}</label>
-        {hint && (
-          <FiHelpCircle size={15} className="text-gray-400 cursor-help" title={hint} />
-        )}
-      </div>
-
+    <div>
+      <label className="block text-sm font-medium text-gray-600 mb-2">{label}</label>
       <div className="relative" ref={ref}>
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 bg-white text-left transition hover:shadow-sm focus:outline-none ${open ? a.border : 'border-gray-200 hover:border-gray-300'
+          className={`w-full flex items-center px-4 py-2.5 rounded-lg border bg-white text-left transition focus:outline-none ${open ? 'border-gray-400' : 'border-gray-200 hover:border-gray-300'
             }`}
         >
-          {SelIcon && <SelIcon size={18} className={`shrink-0 ${a.text}`} />}
-          <span className="grow font-semibold text-sm text-[#1a1a1a]">
-            {selected ? selected.label : 'Select…'}
+          <span className="flex-1 text-sm font-medium text-[#1a1a1a]">
+            {selected ? selected.label : placeholder}
           </span>
           <FiChevronDown
             size={18}
-            className={`text-gray-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''
+            className={`text-gray-500 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''
               }`}
           />
         </button>
 
         {open && (
-          <ul className="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
+          <ul className="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
             {options.map((opt) => {
-              const Icon = opt.icon;
               const isSel = opt.value === value;
               return (
                 <li key={String(opt.value)}>
@@ -74,14 +48,11 @@ function Dropdown({ label, hint, questionIcon: QIcon, options, value, onSelect, 
                       onSelect(opt.value);
                       setOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-semibold transition ${isSel ? `${a.bg} ${a.text}` : 'text-[#1a1a1a] hover:bg-gray-50'
+                    className={`w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm transition ${isSel ? 'bg-gray-50 text-[#1a1a1a] font-semibold' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                   >
-                    {Icon && (
-                      <Icon size={18} className={`shrink-0 ${isSel ? a.text : 'text-gray-400'}`} />
-                    )}
-                    <span className="grow">{opt.label}</span>
-                    {isSel && <FiCheckCircle size={16} className={`shrink-0 ${a.text}`} />}
+                    <span className="flex-1">{opt.label}</span>
+                    {isSel && <FiCheck size={16} className="text-gray-600" />}
                   </button>
                 </li>
               );
@@ -93,97 +64,127 @@ function Dropdown({ label, hint, questionIcon: QIcon, options, value, onSelect, 
   );
 }
 
-/* ---- Step ---- */
+/* ---------- Custom Checkbox ---------- */
+function Checkbox({ label, checked, onChange }) {
+  return (
+    <label
+      onClick={() => onChange(!checked)}
+      className="flex items-center gap-3 cursor-pointer select-none group"
+    >
+      <div
+        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition shrink-0 ${checked
+          ? 'bg-[#1a1a1a] border-[#1a1a1a]'
+          : 'bg-white border-gray-300 group-hover:border-gray-400'
+          }`}
+      >
+        {checked && <FiCheck size={14} className="text-white" strokeWidth={3} />}
+      </div>
+      <span className="text-sm font-medium text-[#1a1a1a]">{label}</span>
+    </label>
+  );
+}
+
+/* ---------- Main Step ---------- */
 export default function StepFloorParking({ data, onChange }) {
   const floorOptions = [
-    { value: 'ground', label: 'Ground Floor', icon: FiHome },
-    { value: '1st', label: '1st Floor', icon: FiLayers },
-    { value: '2nd', label: '2nd Floor', icon: FiLayers },
-    { value: '3rd', label: '3rd+ Floor', icon: FiLayers },
-  ];
-
-  const liftOptions = [
-    { value: true, label: 'Yes, there is a lift', icon: FiCheckCircle },
-    { value: false, label: 'No lift available', icon: FiXCircle },
-  ];
-
-  const parkingOptions = [
-    { value: true, label: 'Yes, parking available', icon: FiCheckCircle },
-    { value: false, label: 'No parking nearby', icon: FiXCircle },
-  ];
-
-  const sides = [
-    {
-      key: 'pickup',
-      title: 'Pickup Location',
-      accent: 'red',
-      titleClass: 'text-[#C0392B]',
-      strip: 'border-t-[#C0392B]',
-      parkingHint: 'Close parking where we can load the van',
-    },
-    {
-      key: 'delivery',
-      title: 'Delivery Location',
-      accent: 'yellow',
-      titleClass: 'text-[#F1C40F]',
-      strip: 'border-t-[#F1C40F]',
-      parkingHint: 'Close parking where we can unload the van',
-    },
+    { value: 'basement', label: 'Basement' },
+    { value: 'ground', label: 'Ground floor' },
+    { value: '1st', label: '1st floor' },
+    { value: '2nd', label: '2nd floor' },
+    { value: '3rd', label: '3rd floor' },
+    { value: '4th+', label: '4th+ floor' },
   ];
 
   return (
-    <div>
-      <h3 className="text-xl font-bold text-[#1a1a1a] mb-8">
-        Help us understand access at both locations
-      </h3>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {sides.map((side) => (
-          <div
-            key={side.key}
-            className={`rounded-xl border-2 border-gray-100 border-t-4 ${side.strip} p-5 bg-white`}
-          >
-            <div className="flex items-center gap-2 mb-6">
-              <FiMapPin size={20} className={side.titleClass} />
-              <h4 className={`text-lg font-semibold ${side.titleClass}`}>{side.title}</h4>
-            </div>
-
-            <Dropdown
-              label="Which floor?"
-              questionIcon={FiLayers}
-              options={floorOptions}
-              value={data[side.key].floorLevel}
-              onSelect={(v) => onChange(side.key, 'floorLevel', v)}
-              accent={side.accent}
-            />
-
-            <Dropdown
-              label="Is there a lift?"
-              questionIcon={FiChevronsUp}
-              options={liftOptions}
-              value={data[side.key].hasLift}
-              onSelect={(v) => onChange(side.key, 'hasLift', v)}
-              accent={side.accent}
-            />
-
-            <Dropdown
-              label="Parking available?"
-              hint={side.parkingHint}
-              questionIcon={FaParking}
-              options={parkingOptions}
-              value={data[side.key].hasParking}
-              onSelect={(v) => onChange(side.key, 'hasParking', v)}
-              accent={side.accent}
-            />
-          </div>
-        ))}
+    <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+      {/* Heading */}
+      <div className="max-w-7xl mx-auto mb-3">
+        <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
+          Tell us about access at both locations
+        </h3>
+        <p className="text-gray-500 text-xs mt-0.5">
+          A few quick details about floor, lift and parking
+        </p>
       </div>
 
-      <div className="mt-10 p-4 bg-amber-50 border-l-4 border-amber-400 rounded">
-        <p className="text-sm text-amber-800">
-          ℹ️ <strong>Note:</strong> Floor level, lift availability, and parking affect pricing.
-          Higher floors and lack of parking may increase the cost.
-        </p>
+      {/* Card */}
+      <div className="max-w-7xl mx-auto">
+        <div
+          className="bg-white rounded-2xl p-5 md:p-6"
+          style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-5 items-start">
+            {/* PICKUP */}
+            <div>
+              <h4 className="text-base font-bold text-[#1a1a1a] mb-3">Pickup details</h4>
+
+              <div className="space-y-3">
+                <Dropdown
+                  label="Select floor"
+                  options={floorOptions}
+                  value={data.pickup.floorLevel}
+                  onSelect={(v) => onChange('pickup', 'floorLevel', v)}
+                />
+
+                <div className="flex flex-col gap-2 pt-1">
+                  <Checkbox
+                    label="Lift available"
+                    checked={data.pickup.hasLift}
+                    onChange={(v) => onChange('pickup', 'hasLift', v)}
+                  />
+                  <Checkbox
+                    label="Parking available"
+                    checked={data.pickup.hasParking}
+                    onChange={(v) => onChange('pickup', 'hasParking', v)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Arrow */}
+            <div className="hidden md:flex items-center justify-center self-stretch pt-9">
+              <div className="w-9 h-9 rounded-full bg-[#F9F8F6] flex items-center justify-center">
+                <FiArrowRight size={16} className="text-gray-500" />
+              </div>
+            </div>
+            <div className="flex md:hidden items-center justify-center my-1">
+              <div className="w-9 h-9 rounded-full bg-[#F9F8F6] flex items-center justify-center">
+                <FiArrowRight size={16} className="text-gray-500 rotate-90" />
+              </div>
+            </div>
+
+            {/* DELIVERY */}
+            <div>
+              <h4 className="text-base font-bold text-[#1a1a1a] mb-3">Delivery details</h4>
+
+              <div className="space-y-3">
+                <Dropdown
+                  label="Select floor"
+                  options={floorOptions}
+                  value={data.delivery.floorLevel}
+                  onSelect={(v) => onChange('delivery', 'floorLevel', v)}
+                />
+
+                <div className="flex flex-col gap-2 pt-1">
+                  <Checkbox
+                    label="Lift available"
+                    checked={data.delivery.hasLift}
+                    onChange={(v) => onChange('delivery', 'hasLift', v)}
+                  />
+                  <Checkbox
+                    label="Parking available"
+                    checked={data.delivery.hasParking}
+                    onChange={(v) => onChange('delivery', 'hasParking', v)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-5 text-center">
+            Don't worry — these quick checks help us plan a smoother move for you.
+          </p>
+        </div>
       </div>
     </div>
   );
