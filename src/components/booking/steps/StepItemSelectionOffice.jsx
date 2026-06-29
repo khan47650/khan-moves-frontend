@@ -88,13 +88,23 @@ function CategoryDropdown({ name, data, items, onAdd, onRemove }) {
                     {data.items.map((it) => {
                         const count = getCount(it.name);
                         return (
-                            <li key={it.name} className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                            <li
+                                key={it.name}
+                                onClick={() => onAdd(it)}
+                                className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0 cursor-pointer"
+                            >
                                 <span className="text-sm text-[#1a1a1a]">{it.name}</span>
                                 {count === 0 ? (
-                                    <button onClick={() => onAdd(it)} className="text-xs font-bold text-[#1a1a1a] hover:underline">+ add</button>
+                                    <button onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAdd(it);
+                                    }} className="text-xs font-bold text-[#1a1a1a] hover:underline">+ add</button>
                                 ) : (
                                     <div className="flex items-center gap-1.5">
-                                        <button onClick={() => onRemove(it.name)} className="w-5 h-5 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiMinus size={10} /></button>
+                                        <button onClick={(e) => {
+                                            e.stopPropagation();
+                                            onRemove(it.name);
+                                        }} className="w-5 h-5 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiMinus size={10} /></button>
                                         <span className="text-xs font-semibold w-5 text-center">{count}</span>
                                         <button onClick={() => onAdd(it)} className="w-5 h-5 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiPlus size={10} /></button>
                                     </div>
@@ -195,29 +205,72 @@ export default function StepItemSelectionOffice({ items, onChange, error, pickup
                 </div>
 
                 <div className="lg:col-span-1">
-                    <div className="sticky top-20 space-y-3">
-                        <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                            <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-base font-bold text-[#1a1a1a]">Your move summary</h4>
-                                {totalItems > 0 && <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{totalItems} item{totalItems !== 1 ? 's' : ''}</span>}
-                            </div>
-                            {items.length > 0 ? (
-                                <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                                    {items.map((it) => (
-                                        <div key={it.name} className="flex items-center justify-between text-sm py-1">
-                                            <span className="text-gray-700 truncate pr-2 flex-1">{it.name}</span>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                <span className="text-gray-500 text-xs font-semibold">×{it.quantity}</span>
-                                                <button onClick={() => handleRemove(it.name)} className="text-gray-400 hover:text-red-500 transition"><FiX size={14} /></button>
-                                            </div>
+                    <div
+                        className="sticky top-20 bg-white rounded-2xl p-4 md:p-5 h-full"
+                        style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-base font-bold text-[#1a1a1a]">
+                                Your move summary
+                            </h4>
+
+                            {totalItems > 0 && (
+                                <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                    {totalItems} item{totalItems !== 1 ? 's' : ''}
+                                </span>
+                            )}
+                        </div>
+
+                        {items.length > 0 ? (
+                            <div className="space-y-1.5 max-h-105 overflow-y-auto pr-1">
+                                {items.map((it) => (
+                                    <div
+                                        key={it.name}
+                                        className="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0"
+                                    >
+                                        <span className="text-sm text-gray-700 flex-1 truncate">
+                                            {it.name}
+                                        </span>
+
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={() => handleRemove(it.name)}
+                                                className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"
+                                            >
+                                                <FiMinus size={10} />
+                                            </button>
+
+                                            <span className="w-5 text-center text-xs font-bold text-[#1a1a1a]">
+                                                {it.quantity}
+                                            </span>
+
+                                            <button
+                                                onClick={() => handleAdd(it)}
+                                                className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"
+                                            >
+                                                <FiPlus size={10} />
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    onChange(items.filter(i => i.name !== it.name))
+                                                }
+                                                className="ml-1 text-gray-300 hover:text-red-500 transition"
+                                            >
+                                                <FiX size={12} />
+                                            </button>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : <p className="text-gray-400 text-sm">Nothing here yet. Add items to see them listed.</p>}
-                        </div>
-                        <div className="bg-white rounded-2xl overflow-hidden" style={{ isolation: 'isolate', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                            <MapComponent pickupLat={pickup?.lat || 52.509} pickupLng={pickup?.lng || -1.885} deliveryLat={delivery?.lat || 51.5074} deliveryLng={delivery?.lng || -0.1278} distance={99} time="119 mins" />
-                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-56">
+                                <p className="text-gray-400 text-sm text-center">
+                                    Nothing here yet.<br />
+                                    Add items to see them listed.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

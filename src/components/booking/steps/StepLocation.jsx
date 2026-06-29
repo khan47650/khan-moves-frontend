@@ -4,6 +4,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import PostCodeInput from '../../PostCodeInput';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import MapComponent from "../MapComponent";
 
 const FLOOR_OPTIONS = [
   { value: 'basement', label: 'Basement' },
@@ -61,54 +62,6 @@ function Checkbox({ label, checked, onChange }) {
   );
 }
 
-function RouteMap({ pickupLat, pickupLng, deliveryLat, deliveryLng, distance, time, routeCoords }) {
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
-
-  const pickupIcon = L.divIcon({
-    html: `<div style="background:#C0392B;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35)"><span style="transform:rotate(45deg);font-size:13px;line-height:1">🚛</span></div>`,
-    className: '', iconSize: [30, 30], iconAnchor: [15, 30],
-  });
-  const deliveryIcon = L.divIcon({
-    html: `<div style="background:#27AE60;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35)"><span style="transform:rotate(45deg);font-size:13px;line-height:1">🏠</span></div>`,
-    className: '', iconSize: [30, 30], iconAnchor: [15, 30],
-  });
-
-  useEffect(() => {
-    if (!pickupLat || !deliveryLat || !mapRef.current) return;
-    if (!mapInstance.current) {
-      mapInstance.current = L.map(mapRef.current, { zoomControl: false, scrollWheelZoom: false })
-        .setView([(pickupLat + deliveryLat) / 2, (pickupLng + deliveryLng) / 2], 9);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM', maxZoom: 19 }).addTo(mapInstance.current);
-    }
-    const map = mapInstance.current;
-    map.eachLayer(l => { if (l instanceof L.Marker || l instanceof L.Polyline) map.removeLayer(l); });
-    L.marker([pickupLat, pickupLng], { icon: pickupIcon }).addTo(map);
-    L.marker([deliveryLat, deliveryLng], { icon: deliveryIcon }).addTo(map);
-    if (routeCoords && routeCoords.length > 0) {
-      L.polyline(routeCoords, { color: '#2980B9', weight: 5, opacity: 0.85 }).addTo(map);
-    } else {
-      L.polyline([[pickupLat, pickupLng], [deliveryLat, deliveryLng]], { color: '#2980B9', weight: 4, dashArray: '8,6', opacity: 0.7 }).addTo(map);
-    }
-    map.fitBounds(L.latLngBounds([[pickupLat, pickupLng], [deliveryLat, deliveryLng]]), { padding: [30, 30] });
-  }, [pickupLat, pickupLng, deliveryLat, deliveryLng, routeCoords]);
-
-  return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100" style={{ isolation: 'isolate', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-      <div ref={mapRef} style={{ height: '220px', width: '100%' }} className="bg-gray-100" />
-      <div className="bg-white px-3 py-2.5 flex items-center justify-between border-t border-gray-100 shrink-0">
-        <div className="flex items-center gap-1.5">
-          <FiNavigation size={13} className="text-[#C0392B]" />
-          <span className="text-xs text-gray-500">Driving distance</span>
-        </div>
-        <div>
-          <span className="font-black text-[#C0392B]">{distance} mi</span>
-          {time && <span className="text-xs text-gray-400 ml-2">· {time}</span>}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function LocationCard({ title, dotColor, data, postcodeError, onAddressChange, onResolved, floorValue, onFloorChange, hasLift, onLiftChange, hasParking, onParkingChange }) {
   const isGround = floorValue === 'ground' || floorValue === 'basement';
@@ -144,7 +97,6 @@ export default function StepLocation({ data, onChange, errors }) {
   const [distance, setDistance] = useState(null);
   const [time, setTime] = useState(null);
   const [calculating, setCalculating] = useState(false);
-  const [routeCoords, setRouteCoords] = useState([]);
 
   useEffect(() => {
     const { lat: pLat, lng: pLng } = data.pickup;
@@ -160,7 +112,6 @@ export default function StepLocation({ data, onChange, errors }) {
           const mins = Math.round(route.duration / 60);
           setDistance(miles); setTime(`${mins} mins`);
           onChange('distance', miles);
-          setRouteCoords(route.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
         }
       })
       .catch(() => {
@@ -241,10 +192,13 @@ export default function StepLocation({ data, onChange, errors }) {
               <span className="text-xs text-gray-400">Calculating route…</span>
             </div>
           ) : bothReady ? (
-            <RouteMap
-              pickupLat={data.pickup.lat} pickupLng={data.pickup.lng}
-              deliveryLat={data.delivery.lat} deliveryLng={data.delivery.lng}
-              distance={distance} time={time} routeCoords={routeCoords}
+            <MapComponent
+              pickupLat={data.pickup.lat}
+              pickupLng={data.pickup.lng}
+              deliveryLat={data.delivery.lat}
+              deliveryLng={data.delivery.lng}
+              distance={distance}
+              time={time}
             />
           ) : (
             <div className="h-full bg-white rounded-2xl flex flex-col items-center justify-center gap-2 p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minHeight: '220px' }}>

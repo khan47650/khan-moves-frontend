@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { FiPlus, FiX, FiTruck } from 'react-icons/fi';
-import MapComponent from '../MapComponent';
+import { FiPlus, FiMinus, FiX, FiTruck } from 'react-icons/fi';
 
 const COMMON_PARTS = [
     'Engine', 'Gearbox / Transmission', 'Wheels & Tyres (set)', 'Bonnet / Hood',
@@ -14,19 +13,58 @@ export default function StepItemSelectionVehicle({ items, onChange, error, picku
 
     const handleAdd = () => {
         if (!name.trim()) return;
-        onChange([...items, {
-            name: name.trim(),
-            weight: weight ? Number(weight) : null,
-            notes: notes.trim(),
-            quantity: 1,
-            volume: 200,
-            custom: true,
-        }]);
-        setName(''); setWeight(''); setNotes('');
+
+        const existing = items.find(i => i.name === name.trim());
+
+        if (existing) {
+            onChange(
+                items.map(i =>
+                    i.name === name.trim()
+                        ? {
+                            ...i,
+                            quantity: i.quantity + 1,
+                            weight: weight ? Number(weight) : i.weight,
+                            notes: notes.trim() || i.notes,
+                        }
+                        : i
+                )
+            );
+        } else {
+            onChange([
+                ...items,
+                {
+                    name: name.trim(),
+                    weight: weight ? Number(weight) : null,
+                    notes: notes.trim(),
+                    quantity: 1,
+                    volume: 200,
+                    custom: true,
+                },
+            ]);
+        }
+
+        setName('');
+        setWeight('');
+        setNotes('');
     };
 
-    const handleRemove = (idx) => onChange(items.filter((_, i) => i !== idx));
+    const handleRemove = (name) => {
+        const ex = items.find(i => i.name === name);
+
+        if (ex.quantity > 1) {
+            onChange(
+                items.map(i =>
+                    i.name === name
+                        ? { ...i, quantity: i.quantity - 1 }
+                        : i
+                )
+            );
+        } else {
+            onChange(items.filter(i => i.name !== name));
+        }
+    };
     const quickAdd = (partName) => setName(partName);
+    const totalItems = items.reduce((s, i) => s + i.quantity, 0);
 
     return (
         <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
@@ -78,27 +116,71 @@ export default function StepItemSelectionVehicle({ items, onChange, error, picku
                     </div>
                 </div>
 
-                <div className="lg:col-span-1">
-                    <div className="sticky top-20 space-y-3">
-                        <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+                <div className="lg:col-span-1 flex">
+                    <div className="sticky top-20 w-full flex">
+                        <div className="bg-white rounded-2xl p-4 flex flex-col w-full h-full" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
                             <div className="flex items-center justify-between mb-3">
                                 <h4 className="text-base font-bold text-[#1a1a1a]">Your parts</h4>
-                                {items.length > 0 && <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{items.length} item{items.length !== 1 ? 's' : ''}</span>}
+                                {totalItems > 0 && (
+                                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                        {totalItems} item{totalItems !== 1 ? 's' : ''}
+                                    </span>
+                                )}
                             </div>
                             {items.length > 0 ? (
-                                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                                    {items.map((it, idx) => (
-                                        <div key={idx} className="flex items-start justify-between gap-2 py-1.5 border-b border-gray-100 last:border-0">
+                                <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
+                                    {items.map((it) => (
+                                        <div
+                                            key={it.name}
+                                            className="flex items-center gap-1.5 py-1.5 border-b border-gray-100 last:border-0"
+                                        >
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-[#1a1a1a] truncate">{it.name}</p>
+                                                <p className="text-sm text-gray-700 truncate">
+                                                    {it.name}
+                                                </p>
+
                                                 {(it.weight || it.notes) && (
                                                     <p className="text-xs text-gray-500 truncate">
-                                                        {it.weight ? `${it.weight} kg` : ''}{it.weight && it.notes ? ' · ' : ''}{it.notes}
+                                                        {it.weight ? `${it.weight} kg` : ''}
+                                                        {it.weight && it.notes ? ' • ' : ''}
+                                                        {it.notes}
                                                     </p>
                                                 )}
                                             </div>
-                                            <button onClick={() => handleRemove(idx)} className="text-gray-400 hover:text-red-500 transition shrink-0 mt-0.5">
-                                                <FiX size={16} />
+
+                                            <button
+                                                onClick={() => handleRemove(it.name)}
+                                                className="w-5 h-5 rounded-full border border-gray-200 hover:bg-[#1a1a1a] hover:text-white text-gray-400 transition flex items-center justify-center shrink-0"
+                                            >
+                                                <FiMinus size={9} />
+                                            </button>
+
+                                            <span className="text-xs font-bold text-[#1a1a1a] w-4 text-center shrink-0">
+                                                {it.quantity}
+                                            </span>
+
+                                            <button
+                                                onClick={() => {
+                                                    onChange(
+                                                        items.map(i =>
+                                                            i.name === it.name
+                                                                ? { ...i, quantity: i.quantity + 1 }
+                                                                : i
+                                                        )
+                                                    );
+                                                }}
+                                                className="w-5 h-5 rounded-full border border-gray-200 hover:bg-[#1a1a1a] hover:text-white text-gray-400 transition flex items-center justify-center shrink-0"
+                                            >
+                                                <FiPlus size={9} />
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    onChange(items.filter(i => i.name !== it.name))
+                                                }
+                                                className="text-gray-300 hover:text-red-400 transition ml-0.5 shrink-0"
+                                            >
+                                                <FiX size={11} />
                                             </button>
                                         </div>
                                     ))}
@@ -110,9 +192,7 @@ export default function StepItemSelectionVehicle({ items, onChange, error, picku
                                 </div>
                             )}
                         </div>
-                        <div className="bg-white rounded-2xl overflow-hidden" style={{ isolation: 'isolate', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                            <MapComponent pickupLat={pickup?.lat || 52.509} pickupLng={pickup?.lng || -1.885} deliveryLat={delivery?.lat || 51.5074} deliveryLng={delivery?.lng || -0.1278} distance={99} time="119 mins" />
-                        </div>
+
                     </div>
                 </div>
             </div>

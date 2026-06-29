@@ -50,10 +50,10 @@ export default function StepItemSelection({ items, onChange, error }) {
         <div className="max-w-7xl mx-auto mb-3 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">{error}</div>
       )}
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-stretch">
         {/* ── LEFT: Items selection ── */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div className="flex-1">
+          <div className="bg-white rounded-2xl p-4 md:p-5  h-full" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
             {/* Category tabs */}
             <div className="overflow-x-auto -mx-1 px-1 mb-4 border-b border-gray-100">
               <div className="flex gap-1 min-w-min pb-0">
@@ -115,32 +115,37 @@ export default function StepItemSelection({ items, onChange, error }) {
         </div>
 
         {/* ── RIGHT: Summary (no map) ── */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-20 bg-white rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-base font-bold text-[#1a1a1a]">Your move summary</h4>
-              {totalCount > 0 && (
-                <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{totalCount} item{totalCount !== 1 ? 's' : ''}</span>
+        <div className="w-full lg:w-80 flex">
+          <div className="sticky top-20 w-full flex">
+            <div
+              className="bg-white rounded-2xl p-4 md:p-5 flex flex-col w-full min-h-162.5"
+              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base font-bold text-[#1a1a1a]">Your move summary</h4>
+                {totalCount > 0 && (
+                  <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{totalCount} item{totalCount !== 1 ? 's' : ''}</span>
+                )}
+              </div>
+
+              {items.length > 0 ? (
+                <div className="flex-1 space-y-1 overflow-y-auto pr-1">
+                  {items.map(item => (
+                    <div key={item.name} className="flex items-center gap-2 py-1.5 border-b border-gray-100 last:border-0">
+                      <span className="text-sm text-gray-700 flex-1 truncate">{item.name}</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => handleRemove(item.name)} className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiMinus size={10} /></button>
+                        <span className="text-xs font-bold text-[#1a1a1a] w-4 text-center">{item.quantity}</span>
+                        <button onClick={() => handleAdd(item)} className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiPlus size={10} /></button>
+                        <button onClick={() => onChange(items.filter(i => i.name !== item.name))} className="text-gray-300 hover:text-red-400 transition ml-0.5"><FiX size={12} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm leading-relaxed">Nothing added yet. Select items from the categories.</p>
               )}
             </div>
-
-            {items.length > 0 ? (
-              <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
-                {items.map(item => (
-                  <div key={item.name} className="flex items-center gap-2 py-1.5 border-b border-gray-100 last:border-0">
-                    <span className="text-sm text-gray-700 flex-1 truncate">{item.name}</span>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={() => handleRemove(item.name)} className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiMinus size={10} /></button>
-                      <span className="text-xs font-bold text-[#1a1a1a] w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => handleAdd(item)} className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiPlus size={10} /></button>
-                      <button onClick={() => onChange(items.filter(i => i.name !== item.name))} className="text-gray-300 hover:text-red-400 transition ml-0.5"><FiX size={12} /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-sm leading-relaxed">Nothing added yet. Select items from the categories.</p>
-            )}
           </div>
         </div>
       </div>

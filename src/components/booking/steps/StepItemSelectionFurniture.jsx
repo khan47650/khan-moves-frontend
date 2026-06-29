@@ -99,11 +99,14 @@ export default function StepItemSelectionFurniture({ items, onChange, error }) {
             {error && <div className="max-w-7xl mx-auto mb-3 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">{error}</div>}
 
             {/* KEY FIX: use flex on lg instead of grid, with h-[calc] to prevent summary scroll */}
-            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-start">
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-stretch">
 
                 {/* Left: search + categories */}
-                <div className="flex-1 min-w-0">
-                    <div className="bg-white rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                <div className="flex-1">
+                    <div
+                        className="bg-white rounded-2xl p-4 md:p-5 h-full"
+                        style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+                    >
                         <div className="relative mb-3">
                             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                             <input type="text" placeholder="Search items e.g. Sofa, Bed…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -155,41 +158,71 @@ export default function StepItemSelectionFurniture({ items, onChange, error }) {
                     </div>
                 </div>
 
-                {/* Right: summary — sticky, never scrolls independently */}
-                <div className="w-full lg:w-72 shrink-0 lg:sticky lg:top-20 lg:self-start">
-                    <div className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-sm font-bold text-[#1a1a1a]">Your move summary</h4>
-                            {totalItems > 0 && (
-                                <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                                    {totalItems} item{totalItems !== 1 ? 's' : ''}
-                                </span>
+                {/* Right: summary */}
+                <div className="w-full lg:w-80 flex">
+                    <div className="sticky top-20 w-full flex">
+                        <div
+                            className="bg-white rounded-2xl p-4 flex flex-col w-full h-full"
+                            style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
+                        >
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-bold text-[#1a1a1a]">
+                                    Your move summary
+                                </h4>
+
+                                {totalItems > 0 && (
+                                    <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                        {totalItems} item{totalItems !== 1 ? "s" : ""}
+                                    </span>
+                                )}
+                            </div>
+
+                            {items.length > 0 ? (
+                                <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+                                    {items.map((it) => (
+                                        <div
+                                            key={it.name}
+                                            className="flex items-center gap-1.5 py-1.5 border-b border-gray-100 last:border-0"
+                                        >
+                                            <span className="text-sm text-gray-700 flex-1 truncate">
+                                                {it.name}
+                                            </span>
+
+                                            <button
+                                                onClick={() => handleRemove(it.name)}
+                                                className="w-5 h-5 rounded-full border border-gray-200 hover:bg-[#1a1a1a] hover:text-white text-gray-400 transition flex items-center justify-center shrink-0"
+                                            >
+                                                <FiMinus size={9} />
+                                            </button>
+
+                                            <span className="text-xs font-bold text-[#1a1a1a] w-4 text-center shrink-0">
+                                                {it.quantity}
+                                            </span>
+
+                                            <button
+                                                onClick={() => handleAdd(it)}
+                                                className="w-5 h-5 rounded-full border border-gray-200 hover:bg-[#1a1a1a] hover:text-white text-gray-400 transition flex items-center justify-center shrink-0"
+                                            >
+                                                <FiPlus size={9} />
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    onChange(items.filter((i) => i.name !== it.name))
+                                                }
+                                                className="text-gray-300 hover:text-red-400 transition ml-0.5 shrink-0"
+                                            >
+                                                <FiX size={11} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-400 text-sm">
+                                    Nothing here yet. Add items above.
+                                </p>
                             )}
                         </div>
-                        {items.length > 0 ? (
-                            <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
-                                {items.map(it => (
-                                    <div key={it.name} className="flex items-center gap-1.5 py-1.5 border-b border-gray-100 last:border-0">
-                                        <span className="text-sm text-gray-700 flex-1 truncate">{it.name}</span>
-                                        <button onClick={() => handleRemove(it.name)}
-                                            className="w-5 h-5 rounded-full border border-gray-200 hover:bg-[#1a1a1a] hover:text-white text-gray-400 transition flex items-center justify-center shrink-0">
-                                            <FiMinus size={9} />
-                                        </button>
-                                        <span className="text-xs font-bold text-[#1a1a1a] w-4 text-center shrink-0">{it.quantity}</span>
-                                        <button onClick={() => handleAdd(it)}
-                                            className="w-5 h-5 rounded-full border border-gray-200 hover:bg-[#1a1a1a] hover:text-white text-gray-400 transition flex items-center justify-center shrink-0">
-                                            <FiPlus size={9} />
-                                        </button>
-                                        <button onClick={() => onChange(items.filter(i => i.name !== it.name))}
-                                            className="text-gray-300 hover:text-red-400 transition ml-0.5 shrink-0">
-                                            <FiX size={11} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-gray-400 text-sm">Nothing here yet. Add items above.</p>
-                        )}
                     </div>
                 </div>
             </div>
