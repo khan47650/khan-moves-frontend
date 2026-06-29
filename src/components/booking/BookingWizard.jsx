@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-icons/fi';
 
-// Import all steps
 import StepServiceType from './steps/StepServiceType';
 import StepLocation from './steps/StepLocation';
-import StepFloorParking from './steps/StepFloorParking';
 import StepItemSelection from './steps/StepItemSelection';
 import StepItemSelectionFurniture from './steps/StepItemSelectionFurniture';
 import StepItemSelectionOffice from './steps/StepItemSelectionOffice';
@@ -19,271 +18,161 @@ import { calculateTotalPrice } from '../../utils/priceCalculator';
 
 const STEPS = [
   { id: 'service', label: 'What?', title: 'Service Type' },
-  { id: 'location', label: 'Where?', title: 'Location' },
-  { id: 'floor', label: 'Access', title: 'Floor & Parking' },
-  { id: 'items', label: 'What Items?', title: 'Item Selection' },
+  { id: 'location', label: 'Where?', title: 'Locations & Access' },
+  { id: 'items', label: 'Items', title: 'Item Selection' },
   { id: 'datePrice', label: 'When?', title: 'Date & Price' },
   { id: 'services', label: 'Add-ons', title: 'Additional Services' },
   { id: 'confirm', label: 'Review', title: 'Confirm Details' },
 ];
 
 export default function BookingWizard() {
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // All booking data
   const [bookingData, setBookingData] = useState({
-    // Step 1: Service Type
-    serviceType: '',
-
-    // Step 2: Location
+    serviceType: location.state?.serviceType || '',
     pickup: { address: '', postcode: '', town: '', region: '', lat: null, lng: null },
     delivery: { address: '', postcode: '', town: '', region: '', lat: null, lng: null },
-
-    // Step 3: Floor & Parking
     pickupFloor: { floorLevel: 'ground', hasLift: true, hasParking: true },
     deliveryFloor: { floorLevel: 'ground', hasLift: true, hasParking: true },
-
-    // Step 4: Items
     items: [],
-
-    // Step 5: Date & Price
-    dateType: 'specific', // ✅ ADD THIS
+    dateType: 'specific',
     date: '',
-    timeSlot: 'morning',
+    timeSlot: '',
     helperCount: 1,
-
-    // Step 6: Services
-    protectionPlus: false,
-    protectionGoodsValue: 1000,
     dismantleCount: 0,
     assemblyCount: 0,
     specialInstructions: '',
-
-    // Step 7: Customer Details
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
+    packingService: false,
+    distance: 25,
   });
 
-  // Calculate distance (mock - in real app use coordinates)
-  const distance = 25;
-  const totalVolume = bookingData.items.reduce((sum, item) => sum + (item.volume || 0) * item.quantity, 0);
+  useEffect(() => {
+    if (location.state?.serviceType) setCurrentStep(1);
+  }, [location.state]);
 
-  // Calculate total price
+  const totalVolume = bookingData.items.reduce((s, it) => s + (it.volume || 0) * it.quantity, 0);
   const totalPrice = calculateTotalPrice({
-    distance,
+    distance: bookingData.distance,
     volume: totalVolume,
     date: bookingData.date,
     timeSlot: bookingData.timeSlot,
     helperCount: bookingData.helperCount,
     dismantleCount: bookingData.dismantleCount,
     assemblyCount: bookingData.assemblyCount,
-    protectionPlus: bookingData.protectionPlus,
-    goodsValue: bookingData.protectionGoodsValue,
+    protectionPlus: false,
+    goodsValue: 0,
   });
 
   const handleChange = (key, value) => {
-    setBookingData((prev) => ({ ...prev, [key]: value }));
-    // Clear error for this field
-    if (errors[key]) {
-      const newErrors = { ...errors };
-      delete newErrors[key];
-      setErrors(newErrors);
-    }
+    setBookingData(prev => ({ ...prev, [key]: value }));
+    if (errors[key]) { const e = { ...errors }; delete e[key]; setErrors(e); }
   };
 
   const validateStep = () => {
-    const newErrors = {};
-
+    const e = {};
     switch (STEPS[currentStep].id) {
       case 'service':
-        if (!bookingData.serviceType) newErrors.serviceType = 'Please select a service';
-        break;
-
+        if (!bookingData.serviceType) e.serviceType = 'Please select a service'; break;
       case 'location':
-        if (!bookingData.pickup.postcode) newErrors.pickupPostcode = 'Pickup postcode required';
-        if (!bookingData.delivery.postcode) newErrors.deliveryPostcode = 'Delivery postcode required';
+        if (!bookingData.pickup.postcode) e.pickupPostcode = 'Pickup postcode required';
+        if (!bookingData.delivery.postcode) e.deliveryPostcode = 'Delivery postcode required';
         break;
-
       case 'items':
-        if (bookingData.items.length === 0) newErrors.items = 'Please select at least one item';
-        break;
-
+        if (bookingData.items.length === 0) e.items = 'Please select at least one item'; break;
       case 'datePrice':
-        if (bookingData.dateType !== 'flexible' && !bookingData.date) {
-          newErrors.date = 'Please select a date';
+        if (bookingData.dateType === 'specific') {
+          if (!bookingData.date) {
+            e.date = 'Please select a date';
+          }
+
+          if (!bookingData.timeSlot) {
+            e.timeSlot = 'Please select a time slot';
+          }
         }
         break;
-
-      case 'confirm':
-        if (!bookingData.customerName) newErrors.customerName = 'Name required';
-        if (!bookingData.customerEmail) newErrors.customerEmail = 'Email required';
-        if (!bookingData.customerPhone) newErrors.customerPhone = 'Phone required';
-        break;
     }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return false;
-    }
-
-    setErrors({});
-    return true;
+    if (Object.keys(e).length > 0) { setErrors(e); return false; }
+    setErrors({}); return true;
   };
 
   const handleNext = () => {
-    if (validateStep()) {
-      if (currentStep < STEPS.length - 1) {
-        setCurrentStep(currentStep + 1);
-        window.scrollTo(0, 0);
-      }
+    if (validateStep() && currentStep < STEPS.length - 1) {
+      setCurrentStep(currentStep + 1); window.scrollTo(0, 0);
     }
   };
-
   const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      window.scrollTo(0, 0);
-    }
+    if (currentStep > 0) { setCurrentStep(currentStep - 1); window.scrollTo(0, 0); }
   };
-
   const handleSubmit = async () => {
-    if (!validateStep()) return;
-
     setLoading(true);
     try {
-      // Send booking to backend
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...bookingData,
-          totalPrice,
-          distance,
-          volume: totalVolume,
-        }),
+      const res = await fetch('/api/bookings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...bookingData, totalPrice, volume: totalVolume }),
       });
-
-      if (response.ok) {
-        // Redirect to confirmation page
-        const { bookingRef } = await response.json();
-        window.location.href = `/confirmation/${bookingRef}`;
-      } else {
-        alert('Booking failed. Please try again.');
-      }
-    } catch (err) {
-      alert('Error submitting booking');
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) { const { bookingRef } = await res.json(); window.location.href = `/confirmation/${bookingRef}`; }
+      else alert('Booking failed. Please try again.');
+    } catch { alert('Error submitting booking'); }
+    finally { setLoading(false); }
   };
-
   const handleEdit = (stepId) => {
-    const stepIndex = STEPS.findIndex((s) => s.id === stepId);
-    if (stepIndex !== -1) {
-      setCurrentStep(stepIndex);
-      window.scrollTo(0, 0);
-    }
+    const idx = STEPS.findIndex(s => s.id === stepId);
+    if (idx !== -1) { setCurrentStep(idx); window.scrollTo(0, 0); }
   };
 
   const step = STEPS[currentStep];
   const progress = ((currentStep + 1) / STEPS.length) * 100;
-  const isConfirmStep = step.id === 'confirm';
+  const isConfirm = step.id === 'confirm';
+
+  const itemProps = {
+    items: bookingData.items, onChange: its => handleChange('items', its),
+    error: errors.items, pickup: bookingData.pickup, delivery: bookingData.delivery,
+    serviceType: bookingData.serviceType,
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className={`max-w-7xl mx-auto px-4 ${isConfirmStep ? 'pt-0' : 'pt-4'}`}>
-        {/* Header - HIDE ON CONFIRM STEP */}
-        {!isConfirmStep && (
-          <div className="mb-3">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a1a] mb-1">Get Your Moving Quote</h1>
-            <p className="text-gray-600 text-sm mb-3">
-              Step {currentStep + 1} of {STEPS.length} — {step.title}
-            </p>
-
-            {/* Progress bar */}
-            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-linear-to-r from-[#C0392B] to-red-600"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
-              />
+    <div className="min-h-screen bg-[#F5F1ED]">
+      <div className={`max-w-7xl mx-auto px-4 ${isConfirm ? 'pt-0' : 'pt-4'}`}>
+        {!isConfirm && (
+          <>
+            <div className="mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Get Your Moving Quote</h1>
+              <p className="text-gray-600 text-sm mb-3">Step {currentStep + 1} of {STEPS.length} — {step.title}</p>
+              <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <motion.div className="h-full bg-linear-to-r from-[#DC2626] to-red-600"
+                  initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.5 }} />
+              </div>
             </div>
-          </div>
+            <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+              {STEPS.map((s, idx) => (
+                <button key={s.id} onClick={() => idx < currentStep && setCurrentStep(idx)}
+                  className={`shrink-0 px-3 py-1.5 rounded-lg font-semibold text-sm transition ${idx === currentStep ? 'bg-[#DC2626] text-white'
+                    : idx < currentStep ? 'bg-green-100 text-green-700 cursor-pointer'
+                      : 'bg-gray-200 text-gray-500 cursor-default'}`}>
+                  {idx < currentStep ? <FiCheckCircle className="inline mr-1" size={13} /> : `${idx + 1}. `}
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
-        {/* Step indicators - HIDE ON CONFIRM STEP */}
-        {!isConfirmStep && (
-          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-            {STEPS.map((s, idx) => (
-              <button
-                key={s.id}
-                onClick={() => idx < currentStep && setCurrentStep(idx)}
-                className={`shrink-0 px-3 py-1.5 rounded-lg font-semibold text-sm transition ${idx === currentStep
-                  ? 'bg-[#C0392B] text-white'
-                  : idx < currentStep
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-200 text-gray-600'
-                  }`}
-              >
-                {idx < currentStep ? <FiCheckCircle className="inline mr-1" size={14} /> : `${idx + 1}.`}
-                {s.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Step Content */}
         <AnimatePresence mode="wait">
-          <motion.div
-            key={step.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="mb-4"
-          >
-            {step.id === 'service' && (
-              <StepServiceType value={bookingData.serviceType} onChange={(v) => handleChange('serviceType', v)} error={errors.serviceType} />
-            )}
-            {step.id === 'location' && (
-              <StepLocation data={bookingData} onChange={handleChange} errors={errors} />
-            )}
-            {step.id === 'floor' && (
-              <StepFloorParking
-                data={bookingData}
-                onChange={(key, field, value) =>
-                  handleChange(key, { ...bookingData[key], [field]: value })
-                }
-              />
-            )}
+          <motion.div key={step.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.25 }} className="mb-4">
+            {step.id === 'service' && <StepServiceType value={bookingData.serviceType} onChange={v => handleChange('serviceType', v)} error={errors.serviceType} />}
+            {step.id === 'location' && <StepLocation data={bookingData} onChange={handleChange} errors={errors} />}
             {step.id === 'items' && (() => {
-              const itemProps = {
-                items: bookingData.items,
-                onChange: (items) => handleChange('items', items),
-                error: errors.items,
-                pickup: bookingData.pickup,
-                delivery: bookingData.delivery,
-                serviceType: bookingData.serviceType,
-              };
-
               switch (bookingData.serviceType) {
-                case 'furniture':
-                  return <StepItemSelectionFurniture {...itemProps} />;
-                case 'office':
-                  return <StepItemSelectionOffice {...itemProps} />;
-                case 'parcels':
-                  return <StepItemSelectionParcels {...itemProps} />;
-                case 'vehicle':
-                  return <StepItemSelectionVehicle {...itemProps} />;
-                case 'pallets':
-                  return <StepItemSelectionPallets {...itemProps} />;
-                case 'home':
-                default:
-                  return <StepItemSelection {...itemProps} />;
+                case 'furniture': return <StepItemSelectionFurniture {...itemProps} />;
+                case 'office': return <StepItemSelectionOffice    {...itemProps} />;
+                case 'parcels': return <StepItemSelectionParcels   {...itemProps} />;
+                case 'vehicle': return <StepItemSelectionVehicle   {...itemProps} />;
+                case 'pallets': return <StepItemSelectionPallets   {...itemProps} />;
+                default: return <StepItemSelection          {...itemProps} />;
               }
             })()}
             {step.id === 'datePrice' && (
@@ -291,54 +180,38 @@ export default function BookingWizard() {
                 data={bookingData}
                 onChange={handleChange}
                 errors={errors}
-                distance={distance}
+                distance={bookingData.distance}
                 volume={totalVolume}
+                pickupLat={bookingData.pickup.lat}
+                pickupLng={bookingData.pickup.lng}
+                deliveryLat={bookingData.delivery.lat}
+                deliveryLng={bookingData.delivery.lng}
               />
             )}
-            {step.id === 'services' && (
-              <StepAdditionalServices
-                data={bookingData}
-                onChange={handleChange}
-                errors={errors}
-                basePrice={Math.round(totalPrice * 0.7)}
-              />
-            )}
+            {step.id === 'services' && <StepAdditionalServices data={bookingData} onChange={handleChange} errors={errors} basePrice={Math.round(totalPrice * 0.7)} />}
             {step.id === 'confirm' && (
-              <StepConfirmDetails
-                data={bookingData}
-                onEdit={handleEdit}
-                onSubmit={handleSubmit}
-                errors={errors}
-                loading={loading}
-                totalPrice={totalPrice}
-              />
+              <StepConfirmDetails data={bookingData} onEdit={handleEdit} onSubmit={handleSubmit}
+                errors={errors} loading={loading} totalPrice={totalPrice}
+                pickupLat={bookingData.pickup.lat} pickupLng={bookingData.pickup.lng}
+                deliveryLat={bookingData.delivery.lat} deliveryLng={bookingData.delivery.lng}
+                distance={bookingData.distance} />
             )}
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation - smaller buttons */}
-        {!isConfirmStep && (
-          <div className="flex gap-4 justify-between items-center pb-4">
-            <button
-              onClick={handlePrev}
-              disabled={currentStep === 0}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm"
-            >
+        {!isConfirm && (
+          <div className="flex gap-4 justify-between items-center pb-6">
+            <button onClick={handlePrev} disabled={currentStep === 0}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition disabled:opacity-40 disabled:cursor-not-allowed font-semibold text-sm">
               <FiChevronLeft size={18} /> Back
             </button>
-
-            <div className="text-center text-xs text-gray-600">
-              Step {currentStep + 1} of {STEPS.length}
-            </div>
-
-            {currentStep < STEPS.length - 1 ? (
-              <button
-                onClick={handleNext}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#C0392B] text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm"
-              >
+            <span className="text-xs text-gray-400">Step {currentStep + 1} of {STEPS.length}</span>
+            {currentStep < STEPS.length - 1 && (
+              <button onClick={handleNext}
+                className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-bold text-sm shadow-sm">
                 Next <FiChevronRight size={18} />
               </button>
-            ) : null}
+            )}
           </div>
         )}
       </div>
