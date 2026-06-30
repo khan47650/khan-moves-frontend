@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiSearch, FiDownload, FiCopy, FiX } from 'react-icons/fi';
 import { dummyActiveJobs, dummyCompletedJobs } from '../adminDummyData';
+import { toast } from 'react-toastify';
 
 export default function Invoice() {
     const allJobs = [...dummyActiveJobs, ...dummyCompletedJobs];
@@ -56,8 +57,8 @@ export default function Invoice() {
                                     key={job.id}
                                     onClick={() => handleSelectJob(job)}
                                     className={`w-full text-left p-3 rounded-lg border-2 transition ${selectedJob?.id === job.id
-                                            ? 'border-[#C0392B] bg-red-50'
-                                            : 'border-gray-200 bg-white hover:bg-gray-50'
+                                        ? 'border-[#C0392B] bg-red-50'
+                                        : 'border-gray-200 bg-white hover:bg-gray-50'
                                         }`}
                                 >
                                     <p className="font-semibold text-[#1a1a1a]">{job.avNumber}</p>
@@ -124,7 +125,7 @@ export default function Invoice() {
                                 </button>
                                 <button
                                     onClick={() => {
-                                        alert('Invoice copied to clipboard!');
+                                        toast.success('Invoice copied to clipboard!');
                                     }}
                                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold"
                                 >

@@ -56,7 +56,7 @@ export default function SignIn() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="admin@khanmoves.co.uk"
+                            placeholder="Enter your Email"
                             required
                             className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-300 focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626] outline-none transition"
                         />

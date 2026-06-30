@@ -107,7 +107,6 @@ export default function JobsHistory() {
             <p className="text-gray-500 mb-8">View completed and deleted jobs.</p>
 
             {/* Filter Dropdown */}
-            {/* Filters */}
             <div className="mb-8 flex gap-6 items-end flex-wrap lg:flex-nowrap">
                 <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">Filter by Type</label>
@@ -191,7 +190,7 @@ export default function JobsHistory() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedJob(null)}
-                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                            className="fixed inset-0 bg-black/50 z-40"
                         />
 
                         {/* Side Panel */}
@@ -297,15 +296,15 @@ export default function JobsHistory() {
                                 </div>
 
                                 {/* Price Section */}
-                                <div className="bg-[#C0392B]/5 border border-[#C0392B]/20 rounded-lg p-4">
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <FiDollarSign className="text-[#C0392B]" size={18} />
+                                        <FiDollarSign className="text-green-600" size={18} />
                                         <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Price</h4>
                                     </div>
                                     <div className="flex items-baseline justify-between">
-                                        <span className="text-4xl font-bold text-[#C0392B]">£{selectedJob.finalPrice}</span>
+                                        <span className="text-4xl font-bold text-green-600">£{selectedJob.finalPrice}</span>
                                         {selectedJob.discount > 0 && (
-                                            <span className="text-sm text-green-600 font-semibold">-£{selectedJob.discount}</span>
+                                            <span className="text-sm text-green-700 font-semibold">-£{selectedJob.discount}</span>
                                         )}
                                     </div>
                                 </div>

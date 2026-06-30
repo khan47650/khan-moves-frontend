@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiMessageSquare, FiLink, FiFileText, FiCopy } from 'react-icons/fi';
 import { FaCalculator } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 export default function Tools() {
     const [calculatorBase, setCalculatorBase] = useState(100);
@@ -110,7 +111,7 @@ export default function Tools() {
                             <button
                                 onClick={() => {
                                     navigator.clipboard.writeText(msg.text);
-                                    alert('Message copied!');
+                                    toast.success('Message copied!');
                                 }}
                                 className="text-sm flex items-center gap-2 text-[#C0392B] font-semibold hover:text-red-800 transition"
                             >

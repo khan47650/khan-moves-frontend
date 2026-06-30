@@ -9,8 +9,11 @@ import JobsHistory from './sections/JobsHistory';
 import Invoice from './sections/Invoice';
 import Tools from './sections/Tools';
 import Drivers from './sections/Drivers';
+import Vehicles from './sections/Vehicles';
 import Earnings from './sections/Earnings';
 import Expenses from './sections/Expenses';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
@@ -35,6 +38,8 @@ export default function AdminDashboard() {
                 return <Tools />;
             case 'drivers':
                 return <Drivers />;
+            case 'vehicles':
+                return <Vehicles />;
             case 'earnings':
                 return <Earnings />;
             case 'expenses':
@@ -46,6 +51,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="h-screen bg-gray-50 flex flex-col">
+            <ToastContainer position="top-right" autoClose={3000} theme="colored" />
             <AdminHeader isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
             <div className="flex grow overflow-hidden">
                 <AdminSidebar activeSection={activeSection} setActiveSection={setActiveSection} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />

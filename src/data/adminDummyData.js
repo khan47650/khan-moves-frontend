@@ -152,6 +152,7 @@ export const dummyDrivers = [
     totalJobs: 156,
     earnings: '£4,680',
     currentJob: 'AV1701 (On-Way)',
+    licensePdfUrl: '/documents/licenses/ahmad-hassan-license.pdf',
     stats: { totalJobs: 156, earnings: 4680, rating: 4.9 }
   },
   {
@@ -164,8 +165,52 @@ export const dummyDrivers = [
     totalJobs: 142,
     earnings: '£4,260',
     currentJob: 'None',
+    licensePdfUrl: '/documents/licenses/ahmad-hassan-license.pdf', 
     stats: { totalJobs: 142, earnings: 4260, rating: 4.8 }
   }
+];
+
+export const dummyVehicles = [
+  {
+    id: 1,
+    regNumber: 'EK63LKY',
+    makeModel: 'MERCEDES-BENZ SPRINTER',
+    type: 'Goods Vehicle',
+    category: 'LWB up to 4m Transit Van',
+    loadingCapacity: '16m³',
+    payload: '1200kg',
+    maxLength: '4m',
+    motorbikesCapacity: '-',
+    tailLift: 'No',
+    fuelType: 'Diesel',
+    seats: 2,
+    useOfTrailer: 'No',
+    location: 'Golden Hillock',
+    motExpiry: '2026-06-18',
+    taxExpiry: '2027-01-01',
+    assignedDriver: 'Ahmad Hassan',
+    motImageUrl: '/documents/mot/EK63LKY-mot.jpg',
+  },
+  {
+    id: 2,
+    regNumber: 'GH14XYZ',
+    makeModel: 'FORD TRANSIT',
+    type: 'Goods Vehicle',
+    category: 'MWB up to 3.5m Transit Van',
+    loadingCapacity: '11m³',
+    payload: '900kg',
+    maxLength: '3.5m',
+    motorbikesCapacity: '-',
+    tailLift: 'No',
+    fuelType: 'Diesel',
+    seats: 2,
+    useOfTrailer: 'No',
+    location: 'Golden Hillock',
+    motExpiry: '2026-09-12',
+    taxExpiry: '2026-12-01',
+    assignedDriver: 'Hassan Khan',
+    motImageUrl: '/documents/mot/GH14XYZ-mot.jpg',
+  },
 ];
 
 export const dummyExpenses = [

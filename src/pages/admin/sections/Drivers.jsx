@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiUser, FiPhone, FiEdit, FiPlus } from 'react-icons/fi';
+import { FiUser, FiPhone, FiEdit, FiPlus, FiFileText, FiDownload } from 'react-icons/fi';
 import { dummyDrivers } from '../adminDummyData';
 
 export default function Drivers() {
@@ -24,8 +24,8 @@ export default function Drivers() {
                                 key={driver.id}
                                 onClick={() => setSelectedDriver(driver)}
                                 className={`w-full text-left p-3 rounded-lg border-2 transition ${selectedDriver?.id === driver.id
-                                        ? 'border-[#C0392B] bg-red-50'
-                                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                                    ? 'border-[#C0392B] bg-red-50'
+                                    : 'border-gray-200 bg-white hover:bg-gray-50'
                                     }`}
                             >
                                 <p className="font-semibold text-[#1a1a1a]">{driver.name}</p>
@@ -81,7 +81,20 @@ export default function Drivers() {
                                 <div className="space-y-4">
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Driving License</p>
-                                        <p className="text-gray-700 font-mono bg-gray-50 p-2 rounded-lg">{selectedDriver.licenseNumber}</p>
+                                        <div className="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-lg">
+                                            <p className="text-gray-700 font-mono">{selectedDriver.licenseNumber}</p>
+                                            {selectedDriver.licensePdfUrl && (
+
+                                                <a href={selectedDriver.licensePdfUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    download
+                                                    className="flex items-center gap-2 px-3 py-2 bg-[#C0392B] text-white rounded-lg hover:bg-red-800 transition text-sm font-semibold shrink-0"
+                                                >
+                                                    <FiFileText size={16} /> View / Download
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Joining Date</p>
@@ -105,6 +118,6 @@ export default function Drivers() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
