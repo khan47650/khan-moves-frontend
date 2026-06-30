@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiPhone, FiMail, FiUser, FiCheckCircle, FiMessageSquare, FiTruck } from 'react-icons/fi';
 
-// UK phone formatter: strips non-digits, formats as 07XXX XXXXXX
 function formatUKPhone(raw) {
   const digits = raw.replace(/\D/g, '').slice(0, 11);
   if (digits.length <= 5) return digits;
   return digits.slice(0, 5) + ' ' + digits.slice(5);
 }
 
-// Common email domain corrections
 const EMAIL_CORRECTIONS = {
   'gamil.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmial.com': 'gmail.com',
   'gmaill.com': 'gmail.com', 'gnail.com': 'gmail.com', 'gmail.co': 'gmail.com',
@@ -28,10 +26,9 @@ function correctEmail(email) {
 
 export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading }) {
   const [formData, setFormData] = useState({
-    name: '', phone: '', email: '', whatsapp: '',
-    specialInstructions: '', businessDelivery: false, vehicle: '',
+    name: '', phone: '', email: '', whatsapp: '', businessDelivery: false,
   });
-  const [errors, setErrors]               = useState({});
+  const [errors, setErrors] = useState({});
   const [emailSuggestion, setEmailSuggestion] = useState(null);
 
   useEffect(() => {
@@ -44,7 +41,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
     const e = {};
     if (!formData.name.trim()) e.name = 'Name is required';
     if (!formData.phone.trim()) e.phone = 'Phone is required';
-    const digits = formData.phone.replace(/\D/g,'');
+    const digits = formData.phone.replace(/\D/g, '');
     if (digits && digits.length < 10) e.phone = 'Enter a valid UK number';
     return e;
   };
@@ -65,7 +62,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     onConfirm(formData);
-    setFormData({ name:'', phone:'', email:'', whatsapp:'', specialInstructions:'', businessDelivery:false, vehicle:'' });
+    setFormData({ name: '', phone: '', email: '', whatsapp: '', businessDelivery: false });
     setErrors({});
     setEmailSuggestion(null);
   };
@@ -97,7 +94,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
                 type="text"
                 placeholder="Your full name"
                 value={formData.name}
-                onChange={e => { setFormData(p => ({...p, name: e.target.value})); if (errors.name) setErrors(p => ({...p, name:''})); }}
+                onChange={e => { setFormData(p => ({ ...p, name: e.target.value })); if (errors.name) setErrors(p => ({ ...p, name: '' })); }}
                 className={`w-full px-3.5 py-2.5 border rounded-lg text-sm outline-none transition ${errors.name ? 'border-red-400' : 'border-gray-200 focus:border-gray-400'}`}
               />
               {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
@@ -133,7 +130,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
               {emailSuggestion && (
                 <div className="mt-1.5 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5">
                   <span>Did you mean <strong>{emailSuggestion}</strong>?</span>
-                  <button onClick={() => { setFormData(p => ({...p, email: emailSuggestion})); setEmailSuggestion(null); }} className="ml-auto font-bold text-amber-800 underline">Use this</button>
+                  <button onClick={() => { setFormData(p => ({ ...p, email: emailSuggestion })); setEmailSuggestion(null); }} className="ml-auto font-bold text-amber-800 underline">Use this</button>
                 </div>
               )}
             </div>
@@ -152,38 +149,12 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
               />
             </div>
 
-            {/* Vehicle */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                <FiTruck size={15} /> Vehicle preference (optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Luton van, transit van…"
-                value={formData.vehicle}
-                onChange={e => setFormData(p => ({...p, vehicle: e.target.value}))}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-gray-400 transition"
-              />
-            </div>
-
-            {/* Special Instructions */}
-            <div>
-              <label className="text-sm font-semibold text-gray-700 mb-2 block">Special instructions (important)</label>
-              <textarea
-                placeholder="e.g. Parking available, narrow entrance, fragile items…"
-                value={formData.specialInstructions}
-                onChange={e => setFormData(p => ({...p, specialInstructions: e.target.value}))}
-                rows="3"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-gray-400 transition resize-none"
-              />
-            </div>
-
             {/* Business Delivery */}
             <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
               <input
                 type="checkbox"
                 checked={formData.businessDelivery}
-                onChange={e => setFormData(p => ({...p, businessDelivery: e.target.checked}))}
+                onChange={e => setFormData(p => ({ ...p, businessDelivery: e.target.checked }))}
                 className="w-4 h-4 shrink-0"
               />
               <div className="flex items-center gap-2 flex-1 min-w-0">
