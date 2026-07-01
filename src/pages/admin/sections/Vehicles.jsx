@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiTruck, FiDownload, FiPlus, FiAlertCircle } from 'react-icons/fi';
+import { FiTruck, FiDownload, FiPlus, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { dummyVehicles } from '../../../data/adminDummyData';
 
 export default function Vehicles() {
@@ -60,6 +60,47 @@ export default function Vehicles() {
                                 >
                                     <FiDownload size={16} /> Copy of MOT
                                 </button>
+                            </div>
+
+                            {/* Tax & MOT Cards */}
+                            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+                                {(() => {
+                                    const getDaysLeft = (dateStr) => {
+                                        const exp = new Date(dateStr);
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        return Math.ceil((exp - today) / (1000 * 60 * 60 * 24));
+                                    };
+                                    const taxDays = getDaysLeft(selectedVehicle.taxExpiry);
+                                    const motDays = getDaysLeft(selectedVehicle.motExpiry);
+                                    const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+                                    return (
+                                        <>
+                                            <div className={`p-4 rounded-lg border-2 flex items-center justify-between ${taxDays <= 30 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}`}>
+                                                <div>
+                                                    <p className={`text-xs uppercase font-bold mb-1 ${taxDays <= 30 ? 'text-red-600' : 'text-green-600'}`}>TAX</p>
+                                                    <p className={`text-sm font-semibold ${taxDays <= 30 ? 'text-red-800' : 'text-green-800'}`}>Expires: {formatDate(selectedVehicle.taxExpiry)}</p>
+                                                    <p className={`text-xs font-semibold mt-0.5 ${taxDays <= 30 ? 'text-red-500' : 'text-green-500'}`}>{taxDays} days left</p>
+                                                </div>
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center ${taxDays <= 30 ? 'bg-red-100' : 'bg-green-100'}`}>
+                                                    <FiCheckCircle className={taxDays <= 30 ? 'text-red-500' : 'text-green-500'} size={22} />
+                                                </div>
+                                            </div>
+
+                                            <div className={`p-4 rounded-lg border-2 flex items-center justify-between ${motDays <= 30 ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}`}>
+                                                <div>
+                                                    <p className={`text-xs uppercase font-bold mb-1 ${motDays <= 30 ? 'text-red-600' : 'text-green-600'}`}>MOT</p>
+                                                    <p className={`text-sm font-semibold ${motDays <= 30 ? 'text-red-800' : 'text-green-800'}`}>Expires: {formatDate(selectedVehicle.motExpiry)}</p>
+                                                    <p className={`text-xs font-semibold mt-0.5 ${motDays <= 30 ? 'text-red-500' : 'text-green-500'}`}>{motDays} days left</p>
+                                                </div>
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center ${motDays <= 30 ? 'bg-red-100' : 'bg-green-100'}`}>
+                                                    <FiCheckCircle className={motDays <= 30 ? 'text-red-500' : 'text-green-500'} size={22} />
+                                                </div>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             <div className="mb-8 pb-8 border-b border-gray-200">
