@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiTruck, FiDownload, FiPlus, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiTruck, FiDownload, FiPlus, FiAlertCircle } from 'react-icons/fi';
 import { dummyVehicles } from '../../../data/adminDummyData';
 
 export default function Vehicles() {
@@ -60,23 +60,6 @@ export default function Vehicles() {
                                 >
                                     <FiDownload size={16} /> Copy of MOT
                                 </button>
-                            </div>
-
-                            <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                                <div className="p-4 bg-green-50 rounded-lg border border-green-200 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-green-600 uppercase font-semibold mb-1">Tax Expires</p>
-                                        <p className="text-lg font-bold text-green-900">{selectedVehicle.taxExpiry}</p>
-                                    </div>
-                                    <FiCheckCircle className="text-green-600" size={24} />
-                                </div>
-                                <div className="p-4 bg-green-50 rounded-lg border border-green-200 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-green-600 uppercase font-semibold mb-1">MOT Expires</p>
-                                        <p className="text-lg font-bold text-green-900">{selectedVehicle.motExpiry}</p>
-                                    </div>
-                                    <FiCheckCircle className="text-green-600" size={24} />
-                                </div>
                             </div>
 
                             <div className="mb-8 pb-8 border-b border-gray-200">

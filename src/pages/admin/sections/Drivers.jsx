@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiUser, FiPhone, FiEdit, FiPlus, FiFileText, FiDownload } from 'react-icons/fi';
+import { FiUser, FiPhone, FiEdit, FiPlus, FiFileText } from 'react-icons/fi';
 import { dummyDrivers } from '../adminDummyData';
 
 export default function Drivers() {
@@ -38,14 +38,35 @@ export default function Drivers() {
                 <div className="lg:col-span-2">
                     {selectedDriver ? (
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
+                            {/* ── Header: name + Driver ID | View Licence + Edit buttons ── */}
                             <div className="flex items-start justify-between mb-6 pb-6 border-b border-gray-200">
                                 <div>
                                     <h2 className="text-2xl font-bold text-[#1a1a1a]">{selectedDriver.name}</h2>
                                     <p className="text-gray-500">Driver ID: #{selectedDriver.id}</p>
                                 </div>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold">
-                                    <FiEdit size={16} /> Edit
-                                </button>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {selectedDriver.id === 1 ? (
+                                        <button
+                                            disabled
+                                            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-400 rounded-lg font-semibold text-sm cursor-not-allowed"
+                                        >
+                                            <FiFileText size={16} /> No Licence
+                                        </button>
+                                    ) : (
+
+                                        <a href={selectedDriver.licensePdfUrl || '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            download
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#C0392B] text-white rounded-lg hover:bg-red-800 transition font-semibold text-sm"
+                                        >
+                                            <FiFileText size={16} /> View Licence
+                                        </a>
+                                    )}
+                                    <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold text-sm">
+                                        <FiEdit size={16} /> Edit
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="grid sm:grid-cols-3 gap-4 mb-8">
@@ -81,20 +102,7 @@ export default function Drivers() {
                                 <div className="space-y-4">
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Driving License</p>
-                                        <div className="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-lg">
-                                            <p className="text-gray-700 font-mono">{selectedDriver.licenseNumber}</p>
-                                            {selectedDriver.licensePdfUrl && (
-
-                                                <a href={selectedDriver.licensePdfUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    download
-                                                    className="flex items-center gap-2 px-3 py-2 bg-[#C0392B] text-white rounded-lg hover:bg-red-800 transition text-sm font-semibold shrink-0"
-                                                >
-                                                    <FiFileText size={16} /> View / Download
-                                                </a>
-                                            )}
-                                        </div>
+                                        <p className="text-gray-700 font-mono font-semibold">{selectedDriver.licenseNumber}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Joining Date</p>

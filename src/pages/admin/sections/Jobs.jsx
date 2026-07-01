@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiEdit, FiX, FiCheckCircle,
     FiMessageSquare, FiEye, FiTrash2, FiChevronDown, FiArrowRight,
-    FiPhone, FiMail, FiMapPin, FiClock, FiPackage, FiDollarSign
+    FiPhone, FiMail, FiMapPin, FiPackage, FiDollarSign, FiClock, FiLayers, FiCheck
 } from 'react-icons/fi';
 import { dummyActiveJobs, dummyOnWayJobs, dummyCompletedJobs } from '../../../data/adminDummyData';
 
@@ -16,19 +16,16 @@ export default function Jobs() {
     const [selectedDriver, setSelectedDriver] = useState('');
     const [selectedVehicle, setSelectedVehicle] = useState('');
 
-    // Dummy drivers and vehicles
     const availableDrivers = ['Ahmad Hassan', 'Hassan Khan', 'John Smith', 'Michael Brown'];
     const availableVehicles = ['Van A1', 'Van A2', 'Van B1', 'Van B2', 'Van C1'];
 
+    // ── Outer job card — Ref only (no customer name), locations + floor/lift/parking ──
     const JobCard = ({ job, tab }) => (
         <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition">
             <div className="flex items-start justify-between mb-4">
-                <div>
-                    <h3 className="text-lg font-bold text-[#1a1a1a]">{job.customerName}</h3>
-                    <p className="text-sm text-gray-500">
-                        Ref: <span className="font-semibold text-[#C0392B]">{job.avNumber}</span>
-                    </p>
-                </div>
+                <p className="text-sm text-gray-500">
+                    Ref: <span className="font-bold text-[#C0392B] text-base">{job.avNumber}</span>
+                </p>
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${tab === 'active' ? 'bg-blue-100 text-blue-800' :
                     tab === 'on-way' ? 'bg-orange-100 text-orange-800' :
                         'bg-green-100 text-green-800'
@@ -38,24 +35,56 @@ export default function Jobs() {
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
+                {/* Pickup */}
                 <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Pickup</p>
-                    <p className="text-sm text-gray-700">{job.pickupAddr}</p>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="w-2 h-2 rounded-full bg-[#C0392B] shrink-0" />
+                        <p className="text-xs text-gray-500 uppercase font-semibold">Pickup</p>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-1">{job.pickupAddr}</p>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                        {job.pickupFloor && (
+                            <span className="flex items-center gap-1"><FiLayers size={11} /> {job.pickupFloor}</span>
+                        )}
+                        {job.pickupLift !== undefined && (
+                            <span className="flex items-center gap-1">
+                                <FiCheck size={11} className={job.pickupLift ? 'text-green-600' : 'text-gray-300'} />
+                                Lift {job.pickupLift ? 'available' : 'unavailable'}
+                            </span>
+                        )}
+                        {job.pickupParking !== undefined && (
+                            <span className="flex items-center gap-1">
+                                <FiCheck size={11} className={job.pickupParking ? 'text-green-600' : 'text-gray-300'} />
+                                Parking {job.pickupParking ? 'available' : 'unavailable'}
+                            </span>
+                        )}
+                    </div>
                 </div>
+
+                {/* Delivery */}
                 <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Delivery</p>
-                    <p className="text-sm text-gray-700">{job.deliveryAddr}</p>
-                </div>
-                <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Driver</p>
-                    <p className="text-sm font-semibold text-gray-700">{job.driver}</p>
-                </div>
-                <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Price</p>
-                    <p className="text-lg font-bold">
-                        £{job.finalPrice}
-                        {job.discount > 0 && <span className="text-xs text-green-600 ml-2">-£{job.discount}</span>}
-                    </p>
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="w-2 h-2 rounded-full bg-green-600 shrink-0" />
+                        <p className="text-xs text-gray-500 uppercase font-semibold">Delivery</p>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-1">{job.deliveryAddr}</p>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+                        {job.deliveryFloor && (
+                            <span className="flex items-center gap-1"><FiLayers size={11} /> {job.deliveryFloor}</span>
+                        )}
+                        {job.deliveryLift !== undefined && (
+                            <span className="flex items-center gap-1">
+                                <FiCheck size={11} className={job.deliveryLift ? 'text-green-600' : 'text-gray-300'} />
+                                Lift {job.deliveryLift ? 'available' : 'unavailable'}
+                            </span>
+                        )}
+                        {job.deliveryParking !== undefined && (
+                            <span className="flex items-center gap-1">
+                                <FiCheck size={11} className={job.deliveryParking ? 'text-green-600' : 'text-gray-300'} />
+                                Parking {job.deliveryParking ? 'available' : 'unavailable'}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -194,28 +223,64 @@ export default function Jobs() {
                                     </div>
                                 </div>
 
-                                {/* Pickup Section */}
-                                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                {/* ── Pickup ── */}
+                                <div className="bg-white border border-gray-200 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <FiMapPin className="text-blue-600" size={18} />
-                                        <h4 className="text-sm font-semibold text-blue-900 uppercase tracking-wide">Pickup</h4>
+                                        <span className="w-2.5 h-2.5 rounded-full bg-[#C0392B] shrink-0" />
+                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Pickup</h4>
                                     </div>
-                                    <p className="text-sm text-blue-900 font-medium mb-2">{selectedJob.pickupAddr}</p>
-                                    <p className="text-xs text-blue-700 mb-2">📍 {selectedJob.pickupFloor}</p>
-                                    <div className="flex items-center gap-2 text-xs text-blue-700">
-                                        <FiClock size={14} />
-                                        <span>{selectedJob.date} · {selectedJob.time}</span>
+                                    <p className="text-sm text-gray-800 font-medium mb-2">{selectedJob.pickupAddr}</p>
+                                    <div className="space-y-1.5">
+                                        {selectedJob.pickupFloor && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                <FiLayers size={13} className="text-gray-400" /> {selectedJob.pickupFloor}
+                                            </p>
+                                        )}
+                                        {selectedJob.pickupLift !== undefined && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                <FiCheck size={13} className={selectedJob.pickupLift ? 'text-green-600' : 'text-gray-300'} />
+                                                Lift {selectedJob.pickupLift ? 'available' : 'unavailable'}
+                                            </p>
+                                        )}
+                                        {selectedJob.pickupParking !== undefined && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                <FiCheck size={13} className={selectedJob.pickupParking ? 'text-green-600' : 'text-gray-300'} />
+                                                Parking {selectedJob.pickupParking ? 'available' : 'unavailable'}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                            <FiClock size={13} className="text-gray-400" />
+                                            {selectedJob.date} · {selectedJob.time}
+                                        </p>
                                     </div>
                                 </div>
 
-                                {/* Delivery Section */}
-                                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                                {/* ── Delivery ── */}
+                                <div className="bg-white border border-gray-200 rounded-lg p-4">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <FiMapPin className="text-orange-600" size={18} />
-                                        <h4 className="text-sm font-semibold text-orange-900 uppercase tracking-wide">Delivery</h4>
+                                        <span className="w-2.5 h-2.5 rounded-full bg-green-600 shrink-0" />
+                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Delivery</h4>
                                     </div>
-                                    <p className="text-sm text-orange-900 font-medium mb-2">{selectedJob.deliveryAddr}</p>
-                                    <p className="text-xs text-orange-700">📍 {selectedJob.deliveryFloor}</p>
+                                    <p className="text-sm text-gray-800 font-medium mb-2">{selectedJob.deliveryAddr}</p>
+                                    <div className="space-y-1.5">
+                                        {selectedJob.deliveryFloor && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                <FiLayers size={13} className="text-gray-400" /> {selectedJob.deliveryFloor}
+                                            </p>
+                                        )}
+                                        {selectedJob.deliveryLift !== undefined && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                <FiCheck size={13} className={selectedJob.deliveryLift ? 'text-green-600' : 'text-gray-300'} />
+                                                Lift {selectedJob.deliveryLift ? 'available' : 'unavailable'}
+                                            </p>
+                                        )}
+                                        {selectedJob.deliveryParking !== undefined && (
+                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                <FiCheck size={13} className={selectedJob.deliveryParking ? 'text-green-600' : 'text-gray-300'} />
+                                                Parking {selectedJob.deliveryParking ? 'available' : 'unavailable'}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Items Section */}
