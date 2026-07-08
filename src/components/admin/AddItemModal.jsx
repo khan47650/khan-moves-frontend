@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiX, FiPlus } from 'react-icons/fi';
 
-export default function AddItemModal({ show, onClose, onAdd, serviceName, newItemName, setNewItemName, newItemPrice, setNewItemPrice, newItemVolume, setNewItemVolume, addError }) {
+export default function AddItemModal({ show, onClose, onAdd, serviceName, newItemName, setNewItemName, newItemVolume, setNewItemVolume, addError }) {
     if (!show) return null;
 
     return (
@@ -57,26 +57,6 @@ export default function AddItemModal({ show, onClose, onAdd, serviceName, newIte
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-semibold">m³</span>
                         </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                            Base Price (£)
-                        </label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">£</span>
-                            <input
-                                value={newItemPrice}
-                                onChange={e => setNewItemPrice(e.target.value)}
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                className="w-full border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B]/30 focus:border-[#C0392B] transition-all"
-                                onKeyDown={e => e.key === 'Enter' && onAdd()}
-                            />
-                        </div>
-
                     </div>
 
                     {addError && (

@@ -43,20 +43,6 @@ const INITIAL_ITEMS = {
     ],
 };
 
-// Tier pricing helper
-function getTierInfo(volume) {
-    if (volume <= 3.0) return { label: 'Tier 1', rate: 0.90, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' };
-    if (volume <= 7.0) return { label: 'Tier 2', rate: 1.10, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' };
-    if (volume <= 12.0) return { label: 'Tier 3', rate: 1.30, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' };
-    return { label: 'Tier 4', rate: 1.50, color: 'text-[#C0392B]', bg: 'bg-red-50', border: 'border-red-100' };
-}
-
-function calcTierPrice(volume) {
-    const units = Math.round(volume * 10); // units of 0.1 m³
-    const { rate } = getTierInfo(volume);
-    return parseFloat((units * rate).toFixed(2));
-}
-
 let nextId = 100;
 
 export default function Inventory() {
@@ -81,6 +67,11 @@ export default function Inventory() {
     // Delete state
     const [deleteId, setDeleteId] = useState(null);
 
+    // Bulk state
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [pausedIds, setPausedIds] = useState([]);
+    const [showBulkBar, setShowBulkBar] = useState(false);
+
     const currentItems = items[selectedService] || [];
     const currentService = SERVICES.find(s => s.id === selectedService);
 
@@ -90,21 +81,19 @@ export default function Inventory() {
         return currentItems.filter(it => it.name.toLowerCase().includes(q));
     }, [currentItems, searchQuery]);
 
-    // ── Add ──
+
     const handleAddItem = () => {
         setAddError('');
         const name = newItemName.trim();
-        const price = parseFloat(newItemPrice);
         const volume = parseFloat(newItemVolume);
         if (!name) { setAddError('Item name is required.'); return; }
         if (isNaN(volume) || volume <= 0) { setAddError('Enter a valid volume (m³).'); return; }
-        if (isNaN(price) || price < 0) { setAddError('Enter a valid base price.'); return; }
 
         setItems(prev => ({
             ...prev,
-            [selectedService]: [...prev[selectedService], { id: nextId++, name, volume, basePrice: price }]
+            [selectedService]: [...prev[selectedService], { id: nextId++, name, volume }]
         }));
-        setNewItemName(''); setNewItemPrice(''); setNewItemVolume('');
+        setNewItemName(''); setNewItemVolume('');
         setShowAddModal(false);
     };
 
@@ -112,19 +101,18 @@ export default function Inventory() {
     const startEdit = (item) => {
         setEditingId(item.id);
         setEditName(item.name);
-        setEditPrice(String(item.basePrice));
         setEditVolume(String(item.volume));
+        setSelectedIds([]);
     };
 
     const saveEdit = (id) => {
         const name = editName.trim();
-        const price = parseFloat(editPrice);
         const volume = parseFloat(editVolume);
-        if (!name || isNaN(price) || price < 0 || isNaN(volume) || volume <= 0) return;
+        if (!name || isNaN(volume) || volume <= 0) return;
         setItems(prev => ({
             ...prev,
             [selectedService]: prev[selectedService].map(it =>
-                it.id === id ? { ...it, name, basePrice: price, volume } : it
+                it.id === id ? { ...it, name, volume } : it
             )
         }));
         setEditingId(null);
@@ -142,9 +130,41 @@ export default function Inventory() {
     };
 
     const openAddModal = () => {
-        setAddError(''); setNewItemName(''); setNewItemPrice(''); setNewItemVolume('');
+        setAddError(''); setNewItemName(''); setNewItemVolume('');
         setShowAddModal(true);
     };
+
+    // ── Bulk helpers ──
+    const allFilteredIds = filteredItems.map(i => i.id);
+    const allSelected = allFilteredIds.length > 0 && allFilteredIds.every(id => selectedIds.includes(id));
+
+    const toggleSelectAll = () => {
+        if (allSelected) setSelectedIds([]);
+        else setSelectedIds(allFilteredIds);
+    };
+
+    const toggleSelectOne = (id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const bulkDelete = () => {
+        setItems(prev => ({
+            ...prev,
+            [selectedService]: prev[selectedService].filter(it => !selectedIds.includes(it.id))
+        }));
+        setSelectedIds([]);
+    };
+
+    const bulkPause = () => {
+        setPausedIds(prev => {
+            const allPaused = selectedIds.every(id => prev.includes(id));
+            if (allPaused) return prev.filter(id => !selectedIds.includes(id));
+            return [...new Set([...prev, ...selectedIds])];
+        });
+        setSelectedIds([]);
+    };
+
+    const clearSelection = () => setSelectedIds([]);
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -229,6 +249,32 @@ export default function Inventory() {
                     </button>
                 </div>
 
+                {/* Bulk Action Bar */}
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center justify-between px-6 py-3 bg-[#1a1a1a] text-white border-b border-gray-800">
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-semibold">{selectedIds.length} item{selectedIds.length > 1 ? 's' : ''} selected</span>
+                            <button onClick={clearSelection} className="text-xs text-gray-400 hover:text-white transition-colors underline underline-offset-2">
+                                Clear
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={bulkPause}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-[#F1C40F]/20 text-[#F1C40F] text-xs font-semibold transition-colors"
+                            >
+                                ⏸ {selectedIds.every(id => pausedIds.includes(id)) ? 'Resume' : 'Pause'}
+                            </button>
+                            <button
+                                onClick={bulkDelete}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C0392B]/80 hover:bg-[#C0392B] text-white text-xs font-semibold transition-colors"
+                            >
+                                🗑 Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Search Bar */}
                 <div className="px-6 py-3 border-b border-gray-100 bg-white">
                     <div className="relative">
@@ -250,12 +296,33 @@ export default function Inventory() {
                     </div>
                 </div>
 
-                {/* Column Headers */}
-                <div className="hidden md:grid grid-cols-[1fr_90px_110px_130px_100px] gap-3 px-6 py-3 bg-gray-50 border-b border-gray-100">
+                {/* Mobile Select All — only visible on mobile */}
+                {filteredItems.length > 0 && (
+                    <div className="md:hidden flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
+                        <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={toggleSelectAll}
+                            className="w-4 h-4 rounded border-gray-300 accent-[#C0392B] cursor-pointer"
+                        />
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                            {allSelected ? 'Deselect All' : 'Select All'}
+                        </span>
+                    </div>
+                )}
+
+                {/* Column Headers Desktop*/}
+                <div className="hidden md:grid grid-cols-[40px_1fr_120px_100px] gap-3 px-6 py-3 bg-gray-50 border-b border-gray-100">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={toggleSelectAll}
+                            className="w-4 h-4 rounded border-gray-300 accent-[#C0392B] cursor-pointer"
+                        />
+                    </span>
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Item Name</span>
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Volume</span>
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Tier</span>
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Base Price</span>
                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</span>
                 </div>
 
@@ -273,18 +340,24 @@ export default function Inventory() {
                 ) : (
                     <ul className="divide-y divide-gray-100">
                         {filteredItems.map((item, idx) => {
-                            const tier = getTierInfo(item.volume);
-                            const tierPrice = calcTierPrice(item.volume);
+                            const isSelected = selectedIds.includes(item.id);
+                            const isPaused = pausedIds.includes(item.id);
 
                             return (
                                 <li
                                     key={item.id}
-                                    className={`transition-colors ${editingId === item.id ? 'bg-amber-50/60' : 'hover:bg-gray-50/70'}`}
+                                    className={`transition-colors ${editingId === item.id
+                                        ? 'bg-amber-50/60'
+                                        : isSelected
+                                            ? 'bg-red-50/40'
+                                            : isPaused
+                                                ? 'bg-gray-100/80 opacity-60'
+                                                : 'hover:bg-gray-50/70'
+                                        }`}
                                 >
                                     {editingId === item.id ? (
                                         /* ── Edit Mode ── */
                                         <div className="px-4 py-4 flex flex-col gap-3">
-                                            {/* Row 1: Name */}
                                             <input
                                                 value={editName}
                                                 onChange={e => setEditName(e.target.value)}
@@ -292,8 +365,7 @@ export default function Inventory() {
                                                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#C0392B]/30 focus:border-[#C0392B]"
                                                 autoFocus
                                             />
-                                            {/* Row 2: Volume + Tier preview + Price */}
-                                            <div className="grid grid-cols-3 gap-2">
+                                            <div className="grid grid-cols-2 gap-2">
                                                 <div className="relative">
                                                     <input
                                                         value={editVolume}
@@ -306,71 +378,49 @@ export default function Inventory() {
                                                     />
                                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-semibold">m³</span>
                                                 </div>
-                                                <div className="flex items-center justify-center">
-                                                    {(() => {
-                                                        const ev = parseFloat(editVolume);
-                                                        if (isNaN(ev) || ev <= 0) return <span className="text-xs text-gray-300">—</span>;
-                                                        const et = getTierInfo(ev);
-                                                        return (
-                                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold border ${et.color} ${et.bg} ${et.border}`}>
-                                                                {et.label}
-                                                            </span>
-                                                        );
-                                                    })()}
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => saveEdit(item.id)}
+                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-colors"
+                                                    >
+                                                        <FiCheck size={14} /> Save
+                                                    </button>
+                                                    <button
+                                                        onClick={cancelEdit}
+                                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 text-sm font-semibold transition-colors"
+                                                    >
+                                                        <FiX size={14} /> Cancel
+                                                    </button>
                                                 </div>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">£</span>
-                                                    <input
-                                                        value={editPrice}
-                                                        onChange={e => setEditPrice(e.target.value)}
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="0.00"
-                                                        className="border border-gray-300 rounded-lg pl-7 pr-2 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-[#C0392B]/30 focus:border-[#C0392B]"
-                                                    />
-                                                </div>
-                                            </div>
-                                            {/* Row 3: Save / Cancel */}
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => saveEdit(item.id)}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-colors"
-                                                >
-                                                    <FiCheck size={14} /> Save
-                                                </button>
-                                                <button
-                                                    onClick={cancelEdit}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 text-sm font-semibold transition-colors"
-                                                >
-                                                    <FiX size={14} /> Cancel
-                                                </button>
                                             </div>
                                         </div>
                                     ) : (
                                         <>
-                                            {/* DESKTOP ROW — hidden on mobile */}
-                                            <div className="hidden sm:grid grid-cols-[1fr_90px_110px_130px_100px] gap-3 items-center px-6 py-4">
+                                            {/* DESKTOP ROW */}
+                                            <div className="hidden md:grid grid-cols-[40px_1fr_120px_100px] gap-3 items-center px-6 py-4">
+                                                {/* Checkbox */}
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleSelectOne(item.id)}
+                                                    className="w-4 h-4 rounded border-gray-300 accent-[#C0392B] cursor-pointer"
+                                                />
+                                                {/* Name */}
                                                 <div className="flex items-center gap-3 min-w-0">
                                                     <span className="text-xs text-gray-300 font-mono w-5 text-right shrink-0">{idx + 1}</span>
-                                                    <span className="text-sm font-medium text-gray-800 truncate">{item.name}</span>
+                                                    <span className={`text-sm font-medium truncate ${isPaused ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                                        {item.name}
+                                                    </span>
+                                                    {isPaused && (
+                                                        <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">PAUSED</span>
+                                                    )}
                                                 </div>
+                                                {/* Volume */}
                                                 <div className="flex items-center gap-1">
                                                     <span className="text-sm font-semibold text-gray-700">{item.volume}</span>
                                                     <span className="text-[10px] text-gray-400 font-medium">m³</span>
                                                 </div>
-                                                <div>
-                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${tier.color} ${tier.bg} ${tier.border}`}>
-                                                        {tier.label}
-                                                        <span className="opacity-70 font-normal">· £{tier.rate}/0.1m³</span>
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-0.5">
-                                                        <span className="text-xs text-gray-400 font-medium">£</span>
-                                                        <span className="text-sm font-bold text-gray-700">{tierPrice.toFixed(2)}</span>
-                                                    </div>
-                                                    <span className="text-[10px] text-gray-400">base: £{item.basePrice.toFixed(2)}</span>
-                                                </div>
+                                                {/* Actions */}
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         onClick={() => startEdit(item)}
@@ -389,43 +439,42 @@ export default function Inventory() {
                                                 </div>
                                             </div>
 
-                                            {/* MOBILE CARD — hidden on desktop */}
-                                            <div className="sm:hidden px-4 py-3">
-                                                {/* Top row: number + name + action buttons */}
+                                            {/* MOBILE CARD */}
+                                            <div className="md:hidden px-4 py-3">
                                                 <div className="flex items-start justify-between gap-2 mb-2">
                                                     <div className="flex items-center gap-2 min-w-0">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleSelectOne(item.id)}
+                                                            className="w-4 h-4 rounded border-gray-300 accent-[#C0392B] cursor-pointer shrink-0"
+                                                        />
                                                         <span className="text-xs text-gray-300 font-mono shrink-0">{idx + 1}</span>
-                                                        <span className="text-sm font-semibold text-gray-800 leading-tight">{item.name}</span>
+                                                        <span className={`text-sm font-semibold leading-tight ${isPaused ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                                                            {item.name}
+                                                        </span>
+                                                        {isPaused && (
+                                                            <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">PAUSED</span>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-1.5 shrink-0">
                                                         <button
                                                             onClick={() => startEdit(item)}
                                                             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#F1C40F] hover:bg-amber-50 transition-colors"
-                                                            title="Edit"
                                                         >
                                                             <FiEdit2 size={14} />
                                                         </button>
                                                         <button
                                                             onClick={() => setDeleteId(item.id)}
                                                             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-[#C0392B] hover:bg-red-50 transition-colors"
-                                                            title="Delete"
                                                         >
                                                             <FiTrash2 size={14} />
                                                         </button>
                                                     </div>
                                                 </div>
-                                                {/* Bottom row: volume + tier + price chips */}
-                                                <div className="flex items-center gap-2 flex-wrap">
+                                                <div className="flex items-center gap-2 pl-6">
                                                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600">
                                                         {item.volume} <span className="font-normal text-gray-400">m³</span>
-                                                    </span>
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold border ${tier.color} ${tier.bg} ${tier.border}`}>
-                                                        {tier.label} · £{tier.rate}/0.1m³
-                                                    </span>
-                                                    <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs">
-                                                        <span className="text-gray-400 text-[10px]">£</span>
-                                                        <span className="font-bold text-gray-700">{tierPrice.toFixed(2)}</span>
-                                                        <span className="text-gray-400 text-[10px] ml-1">base £{item.basePrice.toFixed(2)}</span>
                                                     </span>
                                                 </div>
                                             </div>
@@ -435,6 +484,7 @@ export default function Inventory() {
                             );
                         })}
                     </ul>
+
                 )}
             </div>
 
@@ -446,8 +496,6 @@ export default function Inventory() {
                 serviceName={currentService?.label}
                 newItemName={newItemName}
                 setNewItemName={setNewItemName}
-                newItemPrice={newItemPrice}
-                setNewItemPrice={setNewItemPrice}
                 newItemVolume={newItemVolume}
                 setNewItemVolume={setNewItemVolume}
                 addError={addError}
