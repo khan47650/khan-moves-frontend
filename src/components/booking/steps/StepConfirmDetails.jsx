@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, FiNavigation, FiCheck } from 'react-icons/fi';
+import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { toast } from 'react-toastify';
 import ConfirmationDialog from '../ConfirmationDialog';
 import ConfirmationScreen from '../ConfirmationScreen';
 
@@ -65,29 +66,51 @@ function ConfirmMap({ pickupLat, pickupLng, deliveryLat, deliveryLng, distance }
 }
 
 export default function StepConfirmDetails({
-    data, onEdit, onSubmit, errors, loading = false, totalPrice = 346,
-    pickupLat, pickupLng, deliveryLat, deliveryLng, distance = 0,
+    data, onEdit, onSubmit, errors, loading = false, totalPrice = 0,
+    totalVolume = 0, pickupLat, pickupLng, deliveryLat, deliveryLng, distance = 0,
 }) {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
+    const [bookingRef, setBookingRef] = useState('');
 
     const hasCoords = pickupLat && deliveryLat;
 
     const handleProceedClick = () => {
-        if (!termsAccepted) { alert('Please accept the terms & conditions'); return; }
+        if (!termsAccepted) {
+            toast.error('Please accept the terms & conditions');
+            return;
+        }
         setDialogOpen(true);
     };
-    const handleDialogConfirm = (formData) => {
-        setConfirmationData(formData); setShowConfirmation(true); setDialogOpen(false);
+
+    // ── Dialog confirm → call API → show confirmation screen ───────────────
+    const handleDialogConfirm = async (formData) => {
+        const result = await onSubmit(formData); // returns res.data or null
+        if (result) {
+            setConfirmationData(formData);
+            setBookingRef(result.bookingRef || result.data?.bookingRef || '');
+            setShowConfirmation(true);
+            setDialogOpen(false);
+        }
+        // if null, toast already shown in BookingWizard, dialog stays open
     };
 
     if (showConfirmation && confirmationData) {
         return (
-            <ConfirmationScreen data={data} confirmationData={confirmationData} totalPrice={totalPrice}
-                pickupLat={pickupLat} pickupLng={pickupLng} deliveryLat={deliveryLat} deliveryLng={deliveryLng}
-                distance={distance} onConfirmSubmit={() => onSubmit(confirmationData)} loading={loading} />
+            <ConfirmationScreen
+                data={data}
+                confirmationData={confirmationData}
+                totalPrice={totalPrice}
+                totalVolume={totalVolume}
+                bookingRef={bookingRef}
+                pickupLat={pickupLat}
+                pickupLng={pickupLng}
+                deliveryLat={deliveryLat}
+                deliveryLng={deliveryLng}
+                distance={distance}
+            />
         );
     }
 
@@ -102,7 +125,7 @@ export default function StepConfirmDetails({
                 <div className="bg-white rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                     <div className="flex gap-5 flex-col lg:flex-row">
 
-                        {/* ── LEFT: all info ── */}
+                        {/* ── LEFT ── */}
                         <div className="flex-1 min-w-0 space-y-4">
 
                             {/* Route */}
@@ -110,8 +133,7 @@ export default function StepConfirmDetails({
                                 <div className="flex items-center gap-2 mb-2">
                                     <FiMapPin size={14} className="text-gray-500" />
                                     <span className="text-sm font-bold text-[#1a1a1a]">Route</span>
-                                    <button onClick={() => onEdit('location')}
-                                        className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
+                                    <button onClick={() => onEdit('location')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
                                         <FiEdit2 size={12} /> Edit
                                     </button>
                                 </div>
@@ -141,13 +163,33 @@ export default function StepConfirmDetails({
                                 </div>
                             </div>
 
+                            {/* Items summary */}
+                            <div className="pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-sm font-bold text-[#1a1a1a]">Items</span>
+                                    <button onClick={() => onEdit('items')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
+                                        <FiEdit2 size={12} /> Edit
+                                    </button>
+                                </div>
+                                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                                    {data.items.length > 0 ? data.items.map((it, i) => (
+                                        <div key={i} className="flex items-center justify-between bg-[#F9F8F6] px-3 py-2 rounded-lg text-xs">
+                                            <span className="text-gray-700 font-medium truncate flex-1">{it.name}</span>
+                                            <span className="text-gray-500 font-bold shrink-0 ml-2">×{it.quantity}</span>
+                                        </div>
+                                    )) : (
+                                        <p className="text-xs text-gray-400">No items added.</p>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-400 mt-2">Total volume: <span className="font-semibold text-[#1a1a1a]">{totalVolume.toFixed(2)} m³</span></p>
+                            </div>
+
                             {/* Date & Time */}
                             <div className="pt-3 border-t border-gray-100">
                                 <div className="flex items-center gap-2 mb-2">
                                     <FiCalendar size={14} className="text-gray-500" />
                                     <span className="text-sm font-bold text-[#1a1a1a]">Date & time</span>
-                                    <button onClick={() => onEdit('datePrice')}
-                                        className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
+                                    <button onClick={() => onEdit('datePrice')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
                                         <FiEdit2 size={12} /> Edit
                                     </button>
                                 </div>
@@ -173,8 +215,7 @@ export default function StepConfirmDetails({
                                     <div className="flex items-center gap-2 mb-2">
                                         <FiTool size={14} className="text-gray-500" />
                                         <span className="text-sm font-bold text-[#1a1a1a]">Added services</span>
-                                        <button onClick={() => onEdit('services')}
-                                            className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
+                                        <button onClick={() => onEdit('services')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
                                             <FiEdit2 size={12} /> Edit
                                         </button>
                                     </div>
@@ -238,10 +279,13 @@ export default function StepConfirmDetails({
                             <div className="bg-white rounded-xl border-2 border-[#1a1a1a] p-4">
                                 <p className="text-xs text-gray-500 mb-1">Total to pay</p>
                                 <p className="text-3xl font-black text-[#1a1a1a] mb-3">£{totalPrice}</p>
-                                <button onClick={handleProceedClick} disabled={loading || !termsAccepted}
-                                    className={`w-full py-3 rounded-xl font-bold text-white text-sm transition flex items-center justify-center gap-2 ${termsAccepted && !loading ? 'bg-green-600 hover:bg-green-700 shadow-sm' : 'bg-gray-300 cursor-not-allowed'}`}>
+                                <button
+                                    onClick={handleProceedClick}
+                                    disabled={loading || !termsAccepted}
+                                    className={`w-full py-3 rounded-xl font-bold text-white text-sm transition flex items-center justify-center gap-2 ${termsAccepted && !loading ? 'bg-green-600 hover:bg-green-700 shadow-sm' : 'bg-gray-300 cursor-not-allowed'}`}
+                                >
                                     {loading
-                                        ? <><span className="animate-spin">⏳</span> Processing</>
+                                        ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing</>
                                         : <><FiCheckCircle size={16} /> Proceed & Book</>}
                                 </button>
                                 {!termsAccepted && <p className="text-[10px] text-gray-400 text-center mt-2">Accept terms to continue</p>}
@@ -251,8 +295,12 @@ export default function StepConfirmDetails({
                 </div>
             </div>
 
-            <ConfirmationDialog isOpen={dialogOpen} onClose={() => setDialogOpen(false)}
-                onConfirm={handleDialogConfirm} loading={loading} />
+            <ConfirmationDialog
+                isOpen={dialogOpen}
+                onClose={() => !loading && setDialogOpen(false)}
+                onConfirm={handleDialogConfirm}
+                loading={loading}
+            />
         </div>
     );
 }

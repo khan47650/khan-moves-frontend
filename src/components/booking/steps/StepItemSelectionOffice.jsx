@@ -1,147 +1,68 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { FiSearch, FiPlus, FiMinus, FiX, FiChevronDown, FiMonitor, FiPrinter, FiBox, FiFile } from 'react-icons/fi';
-import { FaChair } from 'react-icons/fa';
-import { MdDesk } from 'react-icons/md';
-import { BsBoxSeam } from 'react-icons/bs';
-import MapComponent from '../MapComponent';
+import React, { useState, useEffect } from 'react';
+import { FiSearch, FiPlus, FiMinus, FiX } from 'react-icons/fi';
+import api from '../../../api/api';
 
-const OFFICE_INVENTORY = {
-    Furniture: {
-        icon: MdDesk, items: [
-            { name: 'Office Desk', volume: 500 },
-            { name: 'Pedestal Desk', volume: 600 },
-            { name: 'Conference Table', volume: 1200 },
-            { name: 'Reception Counter', volume: 800 },
-            { name: 'Office Chair', volume: 300 },
-            { name: 'Executive Chair', volume: 450 },
-            { name: 'Visitor Chair', volume: 200 },
-        ]
-    },
-    Storage: {
-        icon: FiBox, items: [
-            { name: 'Filing Cabinet (2 Drawer)', volume: 400 },
-            { name: 'Filing Cabinet (4 Drawer)', volume: 700 },
-            { name: 'Bookshelf', volume: 500 },
-            { name: 'Cupboard / Locker', volume: 600 },
-            { name: 'Safe', volume: 300 },
-        ]
-    },
-    'Office Equipment': {
-        icon: FiMonitor, items: [
-            { name: 'Desktop Computer', volume: 150 },
-            { name: 'Monitor', volume: 100 },
-            { name: 'Printer (Small)', volume: 150 },
-            { name: 'Printer (Large/Copier)', volume: 600 },
-            { name: 'Server Rack', volume: 800 },
-            { name: 'Projector', volume: 100 },
-            { name: 'Shredder', volume: 200 },
-        ]
-    },
-    Kitchen: {
-        icon: FiPrinter, items: [
-            { name: 'Mini Fridge', volume: 200 },
-            { name: 'Coffee Machine', volume: 100 },
-            { name: 'Microwave', volume: 100 },
-            { name: 'Water Cooler', volume: 250 },
-        ]
-    },
-    'Boxes & Bags': {
-        icon: BsBoxSeam, items: [
-            { name: 'Small Box', volume: 50 },
-            { name: 'Medium Box', volume: 100 },
-            { name: 'Large Box', volume: 200 },
-            { name: 'Document Box', volume: 80 },
-        ]
-    },
-    Documents: {
-        icon: FiFile, items: [
-            { name: 'Archive Box', volume: 80 },
-            { name: 'Loose Files', volume: 50 },
-        ]
-    },
-};
-
-// Same CategoryDropdown component as Furniture
-function CategoryDropdown({ name, data, items, onAdd, onRemove }) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
-    useEffect(() => {
-        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-    const Icon = data.icon;
-    const getCount = (n) => items.find(i => i.name === n)?.quantity || 0;
-    const total = data.items.reduce((s, it) => s + getCount(it.name), 0);
-
+function ItemLoader() {
     return (
-        <div className="relative" ref={ref}>
-            <button type="button" onClick={() => setOpen(o => !o)}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border bg-white text-left transition ${open || total > 0 ? 'border-[#1a1a1a]' : 'border-gray-200 hover:border-gray-400'}`}>
-                <Icon size={18} className="text-gray-600 shrink-0" />
-                <span className="flex-1 text-sm font-medium text-[#1a1a1a] truncate">{name}</span>
-                {total > 0 && <span className="text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center bg-[#1a1a1a] text-white">{total}</span>}
-                <FiChevronDown size={16} className={`text-gray-500 transition ${open ? 'rotate-180' : ''}`} />
-            </button>
-            {open && (
-                <ul className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {data.items.map((it) => {
-                        const count = getCount(it.name);
-                        return (
-                            <li
-                                key={it.name}
-                                onClick={() => onAdd(it)}
-                                className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-0 cursor-pointer"
-                            >
-                                <span className="text-sm text-[#1a1a1a]">{it.name}</span>
-                                {count === 0 ? (
-                                    <button onClick={(e) => {
-                                        e.stopPropagation();
-                                        onAdd(it);
-                                    }} className="text-xs font-bold text-[#1a1a1a] hover:underline">+ add</button>
-                                ) : (
-                                    <div className="flex items-center gap-1.5">
-                                        <button onClick={(e) => {
-                                            e.stopPropagation();
-                                            onRemove(it.name);
-                                        }} className="w-5 h-5 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiMinus size={10} /></button>
-                                        <span className="text-xs font-semibold w-5 text-center">{count}</span>
-                                        <button onClick={() => onAdd(it)} className="w-5 h-5 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiPlus size={10} /></button>
-                                    </div>
-                                )}
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
+        <div className="flex flex-col items-center justify-center py-10">
+            <div className="relative w-10 h-10 mb-3">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#1a1a1a] animate-spin" />
+            </div>
+            <p className="text-sm text-gray-400">Loading items...</p>
         </div>
     );
 }
 
-export default function StepItemSelectionOffice({ items, onChange, error, pickup, delivery }) {
+export default function StepItemSelectionOffice({ items, onChange, error, pickup, delivery, serviceType }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [showCustomModal, setShowCustomModal] = useState(false);
     const [customName, setCustomName] = useState('');
+    const [apiItems, setApiItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(true);
+
+    useEffect(() => {
+        const fetchItems = async () => {
+            setLoadingItems(true);
+            try {
+                const res = await api.get('/inventory/services');
+                const services = res.data?.data || [];
+                const matched = services.find(s => s.slug === serviceType);
+                if (matched) {
+                    setApiItems((matched.items || []).filter(it => !it.isPaused));
+                }
+            } catch (err) {
+                // silent
+            } finally {
+                setLoadingItems(false);
+            }
+        };
+        fetchItems();
+    }, [serviceType]);
 
     const handleAdd = (it) => {
         const ex = items.find(i => i.name === it.name);
         if (ex) onChange(items.map(i => i.name === it.name ? { ...i, quantity: i.quantity + 1 } : i));
-        else onChange([...items, { ...it, quantity: 1 }]);
+        else onChange([...items, { name: it.name, volume: it.volume, quantity: 1 }]);
     };
+
     const handleRemove = (name) => {
         const ex = items.find(i => i.name === name);
         if (ex && ex.quantity > 1) onChange(items.map(i => i.name === name ? { ...i, quantity: i.quantity - 1 } : i));
         else onChange(items.filter(i => i.name !== name));
     };
+
     const handleAddCustom = () => {
         if (!customName.trim()) return;
         handleAdd({ name: customName.trim(), volume: 100, custom: true });
-        setCustomName(''); setShowCustomModal(false);
+        setCustomName('');
+        setShowCustomModal(false);
     };
 
     const searchResults = searchQuery
-        ? Object.values(OFFICE_INVENTORY).flatMap(c => c.items).filter(it => it.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        ? apiItems.filter(it => it.name.toLowerCase().includes(searchQuery.toLowerCase()))
         : [];
+
     const totalItems = items.reduce((s, i) => s + i.quantity, 0);
 
     return (
@@ -161,13 +82,16 @@ export default function StepItemSelectionOffice({ items, onChange, error, pickup
                                 className="w-full pl-10 pr-3.5 py-2.5 border border-gray-200 rounded-lg text-sm outline-none placeholder:text-gray-400 focus:border-gray-400 transition" />
                         </div>
 
-                        {searchQuery ? (
+                        {loadingItems ? <ItemLoader /> : searchQuery ? (
                             <div className="max-h-75 overflow-y-auto">
                                 {searchResults.length > 0 ? searchResults.map((it, idx) => {
                                     const count = items.find(i => i.name === it.name)?.quantity || 0;
                                     return (
-                                        <div key={idx} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
-                                            <p className="text-sm font-medium text-[#1a1a1a]">{it.name}</p>
+                                        <div key={it._id || idx} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+                                            <div className="flex-1 pr-3">
+                                                <p className="text-sm font-medium text-[#1a1a1a]">{it.name}</p>
+                                                <p className="text-xs text-gray-400">{it.volume} m³</p>
+                                            </div>
                                             {count === 0 ? (
                                                 <button onClick={() => handleAdd(it)} className="w-8 h-8 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiPlus size={16} /></button>
                                             ) : (
@@ -188,16 +112,32 @@ export default function StepItemSelectionOffice({ items, onChange, error, pickup
                             </div>
                         ) : (
                             <>
-                                <p className="text-xs text-gray-500 mb-2">Or quickly add from our list of office items below:</p>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
-                                    {Object.entries(OFFICE_INVENTORY).map(([name, data]) => (
-                                        <CategoryDropdown key={name} name={name} data={data} items={items} onAdd={handleAdd} onRemove={handleRemove} />
-                                    ))}
-                                    <button onClick={() => setShowCustomModal(true)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-gray-300 hover:border-[#1a1a1a] bg-white text-left transition">
-                                        <FiPlus size={18} className="text-gray-600" />
-                                        <span className="text-sm font-medium text-[#1a1a1a]">Add your own item</span>
-                                    </button>
+                                <div className="max-h-75 overflow-y-auto">
+                                    {apiItems.map((it, idx) => {
+                                        const count = items.find(i => i.name === it.name)?.quantity || 0;
+                                        return (
+                                            <div key={it._id || idx} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+                                                <div className="flex-1 pr-3">
+                                                    <p className="text-sm font-medium text-[#1a1a1a]">{it.name}</p>
+                                                    <p className="text-xs text-gray-400">{it.volume} m³</p>
+                                                </div>
+                                                {count === 0 ? (
+                                                    <button onClick={() => handleAdd(it)} className="w-8 h-8 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiPlus size={16} /></button>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button onClick={() => handleRemove(it.name)} className="w-7 h-7 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiMinus size={14} /></button>
+                                                        <span className="w-7 text-center text-sm font-semibold">{count}</span>
+                                                        <button onClick={() => handleAdd(it)} className="w-7 h-7 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-600 transition flex items-center justify-center"><FiPlus size={14} /></button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
+                                <button onClick={() => setShowCustomModal(true)} className="mt-3 w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-gray-300 hover:border-[#1a1a1a] bg-white text-left transition">
+                                    <FiPlus size={18} className="text-gray-600" />
+                                    <span className="text-sm font-medium text-[#1a1a1a]">Add your own item</span>
+                                </button>
                             </>
                         )}
                         <p className="text-xs text-gray-500 mt-4 text-center">Don't worry — you can edit your list any time before booking.</p>
@@ -205,15 +145,9 @@ export default function StepItemSelectionOffice({ items, onChange, error, pickup
                 </div>
 
                 <div className="lg:col-span-1">
-                    <div
-                        className="sticky top-20 bg-white rounded-2xl p-4 md:p-5 h-full"
-                        style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
-                    >
+                    <div className="sticky top-20 bg-white rounded-2xl p-4 md:p-5 h-full" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
                         <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-base font-bold text-[#1a1a1a]">
-                                Your move summary
-                            </h4>
-
+                            <h4 className="text-base font-bold text-[#1a1a1a]">Your move summary</h4>
                             {totalItems > 0 && (
                                 <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                                     {totalItems} item{totalItems !== 1 ? 's' : ''}
@@ -224,51 +158,20 @@ export default function StepItemSelectionOffice({ items, onChange, error, pickup
                         {items.length > 0 ? (
                             <div className="space-y-1.5 max-h-105 overflow-y-auto pr-1">
                                 {items.map((it) => (
-                                    <div
-                                        key={it.name}
-                                        className="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0"
-                                    >
-                                        <span className="text-sm text-gray-700 flex-1 truncate">
-                                            {it.name}
-                                        </span>
-
+                                    <div key={it.name} className="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0">
+                                        <span className="text-sm text-gray-700 flex-1 truncate">{it.name}</span>
                                         <div className="flex items-center gap-1 shrink-0">
-                                            <button
-                                                onClick={() => handleRemove(it.name)}
-                                                className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"
-                                            >
-                                                <FiMinus size={10} />
-                                            </button>
-
-                                            <span className="w-5 text-center text-xs font-bold text-[#1a1a1a]">
-                                                {it.quantity}
-                                            </span>
-
-                                            <button
-                                                onClick={() => handleAdd(it)}
-                                                className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"
-                                            >
-                                                <FiPlus size={10} />
-                                            </button>
-
-                                            <button
-                                                onClick={() =>
-                                                    onChange(items.filter(i => i.name !== it.name))
-                                                }
-                                                className="ml-1 text-gray-300 hover:text-red-500 transition"
-                                            >
-                                                <FiX size={12} />
-                                            </button>
+                                            <button onClick={() => handleRemove(it.name)} className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiMinus size={10} /></button>
+                                            <span className="w-5 text-center text-xs font-bold text-[#1a1a1a]">{it.quantity}</span>
+                                            <button onClick={() => handleAdd(it)} className="w-5 h-5 rounded-full border border-gray-300 hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center"><FiPlus size={10} /></button>
+                                            <button onClick={() => onChange(items.filter(i => i.name !== it.name))} className="ml-1 text-gray-300 hover:text-red-500 transition"><FiX size={12} /></button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
                             <div className="flex items-center justify-center h-56">
-                                <p className="text-gray-400 text-sm text-center">
-                                    Nothing here yet.<br />
-                                    Add items to see them listed.
-                                </p>
+                                <p className="text-gray-400 text-sm text-center">Nothing here yet.<br />Add items to see them listed.</p>
                             </div>
                         )}
                     </div>

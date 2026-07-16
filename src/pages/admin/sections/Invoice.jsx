@@ -1,147 +1,481 @@
-import React, { useState } from 'react';
-import { FiSearch, FiDownload, FiCopy, FiX } from 'react-icons/fi';
-import { dummyActiveJobs, dummyCompletedJobs } from '../adminDummyData';
-import { toast } from 'react-toastify';
+import React, { useEffect, useRef, useState } from "react";
+import { FiDownload, FiPackage, FiSearch, FiX } from "react-icons/fi";
+import { toast } from "react-toastify";
+import api from "../../../api/api";
+import InvoicePreview from "../../../components/admin/InvoicePreview";
+
+
+const STATUS_STYLES = {
+    pending: "bg-yellow-100 text-yellow-700",
+    confirmed: "bg-blue-100 text-blue-700",
+    in_progress: "bg-purple-100 text-purple-700",
+    completed: "bg-green-100 text-green-700",
+    cancelled: "bg-red-100 text-red-700"
+};
+
+const SectionLoader = () => {
+    return (
+        <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative w-12 h-12 mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#C0392B] animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-[#C0392B]/20 animate-pulse" />
+                </div>
+            </div>
+            <p className="text-sm font-semibold text-gray-400">
+                Loading invoices...
+            </p>
+        </div>
+    );
+};
+
+const formatServiceName = (value = "") => {
+    return value
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
 
 export default function Invoice() {
-    const allJobs = [...dummyActiveJobs, ...dummyCompletedJobs];
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedJob, setSelectedJob] = useState(null);
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [downloading, setDownloading] = useState(false);
     const [invoiceData, setInvoiceData] = useState({
-        notes: '',
+        notes: "",
         discount: 0,
-        tax: 0,
+        tax: 0
     });
 
-    const filteredJobs = allJobs.filter(job =>
-        job.avNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.customerName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const invoiceRef = useRef(null);
 
-    const handleSelectJob = (job) => {
-        setSelectedJob(job);
+    useEffect(() => {
+        fetchBookings();
+    }, []);
+
+    const fetchBookings = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get("/bookings/invoices");
+            setBookings(response.data?.data || []);
+        } catch (err) {
+            console.error("Fetch invoice bookings error:", err);
+            toast.error(
+                err.response?.data?.message || "Failed to load bookings"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSelectBooking = (booking) => {
+        setSelectedBooking(booking);
         setInvoiceData({
-            notes: '',
-            discount: job.discount || 0,
-            tax: 0,
+            notes: "",
+            discount: 0,
+            tax: 0
         });
+    };
+
+    const filteredBookings = bookings.filter((booking) => {
+        const search = searchTerm.trim().toLowerCase();
+
+        if (!search) return true;
+
+        return (
+            booking.bookingRef?.toLowerCase().includes(search) ||
+            booking.customer?.name?.toLowerCase().includes(search) ||
+            booking.customer?.phone?.toLowerCase().includes(search) ||
+            booking.customer?.email?.toLowerCase().includes(search) ||
+            booking.serviceType?.toLowerCase().includes(search)
+        );
+    });
+
+    const basePrice = Number(selectedBooking?.totalPrice || 0);
+    const discount = Number(invoiceData.discount || 0);
+    const tax = Number(invoiceData.tax || 0);
+    const finalTotal = Math.max(0, basePrice - discount + tax);
+
+    const handleDownload = async () => {
+        if (!selectedBooking) {
+            toast.error("Please select a booking");
+            return;
+        }
+
+        if (!invoiceRef.current) {
+            toast.error("Invoice preview is not ready");
+            return;
+        }
+
+        try {
+            setDownloading(true);
+
+            const response = await api.patch(
+                `/bookings/${selectedBooking._id}/price`,
+                {
+                    finalPrice: finalTotal,
+                    discount,
+                    tax
+                }
+            );
+
+            const updatedBooking = response.data?.data || {
+                ...selectedBooking,
+                totalPrice: finalTotal
+            };
+
+            setSelectedBooking(updatedBooking);
+
+            setBookings((currentBookings) =>
+                currentBookings.map((booking) =>
+                    booking._id === updatedBooking._id
+                        ? updatedBooking
+                        : booking
+                )
+            );
+
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            const invoiceElement = invoiceRef.current;
+            const printWindow = window.open(
+                "",
+                "_blank",
+                "width=900,height=800"
+            );
+
+            if (!printWindow) {
+                toast.error("Please allow popups to download invoice");
+                return;
+            }
+
+            const invoiceHTML = invoiceElement.outerHTML;
+
+            printWindow.document.open();
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8" />
+                        <title>Invoice ${updatedBooking.bookingRef}</title>
+                        <style>
+                            * {
+                                box-sizing: border-box;
+                            }
+
+                            html,
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                background: #ffffff;
+                                font-family: Arial, sans-serif;
+                            }
+
+                            body {
+                                display: flex;
+                                justify-content: center;
+                            }
+
+                            img {
+                                max-width: 100%;
+                            }
+
+                            @page {
+                                size: A4;
+                                margin: 0;
+                            }
+
+                            @media print {
+                                html,
+                                body {
+                                    width: 210mm;
+                                    min-height: 297mm;
+                                    -webkit-print-color-adjust: exact;
+                                    print-color-adjust: exact;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${invoiceHTML}
+                        <script>
+                            window.onload = function () {
+                                setTimeout(function () {
+                                    window.print();
+                                }, 300);
+                            };
+
+                            window.onafterprint = function () {
+                                window.close();
+                            };
+                        <\/script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+            toast.success("Invoice ready. Select Save as PDF.");
+        } catch (err) {
+            console.error("Generate invoice error:", err);
+            toast.error(
+                err.response?.data?.message || "Failed to generate invoice"
+            );
+        } finally {
+            setDownloading(false);
+        }
     };
 
     return (
         <div>
-            <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Generate Invoice</h1>
-            <p className="text-gray-500 mb-8">Search for a job and generate an invoice.</p>
+            <h1 className="mb-2 text-3xl font-bold text-[#1a1a1a]">
+                Generate Invoice
+            </h1>
 
-            <div className="grid lg:grid-cols-2 gap-8">
-                <div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                        <label className="block text-sm font-semibold text-[#1a1a1a] mb-3">Search Job</label>
+            <p className="mb-6 text-gray-500">
+                Search a booking and generate a professional invoice PDF.
+            </p>
+
+            <div className="grid gap-6 lg:grid-cols-5">
+                <div className="lg:col-span-2">
+                    <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4">
                         <div className="relative">
-                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <FiSearch
+                                size={16}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                            />
+
                             <input
                                 type="text"
-                                placeholder="Search by AV number or customer name..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#C0392B] outline-none transition"
+                                placeholder="Search by ref, name, phone or service..."
+                                onChange={(event) =>
+                                    setSearchTerm(event.target.value)
+                                }
+                                className="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-[#C0392B]"
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {filteredJobs.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">No jobs found</div>
+                    <div className="max-h-130 space-y-2 overflow-y-auto pr-1">
+                        {loading ? (
+                            <SectionLoader />
+                        ) : filteredBookings.length === 0 ? (
+                            <div className="py-10 text-center text-sm text-gray-400">
+                                No invoice bookings found
+                            </div>
                         ) : (
-                            filteredJobs.map(job => (
+                            filteredBookings.map((booking) => (
                                 <button
-                                    key={job.id}
-                                    onClick={() => handleSelectJob(job)}
-                                    className={`w-full text-left p-3 rounded-lg border-2 transition ${selectedJob?.id === job.id
-                                        ? 'border-[#C0392B] bg-red-50'
-                                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                                    key={booking._id}
+                                    type="button"
+                                    onClick={() =>
+                                        handleSelectBooking(booking)
+                                    }
+                                    className={`w-full rounded-xl border-2 p-3.5 text-left transition ${selectedBooking?._id === booking._id
+                                        ? "border-[#C0392B] bg-red-50"
+                                        : "border-gray-200 bg-white hover:bg-gray-50"
                                         }`}
                                 >
-                                    <p className="font-semibold text-[#1a1a1a]">{job.avNumber}</p>
-                                    <p className="text-sm text-gray-600">{job.customerName}</p>
-                                    <p className="text-xs text-gray-500">£{job.finalPrice}</p>
+                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                        <span className="font-mono text-sm font-bold text-[#1a1a1a]">
+                                            {booking.bookingRef}
+                                        </span>
+
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLES[
+                                                booking.status
+                                            ] ||
+                                                "bg-gray-100 text-gray-600"
+                                                }`}
+                                        >
+                                            {booking.status
+                                                ?.replace(/_/g, " ")
+                                                .toUpperCase()}
+                                        </span>
+                                    </div>
+
+                                    <p className="text-sm font-medium text-gray-700">
+                                        {booking.customer?.name || "—"}
+                                    </p>
+
+                                    <div className="mt-1 flex items-center justify-between gap-3">
+                                        <p className="truncate text-xs text-gray-500">
+                                            {formatServiceName(
+                                                booking.serviceType
+                                            )}
+                                        </p>
+
+                                        <p className="shrink-0 text-sm font-bold text-[#C0392B]">
+                                            £
+                                            {Number(
+                                                booking.totalPrice || 0
+                                            ).toFixed(2)}
+                                        </p>
+                                    </div>
                                 </button>
                             ))
                         )}
                     </div>
                 </div>
 
-                <div>
-                    {selectedJob ? (
+                <div className="min-w-0 lg:col-span-3">
+                    {selectedBooking ? (
                         <>
-                            <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-                                <div className="mb-4">
-                                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">Base Price</label>
-                                    <p className="text-2xl font-bold text-[#C0392B]">£{selectedJob.basePrice.toFixed(2)}</p>
+                            <div className="mb-4 rounded-xl border border-gray-200 bg-white p-5">
+                                <div className="mb-4 flex items-center justify-between">
+                                    <h3 className="font-bold text-[#1a1a1a]">
+                                        Invoice Settings
+                                    </h3>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setSelectedBooking(null)
+                                        }
+                                        className="rounded-lg p-1.5 transition hover:bg-gray-100"
+                                    >
+                                        <FiX
+                                            size={18}
+                                            className="text-gray-500"
+                                        />
+                                    </button>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div>
-                                        <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">Discount (£)</label>
+                                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                            Base Price (£)
+                                        </label>
+
+                                        <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-bold text-[#C0392B]">
+                                            £{basePrice.toFixed(2)}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                            Discount (£)
+                                        </label>
+
                                         <input
                                             type="number"
+                                            min="0"
+                                            step="0.01"
                                             value={invoiceData.discount}
-                                            onChange={(e) => setInvoiceData({ ...invoiceData, discount: parseFloat(e.target.value) })}
-                                            className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-[#C0392B] outline-none"
+                                            onChange={(event) =>
+                                                setInvoiceData((current) => ({
+                                                    ...current,
+                                                    discount:
+                                                        Number(
+                                                            event.target.value
+                                                        ) || 0
+                                                }))
+                                            }
+                                            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
                                         />
                                     </div>
+
                                     <div>
-                                        <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">Tax (£)</label>
+                                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                            Tax / VAT (£)
+                                        </label>
+
                                         <input
                                             type="number"
+                                            min="0"
+                                            step="0.01"
                                             value={invoiceData.tax}
-                                            onChange={(e) => setInvoiceData({ ...invoiceData, tax: parseFloat(e.target.value) })}
-                                            className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-[#C0392B] outline-none"
+                                            onChange={(event) =>
+                                                setInvoiceData((current) => ({
+                                                    ...current,
+                                                    tax:
+                                                        Number(
+                                                            event.target.value
+                                                        ) || 0
+                                                }))
+                                            }
+                                            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-xs text-gray-600 uppercase font-semibold mb-1">Total</p>
-                                    <p className="text-3xl font-bold text-[#C0392B]">
-                                        £{(selectedJob.basePrice - invoiceData.discount + invoiceData.tax).toFixed(2)}
-                                    </p>
+                                <div className="mb-4">
+                                    <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                        Message / Notes
+                                    </label>
+
+                                    <textarea
+                                        rows={3}
+                                        value={invoiceData.notes}
+                                        placeholder="Payment or invoice notes..."
+                                        onChange={(event) =>
+                                            setInvoiceData((current) => ({
+                                                ...current,
+                                                notes: event.target.value
+                                            }))
+                                        }
+                                        className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
+                                    />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-semibold text-[#1a1a1a] mb-2">Additional Notes</label>
-                                    <textarea
-                                        value={invoiceData.notes}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, notes: e.target.value })}
-                                        placeholder="Any additional notes for the invoice..."
-                                        className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-[#C0392B] outline-none resize-none"
-                                        rows="3"
-                                    />
+                                <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                                    <div>
+                                        <p className="text-xs text-gray-500">
+                                            Final Total
+                                        </p>
+
+                                        <p className="text-2xl font-black text-[#1a1a1a]">
+                                            £{finalTotal.toFixed(2)}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        disabled={downloading}
+                                        onClick={handleDownload}
+                                        className="flex items-center gap-2 rounded-xl bg-[#C0392B] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                        {downloading ? (
+                                            <>
+                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                                Generating PDF...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FiDownload size={18} />
+                                                Download Invoice PDF
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="flex gap-2">
-                                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[#C0392B] text-white rounded-lg hover:bg-red-800 transition font-semibold">
-                                    <FiDownload size={18} /> Download PDF
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        toast.success('Invoice copied to clipboard!');
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold"
-                                >
-                                    <FiCopy size={18} /> Copy
-                                </button>
-                                <button
-                                    onClick={() => setSelectedJob(null)}
-                                    className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                                >
-                                    <FiX size={18} />
-                                </button>
+                            <div className="rounded-xl bg-gray-100 p-3 overflow-hidden w-full">
+                                <p className="mb-3 text-center text-xs text-gray-500">
+                                    Invoice Preview
+                                </p>
+
+                                <div className="flex justify-center w-full overflow-hidden">
+                                    <div className="origin-top scale-[0.38] sm:scale-[0.55] md:scale-[0.72] mb-[-620px] sm:mb-[-430px] md:mb-[-270px]">
+                                        <InvoicePreview
+                                            ref={invoiceRef}
+                                            booking={selectedBooking}
+                                            invoiceData={invoiceData}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </>
                     ) : (
-                        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                            <p className="text-gray-500">Select a job to generate invoice</p>
+                        <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white">
+                            <FiPackage
+                                size={32}
+                                className="text-gray-300"
+                            />
+
+                            <p className="text-sm text-gray-400">
+                                Select a booking to generate invoice
+                            </p>
                         </div>
                     )}
                 </div>

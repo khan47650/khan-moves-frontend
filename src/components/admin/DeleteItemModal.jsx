@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiTrash2 } from 'react-icons/fi';
 
-export default function DeleteItemModal({ deleteId, itemName, onCancel, onConfirm }) {
+export default function DeleteItemModal({ deleteId, itemName, onCancel, onConfirm, loading }) {
     if (deleteId === null) return null;
 
     return (
@@ -19,15 +19,18 @@ export default function DeleteItemModal({ deleteId, itemName, onCancel, onConfir
                 <div className="flex gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
                     <button
                         onClick={onCancel}
-                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                        disabled={loading}
+                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-60"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-red-800 text-white text-sm font-semibold transition-all"
+                        disabled={loading}
+                        className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-red-800 disabled:opacity-60 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2"
                     >
-                        Yes, Delete
+                        {loading && <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                        {loading ? 'Deleting...' : 'Yes, Delete'}
                     </button>
                 </div>
             </div>

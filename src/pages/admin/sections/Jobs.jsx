@@ -1,176 +1,236 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    FiEdit, FiX, FiCheckCircle,
-    FiMessageSquare, FiEye, FiTrash2, FiChevronDown, FiArrowRight,
-    FiPhone, FiMail, FiMapPin, FiPackage, FiDollarSign, FiClock, FiLayers, FiCheck
+    FiX, FiEye, FiPackage, FiPhone, FiMail,
+    FiClock, FiCheck, FiArrowRight, FiLayers, FiMessageSquare
 } from 'react-icons/fi';
-import { dummyActiveJobs, dummyOnWayJobs, dummyCompletedJobs } from '../../../data/adminDummyData';
+import { toast } from 'react-toastify';
+import api from '../../../api/api';
+
+function SectionLoader() {
+    return (
+        <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative w-12 h-12 mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#C0392B] animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-[#C0392B]/20 animate-pulse" />
+                </div>
+            </div>
+            <p className="text-sm font-semibold text-gray-400">Loading jobs...</p>
+        </div>
+    );
+}
 
 export default function Jobs() {
     const [activeTab, setActiveTab] = useState('active');
-    const [activeJobs, setActiveJobs] = useState(dummyActiveJobs);
-    const [onWayJobs, setOnWayJobs] = useState(dummyOnWayJobs);
-    const [completedJobs, setCompletedJobs] = useState(dummyCompletedJobs);
+    const [jobs, setJobs] = useState({ active: [], on_way: [] });
+    const [loading, setLoading] = useState(true);
     const [selectedJob, setSelectedJob] = useState(null);
-    const [selectedDriver, setSelectedDriver] = useState('');
-    const [selectedVehicle, setSelectedVehicle] = useState('');
+    const [drivers, setDrivers] = useState([]);
+    const [vehicles, setVehicles] = useState([]);
+    const [selectedDriverId, setSelectedDriverId] = useState('');
+    const [selectedVehicleId, setSelectedVehicleId] = useState('');
+    const [assigning, setAssigning] = useState(false);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
 
-    const availableDrivers = ['Ahmad Hassan', 'Hassan Khan', 'John Smith', 'Michael Brown'];
-    const availableVehicles = ['Van A1', 'Van A2', 'Van B1', 'Van B2', 'Van C1'];
+    useEffect(() => { fetchAll(); }, []);
 
-    // ── Outer job card — Ref only (no customer name), locations + floor/lift/parking ──
-    const JobCard = ({ job, tab }) => (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition">
-            <div className="flex items-start justify-between mb-4">
-                <p className="text-sm text-gray-500">
-                    Ref: <span className="font-bold text-[#C0392B] text-base">{job.avNumber}</span>
-                </p>
-                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${tab === 'active' ? 'bg-blue-100 text-blue-800' :
-                    tab === 'on-way' ? 'bg-orange-100 text-orange-800' :
-                        'bg-green-100 text-green-800'
-                    }`}>
-                    {tab === 'active' ? 'ACTIVE' : tab === 'on-way' ? 'ON-WAY' : 'COMPLETED'}
-                </span>
-            </div>
+    const fetchAll = async () => {
+        setLoading(true);
+        try {
+            const [activeRes, onWayRes] = await Promise.all([
+                api.get('/jobs?status=active'),
+                api.get('/jobs?status=on_way'),
+            ]);
+            setJobs({
+                active: activeRes.data?.data || [],
+                on_way: onWayRes.data?.data || [],
+            });
+        } catch {
+            toast.error('Failed to load jobs');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            <div className="grid sm:grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
-                {/* Pickup */}
-                <div>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#C0392B] shrink-0" />
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Pickup</p>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">{job.pickupAddr}</p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-                        {job.pickupFloor && (
-                            <span className="flex items-center gap-1"><FiLayers size={11} /> {job.pickupFloor}</span>
-                        )}
-                        {job.pickupLift !== undefined && (
-                            <span className="flex items-center gap-1">
-                                <FiCheck size={11} className={job.pickupLift ? 'text-green-600' : 'text-gray-300'} />
-                                Lift {job.pickupLift ? 'available' : 'unavailable'}
-                            </span>
-                        )}
-                        {job.pickupParking !== undefined && (
-                            <span className="flex items-center gap-1">
-                                <FiCheck size={11} className={job.pickupParking ? 'text-green-600' : 'text-gray-300'} />
-                                Parking {job.pickupParking ? 'available' : 'unavailable'}
-                            </span>
-                        )}
-                    </div>
-                </div>
+    const openJob = async (job) => {
+        setSelectedJob(job);
+        setSelectedDriverId(job.assignedDriver?._id || '');
+        setSelectedVehicleId(job.assignedVehicle?._id || '');
 
-                {/* Delivery */}
-                <div>
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="w-2 h-2 rounded-full bg-green-600 shrink-0" />
-                        <p className="text-xs text-gray-500 uppercase font-semibold">Delivery</p>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-1">{job.deliveryAddr}</p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-                        {job.deliveryFloor && (
-                            <span className="flex items-center gap-1"><FiLayers size={11} /> {job.deliveryFloor}</span>
-                        )}
-                        {job.deliveryLift !== undefined && (
-                            <span className="flex items-center gap-1">
-                                <FiCheck size={11} className={job.deliveryLift ? 'text-green-600' : 'text-gray-300'} />
-                                Lift {job.deliveryLift ? 'available' : 'unavailable'}
-                            </span>
-                        )}
-                        {job.deliveryParking !== undefined && (
-                            <span className="flex items-center gap-1">
-                                <FiCheck size={11} className={job.deliveryParking ? 'text-green-600' : 'text-gray-300'} />
-                                Parking {job.deliveryParking ? 'available' : 'unavailable'}
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
+        // Available drivers + vehicles fetch karo based on job date + timeSlot
+        try {
+            const res = await api.get('/jobs/available-resources', {
+                params: {
+                    date: job.date || '',
+                    timeSlot: job.timeSlot || '',
+                    jobId: job._id,
+                },
+            });
+            setDrivers(res.data?.data?.drivers || []);
+            setVehicles(res.data?.data?.vehicles || []);
+        } catch {
+            // fallback — sab show karo
+        }
+    };
 
-            <div className="flex flex-wrap gap-2 items-center">
-                <button
-                    onClick={() => {
-                        setSelectedJob(job);
-                        setSelectedDriver(job.driver);
-                        setSelectedVehicle(job.vehicle);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-sm font-semibold"
-                >
-                    <FiEye size={16} /> View
-                </button>
+    const handleAssign = async () => {
+        if (!selectedJob) return;
+        if (!selectedDriverId && !selectedVehicleId) { toast.error('Select driver or vehicle'); return; }
+        setAssigning(true);
+        try {
+            const res = await api.patch(`/jobs/${selectedJob._id}/assign`, {
+                driverId: selectedDriverId || undefined,
+                vehicleId: selectedVehicleId || undefined,
+            });
+            const updated = res.data.data;
+            setJobs(prev => ({
+                ...prev,
+                active: prev.active.map(j => j._id === updated._id ? updated : j),
+            }));
+            setSelectedJob(updated);
+            toast.success('Driver/Vehicle assigned & WhatsApp sent!');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to assign');
+        } finally {
+            setAssigning(false);
+        }
+    };
 
-                <button className="flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-semibold">
-                    <FiEdit size={16} /> Edit
-                </button>
+    const handleStatusUpdate = async (jobId, status, currentTab) => {
+        setUpdatingStatus(true);
+        try {
+            await api.patch(`/jobs/${jobId}/status`, { status });
+            setJobs(prev => {
+                const updated = { ...prev };
+                // Remove from current tab
+                updated[currentTab] = prev[currentTab].filter(j => j._id !== jobId);
+                // Add to new tab if applicable
+                if (status === 'on_way') {
+                    const job = prev[currentTab].find(j => j._id === jobId);
+                    if (job) updated.on_way = [{ ...job, status: 'on_way' }, ...prev.on_way];
+                }
+                return updated;
+            });
+            setSelectedJob(null);
+            toast.success(status === 'on_way' ? 'Job moved to On-Way!' : 'Job cancelled.');
+        } catch {
+            toast.error('Failed to update status');
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+    const handleCompleteJob = async (jobId) => {
+        setUpdatingStatus(true);
 
-                {tab === 'on-way' && (
-                    <button className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-sm font-semibold">
-                        <FiMessageSquare size={16} /> Message
-                    </button>
-                )}
-            </div>
-        </div>
-    );
+        try {
+            await api.patch(`/jobs/${jobId}/status`, {
+                status: "completed"
+            });
+
+            setJobs(prev => ({
+                ...prev,
+                on_way: prev.on_way.filter(j => j._id !== jobId)
+            }));
+
+            setSelectedJob(null);
+
+            toast.success("Job completed!");
+
+            await api.post(`/jobs/${jobId}/complete-email`);
+
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message || "Failed to complete job"
+            );
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const currentJobs = activeTab === 'active' ? jobs.active : jobs.on_way;
 
     return (
         <div className="relative">
-            {/* Main Content */}
-            <div className="w-full">
-                <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Jobs Management</h1>
-                <p className="text-gray-500 mb-8">Manage all customer jobs across different stages.</p>
+            <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Jobs Management</h1>
+            <p className="text-gray-500 mb-6">Manage all customer jobs across different stages.</p>
 
-                <div className="flex gap-2 mb-8 border-b border-gray-200">
-                    {[
-                        { id: 'active', label: 'Active', count: activeJobs.length },
-                        { id: 'on-way', label: 'On-Way', count: onWayJobs.length },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-4 py-3 font-semibold text-sm border-b-2 transition ${activeTab === tab.id
-                                ? 'border-[#C0392B] text-[#C0392B]'
-                                : 'border-transparent text-gray-600 hover:text-gray-900'
-                                }`}
-                        >
-                            {tab.label} ({tab.count})
-                        </button>
-                    ))}
-                </div>
-
-                <div className="space-y-4">
-                    {activeTab === 'active' && (
-                        activeJobs.length === 0 ? (
-                            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                                <p className="text-gray-500">No active jobs</p>
-                            </div>
-                        ) : activeJobs.map(job => <JobCard key={job.id} job={job} tab="active" />)
-                    )}
-
-                    {activeTab === 'on-way' && (
-                        onWayJobs.length === 0 ? (
-                            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                                <p className="text-gray-500">No jobs on-way</p>
-                            </div>
-                        ) : onWayJobs.map(job => <JobCard key={job.id} job={job} tab="on-way" />)
-                    )}
-                </div>
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 border-b border-gray-200">
+                {[
+                    { id: 'active', label: 'Active', count: jobs.active.length },
+                    { id: 'on_way', label: 'On-Way', count: jobs.on_way.length },
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-4 py-3 font-semibold text-sm border-b-2 transition ${activeTab === tab.id ? 'border-[#C0392B] text-[#C0392B]' : 'border-transparent text-gray-600 hover:text-gray-900'}`}
+                    >
+                        {tab.label} ({tab.count})
+                    </button>
+                ))}
             </div>
 
-            {/* Side Panel with Framer Motion */}
+            {loading ? <SectionLoader /> : currentJobs.length === 0 ? (
+                <div className="bg-white rounded-xl p-12 text-center border border-gray-200">
+                    <FiPackage size={32} className="text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No {activeTab === 'active' ? 'active' : 'on-way'} jobs</p>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {currentJobs.map(job => (
+                        <div key={job._id} className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition">
+                            <div className="flex items-start justify-between mb-3">
+                                <div>
+                                    <p className="text-sm text-gray-500">Ref: <span className="font-bold text-[#C0392B] text-base">{job.bookingRef}</span></p>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        {job.serviceType || "—"}
+                                    </p>
+                                </div>
+                                <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${activeTab === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    {activeTab === 'active' ? 'ACTIVE' : 'ON-WAY'}
+                                </span>
+                            </div>
+
+                            <div className="grid sm:grid-cols-3 gap-3 mb-4 pb-4 border-b border-gray-100 text-sm">
+                                <div>
+                                    <p className="text-xs text-gray-400 font-semibold mb-0.5">Route</p>
+                                    <p className="text-gray-700">{job.pickup?.postcode || '—'} → {job.delivery?.postcode || '—'}</p>
+                                    <p className="text-xs text-gray-500">{job.distance || 0} miles</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-400 font-semibold mb-0.5">Date</p>
+                                    <p className="text-gray-700">{job.dateType === 'flexible' ? 'Flexible' : job.date || '—'}</p>
+                                    <p className="text-xs text-gray-500 capitalize">{job.timeSlot || '—'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-400 font-semibold mb-0.5">Driver / Vehicle</p>
+                                    <p className="text-gray-700">{job.assignedDriverName || 'Not assigned'}</p>
+                                    <p className="text-xs text-gray-500">{job.assignedVehicleReg || '—'}</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => openJob(job)}
+                                className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-xs font-semibold"
+                            >
+                                <FiEye size={14} /> View Details
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Side Panel */}
             <AnimatePresence>
                 {selectedJob && (
                     <>
-                        {/* Backdrop */}
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setSelectedJob(null)}
                             className="fixed inset-0 bg-black/50 z-40"
                         />
-
-                        {/* Side Panel */}
                         <motion.div
                             initial={{ x: '100%', opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
@@ -179,266 +239,212 @@ export default function Jobs() {
                             className="fixed top-16 right-0 h-[calc(100vh-64px)] w-96 bg-white z-50 overflow-y-auto shadow-2xl"
                         >
                             {/* Header */}
-                            <div className="sticky top-0 bg-linear-to-r from-[#C0392B] to-red-700 text-white p-6 flex items-center justify-between">
+                            <div className="sticky top-0 bg-linear-to-r from-[#C0392B] to-red-700 text-white p-5 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-2xl font-bold">{selectedJob.customerName}</h2>
-                                    <p className="text-red-100 text-sm mt-1">Ref: {selectedJob.avNumber}</p>
+                                    <h2 className="text-xl font-bold">{selectedJob.customer?.name || '—'}</h2>
+                                    <p className="text-red-100 text-sm mt-0.5">Ref: {selectedJob.bookingRef}</p>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedJob(null)}
-                                    className="p-2 hover:bg-red-600 rounded-lg transition"
-                                >
-                                    <FiX size={24} />
+                                <button onClick={() => setSelectedJob(null)} className="p-2 hover:bg-red-600 rounded-lg transition">
+                                    <FiX size={22} />
                                 </button>
                             </div>
 
-                            <div className="p-6 space-y-6">
-                                {/* Status Badge */}
-                                <span className={`inline-block px-4 py-2 text-xs font-bold rounded-full ${activeTab === 'active' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-orange-100 text-orange-800'
-                                    }`}>
+                            <div className="p-5 space-y-4">
+                                <span className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${activeTab === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
                                     {activeTab === 'active' ? 'ACTIVE' : 'ON-WAY'}
                                 </span>
 
-                                {/* Contact Section */}
-                                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Contact Information</h4>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-[#C0392B]/10 rounded-lg">
-                                            <FiMail className="text-[#C0392B]" size={18} />
+                                {/* Contact */}
+                                <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase">Contact</h4>
+                                    {selectedJob.customer?.phone && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-[#C0392B]/10 rounded-lg flex items-center justify-center shrink-0"><FiPhone className="text-[#C0392B]" size={14} /></div>
+                                            <p className="text-sm text-gray-700">{selectedJob.customer.phone}</p>
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase">Email</p>
-                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.email}</p>
+                                    )}
+                                    {selectedJob.customer?.email && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-[#C0392B]/10 rounded-lg flex items-center justify-center shrink-0"><FiMail className="text-[#C0392B]" size={14} /></div>
+                                            <p className="text-sm text-gray-700 truncate">{selectedJob.customer.email}</p>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-[#C0392B]/10 rounded-lg">
-                                            <FiPhone className="text-[#C0392B]" size={18} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase">Phone</p>
-                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.phone}</p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
-                                {/* ── Pickup ── */}
-                                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-[#C0392B] shrink-0" />
-                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Pickup</h4>
+                                {/* Route */}
+                                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                                    <h4 className="text-xs font-bold text-blue-500 uppercase mb-3">Route</h4>
+                                    <div className="mb-2">
+                                        <p className="text-xs text-gray-500 mb-0.5">Pickup</p>
+                                        <p className="text-sm font-bold text-[#1a1a1a]">{selectedJob.pickup?.address || '—'}</p>
+                                        <p className="text-xs text-gray-500">{selectedJob.pickup?.postcode}</p>
+                                        <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
+                                            {selectedJob.pickupFloor?.floorLevel && selectedJob.pickupFloor.floorLevel !== 'ground' && (
+                                                <span className="flex items-center gap-1"><FiLayers size={11} /> {selectedJob.pickupFloor.floorLevel}</span>
+                                            )}
+                                            <span className="flex items-center gap-1">
+                                                <FiCheck size={11} className={selectedJob.pickupFloor?.hasLift ? 'text-green-500' : 'text-gray-300'} />
+                                                Lift {selectedJob.pickupFloor?.hasLift ? 'Yes' : 'No'}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <FiCheck size={11} className={selectedJob.pickupFloor?.hasParking ? 'text-green-500' : 'text-gray-300'} />
+                                                Parking {selectedJob.pickupFloor?.hasParking ? 'Yes' : 'No'}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-gray-800 font-medium mb-2">{selectedJob.pickupAddr}</p>
-                                    <div className="space-y-1.5">
-                                        {selectedJob.pickupFloor && (
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                <FiLayers size={13} className="text-gray-400" /> {selectedJob.pickupFloor}
-                                            </p>
-                                        )}
-                                        {selectedJob.pickupLift !== undefined && (
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                <FiCheck size={13} className={selectedJob.pickupLift ? 'text-green-600' : 'text-gray-300'} />
-                                                Lift {selectedJob.pickupLift ? 'available' : 'unavailable'}
-                                            </p>
-                                        )}
-                                        {selectedJob.pickupParking !== undefined && (
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                <FiCheck size={13} className={selectedJob.pickupParking ? 'text-green-600' : 'text-gray-300'} />
-                                                Parking {selectedJob.pickupParking ? 'available' : 'unavailable'}
-                                            </p>
-                                        )}
-                                        <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                            <FiClock size={13} className="text-gray-400" />
-                                            {selectedJob.date} · {selectedJob.time}
+                                    <div className="text-[#C0392B] text-sm my-1 ml-1">↓</div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-0.5">Delivery</p>
+                                        <p className="text-sm font-bold text-[#1a1a1a]">{selectedJob.delivery?.address || '—'}</p>
+                                        <p className="text-xs text-gray-500">{selectedJob.delivery?.postcode}</p>
+                                        <div className="flex flex-wrap gap-2 mt-1 text-xs text-gray-500">
+                                            {selectedJob.deliveryFloor?.floorLevel && selectedJob.deliveryFloor.floorLevel !== 'ground' && (
+                                                <span className="flex items-center gap-1"><FiLayers size={11} /> {selectedJob.deliveryFloor.floorLevel}</span>
+                                            )}
+                                            <span className="flex items-center gap-1">
+                                                <FiCheck size={11} className={selectedJob.deliveryFloor?.hasLift ? 'text-green-500' : 'text-gray-300'} />
+                                                Lift {selectedJob.deliveryFloor?.hasLift ? 'Yes' : 'No'}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <FiCheck size={11} className={selectedJob.deliveryFloor?.hasParking ? 'text-green-500' : 'text-gray-300'} />
+                                                Parking {selectedJob.deliveryFloor?.hasParking ? 'Yes' : 'No'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-2">{selectedJob.distance || 0} miles</p>
+                                </div>
+
+                                {/* Date & Time */}
+                                <div className="border border-gray-100 rounded-xl p-4">
+                                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Date & Time</h4>
+                                    <div className="flex items-center gap-2">
+                                        <FiClock size={14} className="text-gray-400" />
+                                        <p className="text-sm text-gray-700">
+                                            {selectedJob.dateType === 'flexible' ? 'Flexible dates' : selectedJob.date || '—'}
+                                            {selectedJob.timeSlot && <span className="ml-2 capitalize text-gray-500">· {selectedJob.timeSlot}</span>}
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* ── Delivery ── */}
-                                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                                {/* Items */}
+                                <div className="border border-gray-100 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-3">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-green-600 shrink-0" />
-                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Delivery</h4>
+                                        <FiPackage size={14} className="text-[#C0392B]" />
+                                        <h4 className="text-xs font-bold text-gray-500 uppercase">Items ({selectedJob.items?.length || 0})</h4>
                                     </div>
-                                    <p className="text-sm text-gray-800 font-medium mb-2">{selectedJob.deliveryAddr}</p>
-                                    <div className="space-y-1.5">
-                                        {selectedJob.deliveryFloor && (
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                <FiLayers size={13} className="text-gray-400" /> {selectedJob.deliveryFloor}
-                                            </p>
-                                        )}
-                                        {selectedJob.deliveryLift !== undefined && (
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                <FiCheck size={13} className={selectedJob.deliveryLift ? 'text-green-600' : 'text-gray-300'} />
-                                                Lift {selectedJob.deliveryLift ? 'available' : 'unavailable'}
-                                            </p>
-                                        )}
-                                        {selectedJob.deliveryParking !== undefined && (
-                                            <p className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                <FiCheck size={13} className={selectedJob.deliveryParking ? 'text-green-600' : 'text-gray-300'} />
-                                                Parking {selectedJob.deliveryParking ? 'available' : 'unavailable'}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Items Section */}
-                                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FiPackage className="text-[#C0392B]" size={18} />
-                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Items ({selectedJob.items.length})</h4>
-                                    </div>
-                                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                                        {selectedJob.items.map((item, idx) => (
-                                            <motion.div
-                                                key={idx}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
-                                                className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition"
-                                            >
-                                                <span className="text-sm text-gray-700 font-medium">{item.name}</span>
-                                                <span className="text-xs bg-[#C0392B]/10 text-[#C0392B] px-2 py-1 rounded font-semibold">{(item.volume / 1000).toFixed(1)} m³</span>
-                                            </motion.div>
+                                    <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                                        {(selectedJob.items || []).map((it, i) => (
+                                            <div key={i} className="flex justify-between text-sm bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                <span className="text-gray-700 truncate flex-1">{it.name}</span>
+                                                <span className="text-gray-500 font-bold shrink-0 ml-2">x{it.quantity}</span>
+                                            </div>
                                         ))}
                                     </div>
-                                    <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-                                        <span className="text-sm font-semibold text-gray-700">Total Volume:</span>
-                                        <span className="text-lg font-bold text-[#C0392B]">{selectedJob.volume}</span>
-                                    </div>
                                 </div>
 
-                                {/* Price Section */}
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FiDollarSign className="text-green-600" size={18} />
-                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Price</h4>
-                                    </div>
-                                    <div className="flex items-baseline justify-between">
-                                        <span className="text-4xl font-bold text-green-600">£{selectedJob.finalPrice}</span>
-                                        {selectedJob.discount > 0 && (
-                                            <span className="text-sm text-green-700 font-semibold">-£{selectedJob.discount}</span>
-                                        )}
-                                    </div>
+                                {/* Price */}
+                                <div className="bg-[#1a1a1a] rounded-xl p-4 flex items-center justify-between">
+                                    <p className="text-sm text-gray-400">Total Price</p>
+                                    <p className="text-2xl font-black text-[#F1C40F]">£{selectedJob.totalPrice || 0}</p>
                                 </div>
-
-                                {/* Driver & Vehicle - Conditional */}
-                                {activeTab === 'active' && (
-                                    <>
-                                        {/* Driver Selection */}
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">Assign Driver</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={selectedDriver}
-                                                    onChange={(e) => setSelectedDriver(e.target.value)}
-                                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20 transition"
-                                                >
-                                                    <option value="">Select Driver</option>
-                                                    {availableDrivers.map(driver => (
-                                                        <option key={driver} value={driver}>{driver}</option>
-                                                    ))}
-                                                </select>
-                                                <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-gray-500" size={18} />
-                                            </div>
-                                        </div>
-
-                                        {/* Vehicle Selection */}
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-3">Assign Vehicle</label>
-                                            <div className="relative">
-                                                <select
-                                                    value={selectedVehicle}
-                                                    onChange={(e) => setSelectedVehicle(e.target.value)}
-                                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20 transition"
-                                                >
-                                                    <option value="">Select Vehicle</option>
-                                                    {availableVehicles.map(vehicle => (
-                                                        <option key={vehicle} value={vehicle}>{vehicle}</option>
-                                                    ))}
-                                                </select>
-                                                <FiChevronDown className="absolute right-3 top-3 pointer-events-none text-gray-500" size={18} />
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
-
-                                {/* On-Way: Read-only Driver & Vehicle */}
-                                {activeTab === 'on-way' && (
-                                    <>
-                                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-2">Assigned Driver</p>
-                                            <p className="text-lg font-bold text-[#C0392B]">{selectedJob.driver}</p>
-                                        </div>
-
-                                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                            <p className="text-xs text-gray-500 uppercase font-semibold mb-2">Assigned Vehicle</p>
-                                            <p className="text-lg font-bold text-[#C0392B]">{selectedJob.vehicle}</p>
-                                        </div>
-                                    </>
-                                )}
 
                                 {/* Special Instructions */}
                                 {selectedJob.specialInstructions && (
-                                    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                        <p className="text-xs text-yellow-700 uppercase font-semibold mb-2">⚠️ Special Instructions</p>
-                                        <p className="text-sm text-yellow-800">{selectedJob.specialInstructions}</p>
+                                    <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                                        <p className="text-xs font-bold text-amber-700 uppercase mb-2">Special Instructions</p>
+                                        <p className="text-sm text-amber-800">{selectedJob.specialInstructions}</p>
                                     </div>
                                 )}
 
-                                {/* Action Buttons */}
-                                <div className="space-y-3 pt-4 border-t border-gray-200">
-                                    {activeTab === 'active' && (
-                                        <>
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition text-sm font-bold uppercase tracking-wide"
+                                {/* Assign Driver & Vehicle — Active only */}
+                                {activeTab === 'active' && (
+                                    <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+                                        <h4 className="text-xs font-bold text-gray-500 uppercase">Assign Driver & Vehicle</h4>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Driver</label>
+                                            <select
+                                                value={selectedDriverId}
+                                                onChange={e => setSelectedDriverId(e.target.value)}
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0392B] transition"
                                             >
-                                                <FiCheckCircle size={18} /> Complete Job
-                                            </motion.button>
-
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:shadow-lg transition text-sm font-bold uppercase tracking-wide"
+                                                <option value="">Select Driver</option>
+                                                {drivers.map(d => (
+                                                    <option key={d._id} value={d._id}>{d.name} — {d.phone}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Vehicle</label>
+                                            <select
+                                                value={selectedVehicleId}
+                                                onChange={e => setSelectedVehicleId(e.target.value)}
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0392B] transition"
                                             >
-                                                <FiArrowRight size={18} /> Go (On-Way)
-                                            </motion.button>
-                                        </>
-                                    )}
-
-                                    {activeTab === 'on-way' && (
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition text-sm font-bold uppercase tracking-wide"
+                                                <option value="">Select Vehicle</option>
+                                                {vehicles.map(v => (
+                                                    <option key={v._id} value={v._id}>{v.regNumber} — {v.makeModel}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <button
+                                            onClick={handleAssign}
+                                            disabled={assigning || (!selectedDriverId && !selectedVehicleId)}
+                                            className="w-full py-2.5 bg-[#1a1a1a] hover:bg-black text-white rounded-xl font-bold text-sm transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            <FiCheckCircle size={18} /> Complete Job
-                                        </motion.button>
-                                    )}
+                                            {assigning
+                                                ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Assigning...</>
+                                                : <><FiMessageSquare size={14} /> Assign & Notify Driver</>}
+                                        </button>
+                                    </div>
+                                )}
 
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            if (activeTab === 'active') {
-                                                setActiveJobs(activeJobs.filter(j => j.id !== selectedJob.id));
-                                            } else if (activeTab === 'on-way') {
-                                                setOnWayJobs(onWayJobs.filter(j => j.id !== selectedJob.id));
-                                            }
-                                            setSelectedJob(null);
-                                        }}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm font-bold uppercase tracking-wide"
+                                {/* On-Way: show assigned info */}
+                                {activeTab === 'on_way' && (
+                                    <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                                        <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Assigned</h4>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Driver</span>
+                                            <span className="font-semibold text-[#1a1a1a]">{selectedJob.assignedDriverName || '—'}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">Vehicle</span>
+                                            <span className="font-semibold text-[#1a1a1a]">{selectedJob.assignedVehicleReg || '—'}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Action Buttons */}
+                                <div className="space-y-2 pt-2 border-t border-gray-100">
+                                    {activeTab === 'active' && (
+                                        <button
+                                            onClick={() => handleStatusUpdate(selectedJob._id, 'on_way', 'active')}
+                                            disabled={updatingStatus}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition disabled:opacity-50"
+                                        >
+                                            {updatingStatus ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Updating...</> : <><FiArrowRight size={16} /> Go On-Way</>}
+                                        </button>
+                                    )}
+                                    {activeTab === 'on_way' && (
+                                        <button
+                                            onClick={() => handleCompleteJob(selectedJob._id)}
+                                            disabled={updatingStatus}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition disabled:opacity-50"
+                                        >
+                                            {updatingStatus ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Completing...</> : <><FiCheck size={16} /> Complete Job</>}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleStatusUpdate(selectedJob._id, 'in_trash', activeTab)}
+                                        disabled={updatingStatus}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl font-bold text-sm transition disabled:opacity-50"
                                     >
-                                        Cancel Job
-                                    </motion.button>
+                                        <FiX size={16} /> Cancel Job
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>
                     </>
                 )}
+
             </AnimatePresence>
         </div>
     );

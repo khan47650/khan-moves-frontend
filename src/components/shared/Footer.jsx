@@ -18,11 +18,16 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
               <FiMapPin size={16} className="text-[#F1C40F]" />
-              Birmingham, UK
+              <div>
+                265 Golden Hillock Road,<br />
+                Sparkbrook,<br />
+                Birmingham,<br />
+                England, B11 2PH
+              </div>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <FiPhone size={16} className="text-[#F1C40F]" />
-              Operating Nationwide
+              07424153126
             </div>
           </div>
 
@@ -87,16 +92,18 @@ export default function Footer() {
               <div className="flex items-start gap-2">
                 <FiPhone size={16} className="text-[#F1C40F] mt-0.5 shrink-0" />
                 <div>
-                  <a href="tel:01215556666" className="hover:text-[#F1C40F] transition block">
-                    0121 555 6666
-                  </a>
+                  <div>
+                    <a href="tel:07424153126" className="hover:text-[#F1C40F] transition block">
+                      07424153126
+                    </a>
+                  </div>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <FiMail size={16} className="text-[#F1C40F] mt-0.5 shrink-0" />
                 <div>
-                  <a href="mailto:info@khanmoves.co.uk" className="hover:text-[#F1C40F] transition block">
-                    info@khanmoves.co.uk
+                  <a href="mailto:khanmovesuk@gmail.com" className="hover:text-[#F1C40F] transition block">
+                    khanmovesuk@gmail.com
                   </a>
                 </div>
               </div>

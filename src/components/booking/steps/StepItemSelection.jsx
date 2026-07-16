@@ -1,28 +1,49 @@
-import React, { useState } from 'react';
-import { FiPlus, FiMinus, FiX, FiSearch, FiHome, FiTv, FiCoffee, FiDroplet, FiPackage, FiTool, FiBriefcase } from 'react-icons/fi';
-import { itemInventory } from '../../../data/itemInventory';
+import React, { useState, useEffect } from 'react';
+import { FiPlus, FiMinus, FiX, FiSearch, FiPackage } from 'react-icons/fi';
+import api from '../../../api/api';
 
-const categoryIcons = {
-  bedroom: FiHome, bedrooms: FiHome, living: FiTv, 'living-room': FiTv,
-  kitchen: FiCoffee, bathroom: FiDroplet, 'boxes-bags': FiPackage, boxes: FiPackage,
-  garden: FiTool, outdoor: FiTool, office: FiBriefcase,
-};
+function ItemLoader() {
+  return (
+    <div className="flex flex-col items-center justify-center py-12">
+      <div className="relative w-10 h-10 mb-3">
+        <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#1a1a1a] animate-spin" />
+      </div>
+      <p className="text-sm text-gray-400">Loading items...</p>
+    </div>
+  );
+}
 
-export default function StepItemSelection({ items, onChange, error }) {
-  const [selectedCategory, setSelectedCategory] = useState('bedroom');
+export default function StepItemSelection({ items, onChange, error, serviceType }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const categories = Object.keys(itemInventory);
+  const [apiItems, setApiItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get('/inventory/services');
+        const services = res.data?.data || [];
+        const matched = services.find(s => s.slug === serviceType);
+        if (matched) {
+          setApiItems((matched.items || []).filter(it => !it.isPaused));
+        }
+      } catch (err) {
+        // silent
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
+  }, [serviceType]);
 
   const getCount = (name) => items.find(i => i.name === name)?.quantity || 0;
-
-  const categoryCount = (cat) =>
-    items.filter(it => itemInventory[cat]?.some(inv => inv.name === it.name))
-      .reduce((s, it) => s + it.quantity, 0);
 
   const handleAdd = (itemData) => {
     const ex = items.find(i => i.name === itemData.name);
     if (ex) onChange(items.map(i => i.name === itemData.name ? { ...i, quantity: i.quantity + 1 } : i));
-    else onChange([...items, { ...itemData, quantity: 1 }]);
+    else onChange([...items, { name: itemData.name, volume: itemData.volume, quantity: 1 }]);
   };
 
   const handleRemove = (name) => {
@@ -31,9 +52,7 @@ export default function StepItemSelection({ items, onChange, error }) {
     else onChange(items.filter(i => i.name !== name));
   };
 
-  const prettyCat = c => c.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-
-  const filteredItems = (itemInventory[selectedCategory] || []).filter(it =>
+  const filteredItems = apiItems.filter(it =>
     it.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -53,28 +72,7 @@ export default function StepItemSelection({ items, onChange, error }) {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-stretch">
         {/* ── LEFT: Items selection ── */}
         <div className="flex-1">
-          <div className="bg-white rounded-2xl p-4 md:p-5  h-full" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            {/* Category tabs */}
-            <div className="overflow-x-auto -mx-1 px-1 mb-4 border-b border-gray-100">
-              <div className="flex gap-1 min-w-min pb-0">
-                {categories.map(cat => {
-                  const Icon = categoryIcons[cat] || FiPackage;
-                  const count = categoryCount(cat);
-                  const active = selectedCategory === cat;
-                  return (
-                    <button key={cat} onClick={() => { setSelectedCategory(cat); setSearchQuery(''); }}
-                      className={`shrink-0 flex flex-col items-center justify-center w-20 md:w-24 px-2 py-3 text-xs font-medium transition relative ${active ? 'text-[#1a1a1a]' : 'text-gray-400 hover:text-[#1a1a1a]'}`}>
-                      <Icon size={22} className="mb-1.5" />
-                      <span className="whitespace-nowrap">{prettyCat(cat)}</span>
-                      {count > 0 && (
-                        <span className="absolute top-1 right-2 text-[10px] font-bold rounded-full min-w-4 h-4 px-1 flex items-center justify-center bg-[#1a1a1a] text-white">{count}</span>
-                      )}
-                      {active && <div className="absolute -bottom-px left-2 right-2 h-0.5 bg-[#1a1a1a] rounded-full" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="bg-white rounded-2xl p-4 md:p-5 h-full" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
 
             {/* Search */}
             <div className="relative mb-3">
@@ -85,11 +83,14 @@ export default function StepItemSelection({ items, onChange, error }) {
 
             {/* Items list */}
             <div className="lg:max-h-80 lg:overflow-y-auto pr-1">
-              {filteredItems.length > 0 ? filteredItems.map((item, idx) => {
+              {loading ? <ItemLoader /> : filteredItems.length > 0 ? filteredItems.map((item, idx) => {
                 const count = getCount(item.name);
                 return (
-                  <div key={idx} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
-                    <p className="text-sm font-medium text-[#1a1a1a] flex-1 pr-3">{item.name}</p>
+                  <div key={item._id || idx} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+                    <div className="flex-1 pr-3">
+                      <p className="text-sm font-medium text-[#1a1a1a]">{item.name}</p>
+                      <p className="text-xs text-gray-400">{item.volume} m³</p>
+                    </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {count === 0 ? (
                         <button onClick={() => handleAdd(item)} className="w-8 h-8 rounded-full border border-gray-300 hover:border-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white text-gray-500 transition flex items-center justify-center">
@@ -106,7 +107,9 @@ export default function StepItemSelection({ items, onChange, error }) {
                   </div>
                 );
               }) : (
-                <div className="text-center py-6 text-gray-400 text-sm">No items found for "{searchQuery}"</div>
+                <div className="text-center py-6 text-gray-400 text-sm">
+                  {searchQuery ? `No items found for "${searchQuery}"` : 'No items available.'}
+                </div>
               )}
             </div>
 
@@ -114,13 +117,10 @@ export default function StepItemSelection({ items, onChange, error }) {
           </div>
         </div>
 
-        {/* ── RIGHT: Summary (no map) ── */}
+        {/* ── RIGHT: Summary ── */}
         <div className="w-full lg:w-80 flex">
           <div className="sticky top-20 w-full flex">
-            <div
-              className="bg-white rounded-2xl p-4 md:p-5 flex flex-col w-full min-h-162.5"
-              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
-            >
+            <div className="bg-white rounded-2xl p-4 md:p-5 flex flex-col w-full min-h-162.5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-base font-bold text-[#1a1a1a]">Your move summary</h4>
                 {totalCount > 0 && (
@@ -143,7 +143,7 @@ export default function StepItemSelection({ items, onChange, error }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm leading-relaxed">Nothing added yet. Select items from the categories.</p>
+                <p className="text-gray-400 text-sm leading-relaxed">Nothing added yet. Select items from the list.</p>
               )}
             </div>
           </div>

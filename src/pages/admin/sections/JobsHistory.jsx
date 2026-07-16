@@ -1,53 +1,170 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiX, FiChevronDown, FiEye, FiTrash2,
     FiPhone, FiMail, FiMapPin, FiClock, FiPackage, FiDollarSign
 } from 'react-icons/fi';
-import { dummyCompletedJobs } from '../../../data/adminDummyData';
+import api from "../../../api/api";
+import DeleteJobDialog from "../../../components/admin/DeleteJobDialog";
+import { toast } from "react-toastify";
+
+function SectionLoader() {
+    return (
+        <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative w-12 h-12 mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#C0392B] animate-spin" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-[#C0392B]/20 animate-pulse" />
+                </div>
+            </div>
+
+            <p className="text-sm font-semibold text-gray-400">
+                Loading Jobs...
+            </p>
+        </div>
+    );
+}
 
 export default function JobsHistory() {
     const [historyType, setHistoryType] = useState('completed');
-    const [completedJobs, setCompletedJobs] = useState(dummyCompletedJobs);
+    const [completedJobs, setCompletedJobs] = useState([]);
     const [selectedJob, setSelectedJob] = useState(null);
     const [selectedDate, setSelectedDate] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [trashJobs, setTrashJobs] = useState([]);
+    const [deleteOne, setDeleteOne] = useState(null);
+    const [deleteAll, setDeleteAll] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
-    const filteredCompletedJobs = selectedDate
-        ? completedJobs.filter(job => job.date === selectedDate)
-        : completedJobs;
-    const [trashJobs, setTrashJobs] = useState([
-        {
-            id: 5,
-            avNumber: 'AV1650',
-            customerName: 'Robert Taylor',
-            email: 'robert@example.com',
-            phone: '+44 7700 900128',
-            pickupAddr: '55 Willow Road, Sheffield, S11 8NE',
-            deliveryAddr: '8 Oak Crescent, Leeds, LS2 7AE',
-            driver: 'Hassan Khan',
-            vehicle: 'Van C1',
-            finalPrice: 280,
-            discount: 0,
-            date: '2026-06-15',
-            time: '10:00 AM - 4:00 PM',
-            pickupFloor: 'Ground floor',
-            deliveryFloor: '2nd floor',
-            items: [
-                { name: 'Office Desk', volume: 2000 },
-                { name: 'Office Chair', volume: 800 }
-            ],
-            specialInstructions: 'Handle with care - fragile items',
-            volume: '2.8 m³'
+    const loadCompletedJobs = async () => {
+        try {
+            setLoading(true);
+
+            const params = {
+                page,
+                limit: 10,
+            };
+
+            if (selectedDate) {
+                params.from = selectedDate;
+                params.to = selectedDate;
+            }
+
+            const { data } = await api.get("/jobs/history", {
+                params,
+            });
+
+            setCompletedJobs(data.data);
+            setTotalPages(data.totalPages);
+
+        } catch (err) {
+            toast.error("Failed to load completed jobs");
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
+
+    const loadTrashJobs = async () => {
+        try {
+            setLoading(true);
+
+            const params = {
+                page,
+                limit: 10,
+            };
+
+            if (selectedDate) {
+                params.from = selectedDate;
+                params.to = selectedDate;
+            }
+
+            const { data } = await api.get("/jobs/trash", {
+                params,
+            });
+
+            setTrashJobs(data.data);
+            setTotalPages(data.totalPages);
+
+        } catch (err) {
+            toast.error("Failed to load trash jobs");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (historyType === "completed") {
+
+            loadCompletedJobs();
+
+        }
+
+        else {
+
+            loadTrashJobs();
+
+        }
+
+    }, [historyType, page, selectedDate]);
+
+    const deleteTrash = async (id) => {
+
+        if (!window.confirm("Delete this job permanently?")) return;
+
+        try {
+
+            await api.delete(`/jobs/trash/${id}`);
+
+            toast.success("Job deleted");
+
+            loadTrashJobs();
+
+        }
+
+        catch (err) {
+
+            toast.error("Delete failed");
+
+        }
+
+    };
+
+    const deleteAllTrash = async () => {
+
+        if (!window.confirm("Delete all trash jobs?")) return;
+
+        try {
+
+            await api.delete("/jobs/trash");
+
+            toast.success("Trash cleared");
+
+            loadTrashJobs();
+
+        }
+
+        catch (err) {
+
+            toast.error("Failed");
+
+        }
+
+    };
 
     const JobCard = ({ job, type }) => (
         <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition">
             <div className="flex items-start justify-between mb-4">
                 <div>
-                    <h3 className="text-lg font-bold text-[#1a1a1a]">{job.customerName}</h3>
+                    <h3 className="text-lg font-bold text-[#1a1a1a]">
+                        {job.customer?.name}
+                    </h3>
                     <p className="text-sm text-gray-500">
-                        Ref: <span className="font-semibold text-[#C0392B]">{job.avNumber}</span>
+                        Ref: <span className="font-semibold text-[#C0392B]">
+                            {job.bookingRef}
+                        </span>
                     </p>
                 </div>
                 <span className={`px-3 py-1 text-xs font-semibold rounded-full ${type === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -59,21 +176,20 @@ export default function JobsHistory() {
             <div className="grid sm:grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
                 <div>
                     <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Pickup</p>
-                    <p className="text-sm text-gray-700">{job.pickupAddr}</p>
+                    <p className="text-sm text-gray-700">{job.pickup?.address}</p>
                 </div>
                 <div>
                     <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Delivery</p>
-                    <p className="text-sm text-gray-700">{job.deliveryAddr}</p>
+                    <p className="text-sm text-gray-700">{job.delivery?.address}</p>
                 </div>
                 <div>
                     <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Driver</p>
-                    <p className="text-sm font-semibold text-gray-700">{job.driver}</p>
+                    <p className="text-sm font-semibold text-gray-700">{job.assignedDriverName || "Not Assigned"}</p>
                 </div>
                 <div>
                     <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Price</p>
                     <p className="text-lg font-bold">
-                        £{job.finalPrice}
-                        {job.discount > 0 && <span className="text-xs text-green-600 ml-2">-£{job.discount}</span>}
+                        £{job.totalPrice}
                     </p>
                 </div>
             </div>
@@ -88,9 +204,8 @@ export default function JobsHistory() {
 
                 {type === 'deleted' && (
                     <button
-                        onClick={() => {
-                            setTrashJobs(trashJobs.filter(j => j.id !== job.id));
-                        }}
+                        onClick={() => setDeleteOne(job)
+                        }
                         className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm font-semibold"
                     >
                         <FiTrash2 size={16} /> Clear
@@ -99,6 +214,8 @@ export default function JobsHistory() {
             </div>
         </div>
     );
+
+
 
     return (
         <div className="relative">
@@ -113,7 +230,11 @@ export default function JobsHistory() {
                     <div className="relative w-full md:w-64">
                         <select
                             value={historyType}
-                            onChange={(e) => setHistoryType(e.target.value)}
+                            onChange={(e) => {
+                                setHistoryType(e.target.value);
+                                setPage(1);
+
+                            }}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20 transition text-gray-700 font-medium"
                         >
                             <option value="completed">Completed Jobs</option>
@@ -130,13 +251,25 @@ export default function JobsHistory() {
                             <input
                                 type="date"
                                 value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
+                                onChange={(e) => {
+
+                                    setSelectedDate(e.target.value);
+
+                                    setPage(1);
+
+                                }}
                                 className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20 transition"
                             />
                         </div>
                         {selectedDate && (
                             <button
-                                onClick={() => setSelectedDate('')}
+                                onClick={() => {
+
+                                    setSelectedDate("");
+
+                                    setPage(1);
+
+                                }}
                                 className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-semibold"
                             >
                                 Clear Filter
@@ -149,12 +282,33 @@ export default function JobsHistory() {
             {/* Main Content */}
             <div className="w-full">
                 <div className="space-y-4">
+                    {loading && <SectionLoader />}
                     {historyType === 'completed' && (
-                        filteredCompletedJobs.length === 0 ? (
+                        completedJobs.length === 0 ? (
                             <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                                <p className="text-gray-500">{selectedDate ? 'No jobs on this date' : 'No completed jobs'}</p>
+                                <div className="py-10 text-center">
+                                    <FiPackage size={34} className="mx-auto text-gray-300 mb-3" />
+
+                                    <h3 className="font-bold text-gray-700">
+                                        No Completed Jobs
+                                    </h3>
+
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {selectedDate
+                                            ? "No completed jobs found on the selected date."
+                                            : "Completed jobs will appear here."}
+                                    </p>
+                                </div>
                             </div>
-                        ) : filteredCompletedJobs.map(job => <JobCard key={job.id} job={job} type="completed" />)
+                        ) : (
+                            !loading && completedJobs.map(job => (
+                                <JobCard
+                                    key={job.id}
+                                    job={job}
+                                    type="completed"
+                                />
+                            ))
+                        )
                     )}
 
                     {historyType === 'trash' && (
@@ -163,21 +317,94 @@ export default function JobsHistory() {
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => setTrashJobs([])}
-                                    className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm font-bold uppercase tracking-wide mb-4"
+                                    onClick={() => setDeleteAll(true)}
+                                    className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 
+                                    transition text-sm font-bold uppercase tracking-wide mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <FiTrash2 size={18} /> Clear All Trash ({trashJobs.length})
+                                    <FiTrash2 size={18} /> disabled={trashJobs.length === 0}({trashJobs.length})
                                 </motion.button>
                             )}
 
                             {trashJobs.length === 0 ? (
                                 <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                                    <p className="text-gray-500">No deleted jobs</p>
+                                    <div className="py-10 text-center">
+                                        <FiTrash2
+                                            size={34}
+                                            className="mx-auto text-red-200 mb-3"
+                                        />
+
+                                        <h3 className="font-bold text-gray-700">
+                                            Trash Empty
+                                        </h3>
+
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            No cancelled jobs available.
+                                        </p>
+                                    </div>
                                 </div>
                             ) : trashJobs.map(job => <JobCard key={job.id} job={job} type="deleted" />)}
                         </>
                     )}
                 </div>
+                {totalPages > 1 && (
+
+                    <div className="flex justify-center items-center gap-2 mt-8">
+
+                        <button
+
+                            onClick={() => setPage(page - 1)}
+
+                            disabled={page === 1}
+
+                            className="px-4 py-2 rounded-lg border border-gray-300 bg-white disabled:opacity-40"
+
+                        >
+                            Previous
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => (
+
+                            <button
+
+                                key={i}
+
+                                onClick={() => setPage(i + 1)}
+
+                                className={`w-10 h-10 rounded-lg font-semibold transition
+
+            ${page === i + 1
+
+                                        ? "bg-[#C0392B] text-white"
+
+                                        : "bg-white border border-gray-300 hover:border-[#C0392B]"
+
+                                    }`}
+
+                            >
+
+                                {i + 1}
+
+                            </button>
+
+                        ))}
+
+                        <button
+
+                            onClick={() => setPage(page + 1)}
+
+                            disabled={page === totalPages}
+
+                            className="px-4 py-2 rounded-lg border border-gray-300 bg-white disabled:opacity-40"
+
+                        >
+
+                            Next
+
+                        </button>
+
+                    </div>
+
+                )}
             </div>
 
             {/* Side Panel with Framer Motion */}
@@ -204,8 +431,8 @@ export default function JobsHistory() {
                             {/* Header */}
                             <div className="sticky top-0 bg-linear-to-r from-[#C0392B] to-red-700 text-white p-6 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-2xl font-bold">{selectedJob.customerName}</h2>
-                                    <p className="text-red-100 text-sm mt-1">Ref: {selectedJob.avNumber}</p>
+                                    <h2 className="text-2xl font-bold">{selectedJob.customer?.name}</h2>
+                                    <p className="text-red-100 text-sm mt-1">Ref: {selectedJob.bookingRef}</p>
                                 </div>
                                 <button
                                     onClick={() => setSelectedJob(null)}
@@ -219,7 +446,7 @@ export default function JobsHistory() {
                                 {/* Status Badge */}
                                 <span className={`inline-block px-4 py-2 text-xs font-bold rounded-full ${historyType === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                     }`}>
-                                    {historyType === 'completed' ? 'COMPLETED' : 'DELETED'}
+                                    {historyType === 'completed' ? 'COMPLETED' : 'CANCELLED'}
                                 </span>
 
                                 {/* Contact Section */}
@@ -231,7 +458,7 @@ export default function JobsHistory() {
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase">Email</p>
-                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.email}</p>
+                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.customer?.email || "—"}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -240,7 +467,7 @@ export default function JobsHistory() {
                                         </div>
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase">Phone</p>
-                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.phone}</p>
+                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.customer?.phone || "—"}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -251,11 +478,14 @@ export default function JobsHistory() {
                                         <FiMapPin className="text-blue-600" size={18} />
                                         <h4 className="text-sm font-semibold text-blue-900 uppercase tracking-wide">Pickup</h4>
                                     </div>
-                                    <p className="text-sm text-blue-900 font-medium mb-2">{selectedJob.pickupAddr}</p>
-                                    <p className="text-xs text-blue-700 mb-2">📍 {selectedJob.pickupFloor}</p>
+                                    <p className="text-sm text-blue-900 font-medium mb-2">{selectedJob.pickup?.address}</p>
+                                    <p className="text-xs text-blue-700 mb-2">{selectedJob.pickupFloor?.floorLevel}</p>
                                     <div className="flex items-center gap-2 text-xs text-blue-700">
                                         <FiClock size={14} />
-                                        <span>{selectedJob.date} · {selectedJob.time}</span>
+                                        <span>{selectedJob.date}
+
+                                            {selectedJob.timeSlot &&
+                                                <> · {selectedJob.timeSlot}</>}</span>
                                     </div>
                                 </div>
 
@@ -265,8 +495,8 @@ export default function JobsHistory() {
                                         <FiMapPin className="text-orange-600" size={18} />
                                         <h4 className="text-sm font-semibold text-orange-900 uppercase tracking-wide">Delivery</h4>
                                     </div>
-                                    <p className="text-sm text-orange-900 font-medium mb-2">{selectedJob.deliveryAddr}</p>
-                                    <p className="text-xs text-orange-700">📍 {selectedJob.deliveryFloor}</p>
+                                    <p className="text-sm text-orange-900 font-medium mb-2">{selectedJob.delivery?.address}</p>
+                                    <p className="text-xs text-orange-700">{selectedJob.deliveryFloor?.floorLevel}</p>
                                 </div>
 
                                 {/* Items Section */}
@@ -285,13 +515,13 @@ export default function JobsHistory() {
                                                 className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition"
                                             >
                                                 <span className="text-sm text-gray-700 font-medium">{item.name}</span>
-                                                <span className="text-xs bg-[#C0392B]/10 text-[#C0392B] px-2 py-1 rounded font-semibold">{(item.volume / 1000).toFixed(1)} m³</span>
+                                                <span className="text-xs bg-[#C0392B]/10 text-[#C0392B] px-2 py-1 rounded font-semibold">{item.volume?.toFixed(2)} m³</span>
                                             </motion.div>
                                         ))}
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
                                         <span className="text-sm font-semibold text-gray-700">Total Volume:</span>
-                                        <span className="text-lg font-bold text-[#C0392B]">{selectedJob.volume}</span>
+                                        <span className="text-lg font-bold text-[#C0392B]">{selectedJob.totalVolume?.toFixed(2)}m³</span>
                                     </div>
                                 </div>
 
@@ -302,10 +532,7 @@ export default function JobsHistory() {
                                         <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Price</h4>
                                     </div>
                                     <div className="flex items-baseline justify-between">
-                                        <span className="text-4xl font-bold text-green-600">£{selectedJob.finalPrice}</span>
-                                        {selectedJob.discount > 0 && (
-                                            <span className="text-sm text-green-700 font-semibold">-£{selectedJob.discount}</span>
-                                        )}
+                                        <span className="text-4xl font-bold text-green-600">£{selectedJob.totalPrice}</span>
                                     </div>
                                 </div>
 
@@ -313,11 +540,11 @@ export default function JobsHistory() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-2">Driver</p>
-                                        <p className="text-lg font-bold text-[#C0392B]">{selectedJob.driver}</p>
+                                        <p className="text-lg font-bold text-[#C0392B]">{selectedJob.assignedDriverName || "Not Assigned"}</p>
                                     </div>
                                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                         <p className="text-xs text-gray-500 uppercase font-semibold mb-2">Vehicle</p>
-                                        <p className="text-lg font-bold text-[#C0392B]">{selectedJob.vehicle}</p>
+                                        <p className="text-lg font-bold text-[#C0392B]">{selectedJob.assignedVehicleReg || "Not Assigned"}</p>
                                     </div>
                                 </div>
 
@@ -343,6 +570,107 @@ export default function JobsHistory() {
                     </>
                 )}
             </AnimatePresence>
+            <DeleteJobDialog
+
+                open={!!deleteOne}
+
+                title="Delete Job?"
+
+                message={`Delete "${deleteOne?.bookingRef}" permanently?`}
+
+                loading={deleteLoading}
+
+                onCancel={() => setDeleteOne(null)}
+
+                onConfirm={async () => {
+
+                    setDeleteLoading(true);
+
+                    try {
+
+                        await api.delete(`/jobs/trash/${deleteOne._id}`);
+
+                        toast.success("Job deleted");
+
+                        setDeleteOne(null);
+
+                        if (page > 1 && trashJobs.length === 1) {
+
+                            setPage(page - 1);
+
+                        } else {
+
+                            loadTrashJobs();
+
+                        }
+                    }
+
+                    catch {
+
+                        toast.error("Delete failed");
+
+                    }
+
+                    finally {
+
+                        setDeleteLoading(false);
+
+                    }
+
+                }}
+
+            />
+
+            <DeleteJobDialog
+
+                open={deleteAll}
+
+                title="Clear Trash?"
+
+                message="Delete all cancelled jobs permanently?"
+
+                loading={deleteLoading}
+
+                onCancel={() => setDeleteAll(false)}
+
+                onConfirm={async () => {
+
+                    setDeleteLoading(true);
+
+                    try {
+
+                        await api.delete("/jobs/trash");
+
+                        toast.success("Trash cleared");
+
+                        setDeleteAll(false);
+                        if (page > 1 && trashJobs.length === 1) {
+
+                            setPage(page - 1);
+
+                        } else {
+
+                            loadTrashJobs();
+
+                        }
+
+                    }
+
+                    catch {
+
+                        toast.error("Failed");
+
+                    }
+
+                    finally {
+
+                        setDeleteLoading(false);
+
+                    }
+
+                }}
+
+            />
         </div>
     );
 }
