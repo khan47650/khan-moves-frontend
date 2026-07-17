@@ -22,6 +22,9 @@ function SectionLoader() {
     );
 }
 
+const getId = value =>
+    typeof value === "string" ? value : value?._id || "";
+
 export default function Jobs() {
     const [activeTab, setActiveTab] = useState('active');
     const [jobs, setJobs] = useState({ active: [], on_way: [] });
@@ -54,24 +57,81 @@ export default function Jobs() {
         }
     };
 
-    const openJob = async (job) => {
+    const openJob = async job => {
         setSelectedJob(job);
-        setSelectedDriverId(job.assignedDriver?._id || '');
-        setSelectedVehicleId(job.assignedVehicle?._id || '');
 
-        // Available drivers + vehicles fetch karo based on job date + timeSlot
+        const driverId = getId(job.assignedDriver);
+        const vehicleId = getId(job.assignedVehicle);
+
+        setSelectedDriverId(driverId);
+        setSelectedVehicleId(vehicleId);
+
         try {
-            const res = await api.get('/jobs/available-resources', {
+            const res = await api.get("/jobs/available-resources", {
                 params: {
-                    date: job.date || '',
-                    timeSlot: job.timeSlot || '',
-                    jobId: job._id,
-                },
+                    date: job.date || "",
+                    timeSlot: job.timeSlot || "",
+                    jobId: job._id
+                }
             });
-            setDrivers(res.data?.data?.drivers || []);
-            setVehicles(res.data?.data?.vehicles || []);
+
+            let availableDrivers = res.data?.data?.drivers || [];
+            let availableVehicles = res.data?.data?.vehicles || [];
+
+            if (
+                driverId &&
+                !availableDrivers.some(driver => driver._id === driverId)
+            ) {
+                const assignedDriver =
+                    typeof job.assignedDriver === "object"
+                        ? job.assignedDriver
+                        : {
+                            _id: driverId,
+                            name: job.assignedDriverName || "Assigned Driver",
+                            phone: job.assignedDriverPhone || ""
+                        };
+
+                availableDrivers = [assignedDriver, ...availableDrivers];
+            }
+
+            if (
+                vehicleId &&
+                !availableVehicles.some(vehicle => vehicle._id === vehicleId)
+            ) {
+                const assignedVehicle =
+                    typeof job.assignedVehicle === "object"
+                        ? job.assignedVehicle
+                        : {
+                            _id: vehicleId,
+                            regNumber: job.assignedVehicleReg || "Assigned Vehicle",
+                            makeModel: job.assignedVehicleModel || ""
+                        };
+
+                availableVehicles = [assignedVehicle, ...availableVehicles];
+            }
+
+            setDrivers(availableDrivers);
+            setVehicles(availableVehicles);
         } catch {
-            // fallback — sab show karo
+            setDrivers(
+                driverId
+                    ? [{
+                        _id: driverId,
+                        name: job.assignedDriverName || "Assigned Driver",
+                        phone: job.assignedDriverPhone || ""
+                    }]
+                    : []
+            );
+
+            setVehicles(
+                vehicleId
+                    ? [{
+                        _id: vehicleId,
+                        regNumber: job.assignedVehicleReg || "Assigned Vehicle",
+                        makeModel: job.assignedVehicleModel || ""
+                    }]
+                    : []
+            );
         }
     };
 
@@ -89,7 +149,10 @@ export default function Jobs() {
                 ...prev,
                 active: prev.active.map(j => j._id === updated._id ? updated : j),
             }));
+
             setSelectedJob(updated);
+            setSelectedDriverId(getId(updated.assignedDriver));
+            setSelectedVehicleId(getId(updated.assignedVehicle));
             toast.success('Driver/Vehicle assigned & WhatsApp sent!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to assign');
