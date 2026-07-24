@@ -42,10 +42,12 @@ export default function Invoice() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedBooking, setSelectedBooking] = useState(null);
     const [downloading, setDownloading] = useState(false);
+    const [invoiceBasePrice, setInvoiceBasePrice] = useState(0);
+
     const [invoiceData, setInvoiceData] = useState({
         notes: "",
-        discount: 0,
-        tax: 0
+        discount: "",
+        tax: ""
     });
 
     const invoiceRef = useRef(null);
@@ -68,13 +70,18 @@ export default function Invoice() {
             setLoading(false);
         }
     };
-
     const handleSelectBooking = (booking) => {
         setSelectedBooking(booking);
+
+        // Database ki current totalPrice hi new base hogi
+        setInvoiceBasePrice(
+            Number(booking.totalPrice) || 0
+        );
+
         setInvoiceData({
-            notes: "",
-            discount: 0,
-            tax: 0
+            notes: booking.invoiceNotes || "",
+            discount: "",
+            tax: ""
         });
     };
 
@@ -92,10 +99,37 @@ export default function Invoice() {
         );
     });
 
-    const basePrice = Number(selectedBooking?.totalPrice || 0);
-    const discount = Number(invoiceData.discount || 0);
-    const tax = Number(invoiceData.tax || 0);
-    const finalTotal = Math.max(0, basePrice - discount + tax);
+    const basePrice = Math.max(
+        0,
+        Number(invoiceBasePrice) || 0
+    );
+
+    const discount = Math.max(
+        0,
+        Number(invoiceData.discount) || 0
+    );
+
+    const tax = Math.max(
+        0,
+        Number(invoiceData.tax) || 0
+    );
+
+    const finalTotal = Math.max(
+        0,
+        Math.round(
+            (basePrice - discount + tax) * 100
+        ) / 100
+    );
+
+
+    const previewBooking = selectedBooking
+        ? {
+            ...selectedBooking,
+
+            // InvoicePreview ko adjustment se pehle wali price milegi
+            totalPrice: basePrice
+        }
+        : null;
 
     const handleDownload = async () => {
         if (!selectedBooking) {
@@ -108,23 +142,45 @@ export default function Invoice() {
             return;
         }
 
+        const priceToSave = Math.max(
+            0,
+            Math.round(finalTotal * 100) / 100
+        );
+
+        const printWindow = window.open(
+            "",
+            "_blank",
+            "width=900,height=800"
+        );
+
+        if (!printWindow) {
+            toast.error("Please allow popups to download invoice");
+            return;
+        }
+
         try {
             setDownloading(true);
 
             const response = await api.patch(
                 `/bookings/${selectedBooking._id}/price`,
                 {
-                    finalPrice: finalTotal,
+                    finalPrice: priceToSave,
                     discount,
-                    tax
+                    tax,
+                    notes: invoiceData.notes
                 }
             );
 
-            const updatedBooking = response.data?.data || {
-                ...selectedBooking,
-                totalPrice: finalTotal
-            };
+            if (!response.data?.success || !response.data?.data) {
+                throw new Error(
+                    response.data?.message ||
+                    "Booking price was not updated"
+                );
+            }
 
+            const updatedBooking = response.data.data;
+
+            // Database-returned booking me totalPrice ab final price hai
             setSelectedBooking(updatedBooking);
 
             setBookings((currentBookings) =>
@@ -135,90 +191,115 @@ export default function Invoice() {
                 )
             );
 
-            await new Promise((resolve) => setTimeout(resolve, 100));
-
-            const invoiceElement = invoiceRef.current;
-            const printWindow = window.open(
-                "",
-                "_blank",
-                "width=900,height=800"
+            // Preview ko render hone ka time
+            await new Promise((resolve) =>
+                setTimeout(resolve, 150)
             );
 
-            if (!printWindow) {
-                toast.error("Please allow popups to download invoice");
-                return;
-            }
-
+            const invoiceElement = invoiceRef.current;
             const invoiceHTML = invoiceElement.outerHTML;
 
             printWindow.document.open();
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                    <head>
-                        <meta charset="UTF-8" />
-                        <title>Invoice ${updatedBooking.bookingRef}</title>
-                        <style>
-                            * {
-                                box-sizing: border-box;
-                            }
 
+            printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8" />
+                    <title>Invoice ${updatedBooking.bookingRef}</title>
+
+                    <style>
+                        * {
+                            box-sizing: border-box;
+                        }
+
+                        html,
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            background: #ffffff;
+                            font-family: Arial, sans-serif;
+                        }
+
+                        body {
+                            display: flex;
+                            justify-content: center;
+                        }
+
+                        img {
+                            max-width: 100%;
+                        }
+
+                        @page {
+                            size: A4;
+                            margin: 0;
+                        }
+
+                        @media print {
                             html,
                             body {
-                                margin: 0;
-                                padding: 0;
-                                background: #ffffff;
-                                font-family: Arial, sans-serif;
+                                width: 210mm;
+                                min-height: 297mm;
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
                             }
+                        }
+                    </style>
+                </head>
 
-                            body {
-                                display: flex;
-                                justify-content: center;
-                            }
+                <body>
+                    ${invoiceHTML}
 
-                            img {
-                                max-width: 100%;
-                            }
+                    <script>
+                        window.onload = function () {
+                            setTimeout(function () {
+                                window.print();
+                            }, 300);
+                        };
 
-                            @page {
-                                size: A4;
-                                margin: 0;
-                            }
+                        window.onafterprint = function () {
+                            window.close();
+                        };
+                    <\/script>
+                </body>
+            </html>
+        `);
 
-                            @media print {
-                                html,
-                                body {
-                                    width: 210mm;
-                                    min-height: 297mm;
-                                    -webkit-print-color-adjust: exact;
-                                    print-color-adjust: exact;
-                                }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        ${invoiceHTML}
-                        <script>
-                            window.onload = function () {
-                                setTimeout(function () {
-                                    window.print();
-                                }, 300);
-                            };
-
-                            window.onafterprint = function () {
-                                window.close();
-                            };
-                        <\/script>
-                    </body>
-                </html>
-            `);
             printWindow.document.close();
 
-            toast.success("Invoice ready. Select Save as PDF.");
+            /*
+             * Ab saved final total hi next base price hogi.
+             *
+             * Example:
+             * old total = 37
+             * discount = 10
+             * saved total = 27
+             *
+             * Ab UI base = 27 aur fields empty.
+             * Dobara 10 subtract nahi hoga.
+             */
+            setInvoiceBasePrice(
+                Number(updatedBooking.totalPrice) || priceToSave
+            );
+
+            setInvoiceData((current) => ({
+                ...current,
+                discount: "",
+                tax: ""
+            }));
+
+            toast.success(
+                `Price updated to £${priceToSave.toFixed(2)}. Invoice ready.`
+            );
         } catch (err) {
+            printWindow.close();
+
             console.error("Generate invoice error:", err);
+
             toast.error(
-                err.response?.data?.message || "Failed to generate invoice"
+                err.response?.data?.message ||
+                err.message ||
+                "Failed to generate invoice"
             );
         } finally {
             setDownloading(false);
@@ -362,15 +443,16 @@ export default function Invoice() {
                                             min="0"
                                             step="0.01"
                                             value={invoiceData.discount}
-                                            onChange={(event) =>
-                                                setInvoiceData((current) => ({
-                                                    ...current,
-                                                    discount:
-                                                        Number(
-                                                            event.target.value
-                                                        ) || 0
-                                                }))
-                                            }
+                                            onChange={(event) => {
+                                                const value = event.target.value;
+
+                                                if (value === "" || Number(value) >= 0) {
+                                                    setInvoiceData((current) => ({
+                                                        ...current,
+                                                        discount: value
+                                                    }));
+                                                }
+                                            }}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
                                         />
                                     </div>
@@ -385,15 +467,16 @@ export default function Invoice() {
                                             min="0"
                                             step="0.01"
                                             value={invoiceData.tax}
-                                            onChange={(event) =>
-                                                setInvoiceData((current) => ({
-                                                    ...current,
-                                                    tax:
-                                                        Number(
-                                                            event.target.value
-                                                        ) || 0
-                                                }))
-                                            }
+                                            onChange={(event) => {
+                                                const value = event.target.value;
+
+                                                if (value === "" || Number(value) >= 0) {
+                                                    setInvoiceData((current) => ({
+                                                        ...current,
+                                                        tax: value
+                                                    }));
+                                                }
+                                            }}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
                                         />
                                     </div>
@@ -459,7 +542,7 @@ export default function Invoice() {
                                     <div className="origin-top scale-[0.38] sm:scale-[0.55] md:scale-[0.72] mb-[-620px] sm:mb-[-430px] md:mb-[-270px]">
                                         <InvoicePreview
                                             ref={invoiceRef}
-                                            booking={selectedBooking}
+                                            booking={previewBooking}
                                             invoiceData={invoiceData}
                                         />
                                     </div>

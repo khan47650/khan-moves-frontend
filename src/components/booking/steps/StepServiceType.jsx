@@ -94,7 +94,7 @@ export default function StepServiceType({ value, onChange, error }) {
                                                 {service.label}
                                             </p>
                                             <p className="text-xs text-gray-500 mt-1 leading-snug">
-                                                {service.items?.length || 0} items available
+                                                {service.categories?.length || 0} categories available
                                             </p>
                                         </div>
 

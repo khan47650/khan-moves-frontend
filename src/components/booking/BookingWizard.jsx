@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiCheckCircle, FiPhone } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import api from '../../api/api';
 
@@ -43,7 +43,9 @@ export default function BookingWizard() {
         dateType: 'specific',
         date: '',
         timeSlot: '',
-        helperCount: 1,
+        helperCount: 0,
+        dismantleItems: [],
+        assemblyItems: [],
         dismantleCount: 0,
         assemblyCount: 0,
         specialInstructions: '',
@@ -61,18 +63,19 @@ export default function BookingWizard() {
     );
 
     // ── Correct price calculation per client formula ─────────────
-    const totalPrice = calculateTotalPrice({
-        distance: bookingData.distance,
-        volume: totalVolume,
-        pickupFloor: bookingData.pickupFloor,
-        deliveryFloor: bookingData.deliveryFloor,
-        helperCount: bookingData.helperCount,
-        dismantleCount: bookingData.dismantleCount,
-        assemblyCount: bookingData.assemblyCount,
-        packingService: bookingData.packingService,
-        dateType: bookingData.dateType,
-        timeSlot: bookingData.timeSlot,
-    });
+   const totalPrice=calculateTotalPrice({
+    distance:Number(bookingData.distance)||0,
+    volume:Number(totalVolume)||0,
+    pickupFloor:bookingData.pickupFloor,
+    deliveryFloor:bookingData.deliveryFloor,
+    helperCount:Number(bookingData.helperCount)||0,
+    dismantleCount:Number(bookingData.dismantleCount)||0,
+    assemblyCount:Number(bookingData.assemblyCount)||0,
+    packingService:Boolean(bookingData.packingService),
+    dateType:bookingData.dateType,
+    date:bookingData.date,
+    timeSlot:bookingData.timeSlot
+});
 
     const handleChange = (key, value) => {
         setBookingData(prev => ({ ...prev, [key]: value }));
@@ -121,8 +124,9 @@ export default function BookingWizard() {
     };
 
     // ── API call — only fires when user confirms dialog ─────────────────────
-    const handleSubmit = async (customerData) => {
+    const handleSubmit = async customerData => {
         setLoading(true);
+
         try {
             const payload = {
                 serviceType: bookingData.serviceType,
@@ -131,24 +135,27 @@ export default function BookingWizard() {
                 pickupFloor: bookingData.pickupFloor,
                 deliveryFloor: bookingData.deliveryFloor,
                 items: bookingData.items,
-                totalVolume,
                 dateType: bookingData.dateType,
                 date: bookingData.date,
                 timeSlot: bookingData.timeSlot,
                 helperCount: bookingData.helperCount,
                 dismantleCount: bookingData.dismantleCount,
                 assemblyCount: bookingData.assemblyCount,
+                dismantleItems: bookingData.dismantleItems || [],
+                assemblyItems: bookingData.assemblyItems || [],
                 packingService: bookingData.packingService,
                 specialInstructions: bookingData.specialInstructions,
                 distance: bookingData.distance,
-                totalPrice,
-                customer: customerData,
+                customer: customerData
             };
 
             const res = await api.post('/bookings', payload);
-            return res.data; // { success, data, bookingRef }
+            return res.data;
         } catch (err) {
-            toast.error('Failed to submit booking. Please try again.');
+            toast.error(
+                err.response?.data?.message ||
+                'Failed to submit booking. Please try again.'
+            );
             return null;
         } finally {
             setLoading(false);
@@ -189,23 +196,47 @@ export default function BookingWizard() {
                                     transition={{ duration: 0.5 }}
                                 />
                             </div>
+
                         </div>
-                        <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-                            {STEPS.map((s, idx) => (
-                                <button
-                                    key={s.id}
-                                    onClick={() => idx < currentStep && setCurrentStep(idx)}
-                                    className={`shrink-0 px-3 py-1.5 rounded-lg font-semibold text-sm transition ${idx === currentStep
-                                        ? 'bg-[#DC2626] text-white'
-                                        : idx < currentStep
-                                            ? 'bg-green-100 text-green-700 cursor-pointer'
-                                            : 'bg-gray-200 text-gray-500 cursor-default'
-                                        }`}
-                                >
-                                    {idx < currentStep ? <FiCheckCircle className="inline mr-1" size={13} /> : `${idx + 1}. `}
-                                    {s.label}
-                                </button>
-                            ))}
+                        <div className="mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                            <div className="flex gap-2 overflow-x-auto pb-1 flex-1">
+                                {STEPS.map((s, idx) => (
+                                    <button
+                                        key={s.id}
+                                        onClick={() => idx < currentStep && setCurrentStep(idx)}
+                                        className={`shrink-0 px-3 py-1.5 rounded-lg font-semibold text-sm transition ${idx === currentStep
+                                            ? 'bg-[#DC2626] text-white'
+                                            : idx < currentStep
+                                                ? 'bg-green-100 text-green-700 cursor-pointer'
+                                                : 'bg-gray-200 text-gray-500 cursor-default'
+                                            }`}
+                                    >
+                                        {idx < currentStep
+                                            ? <FiCheckCircle className="inline mr-1" size={13} />
+                                            : `${idx + 1}. `
+                                        }
+                                        {s.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <a
+                                href="tel:07424153126"
+                                className="shrink-0 flex items-center gap-2 px-3.5 py-2 bg-red-50 border border-red-100 rounded-xl hover:border-[#C0392B] hover:bg-red-100 transition group"
+                            >
+                                <div className="w-7 h-7 rounded-full bg-[#C0392B] text-white flex items-center justify-center">
+                                    <FiPhone size={13} />
+                                </div>
+
+                                <div className="leading-tight">
+                                    <p className="text-[10px] font-semibold text-gray-500">
+                                        Need Help?
+                                    </p>
+                                    <p className="text-xs font-bold text-[#C0392B] group-hover:underline">
+                                        Call: 07424153126
+                                    </p>
+                                </div>
+                            </a>
                         </div>
                     </>
                 )}

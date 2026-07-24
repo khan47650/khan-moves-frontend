@@ -151,7 +151,7 @@ export default function HomePage() {
 
                     <h3 className="font-bold text-xl text-gray-900 mb-1.5 relative z-10">{service.label}</h3>
                     <p className={`text-sm font-semibold ${theme.text} mb-6`}>
-                      {service.items?.length || 0} items available
+                      {service.categories?.length || 0} categories available
                     </p>
 
                     <div className="mt-auto flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function HomePage() {
                           {service.label}
                         </span>
                         <span className={`ml-auto text-xs font-medium transition-colors ${isSelected ? theme.text : 'text-gray-400'}`}>
-                          {service.items?.length || 0} items
+                          {service.categories?.length || 0} categories
                         </span>
                         {isSelected && (
                           <FiCheckCircle size={16} className={theme.text} />
@@ -234,7 +234,7 @@ export default function HomePage() {
                     <p className="text-white/70 text-sm font-medium mb-1">Your Selection</p>
                     <h4 className="text-3xl font-bold">{selectedService?.label || '—'}</h4>
                     <p className="text-white/60 text-sm mt-1">
-                      {selectedService?.items?.length || 0} items available
+                      {selectedService?.categories?.length || 0} categories available
                     </p>
                   </div>
                 )}

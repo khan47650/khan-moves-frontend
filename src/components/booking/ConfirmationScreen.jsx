@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     FiCheckCircle, FiCopy, FiPackage, FiClock,
@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fi';
 import MapComponent from './MapComponent';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/api';
 
 export default function ConfirmationScreen({
     data,
@@ -22,6 +23,32 @@ export default function ConfirmationScreen({
     const [copied, setCopied] = useState(false);
     const navigate = useNavigate();
 
+    const [serviceName, setServiceName] = useState('');
+
+    useEffect(() => {
+        const fetchServiceName = async () => {
+            try {
+                const res = await api.get('/inventory/services');
+                const services = res.data?.data || [];
+                const matched = services.find(
+                    service => service.slug === data.serviceType
+                );
+
+                setServiceName(
+                    matched?.label ||
+                    data.serviceType?.replaceAll('_', ' ') ||
+                    '—'
+                );
+            } catch (err) {
+                setServiceName(
+                    data.serviceType?.replaceAll('_', ' ') || '—'
+                );
+            }
+        };
+
+        fetchServiceName();
+    }, [data.serviceType]);
+
     const copyToClipboard = () => {
         navigator.clipboard.writeText(bookingRef);
         setCopied(true);
@@ -35,25 +62,6 @@ export default function ConfirmationScreen({
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-    };
-
-    // Pretty service label from slug
-    const serviceLabel = (slug) => {
-        const map = {
-            home: 'Home Removal',
-            furniture: 'Furniture Move',
-            furniture_move: 'Furniture Move',
-            office: 'Office Removal',
-            office_removal: 'Office Removal',
-            parcels: 'Boxes & Parcels',
-            boxes_parcels: 'Boxes & Parcels',
-            packing: 'Packing Service',
-            packing_service: 'Packing Service',
-            vehicle: 'Vehicle Parts',
-            vehicle_parts: 'Vehicle Parts',
-            pallets: 'Pallets',
-        };
-        return map[slug] || slug;
     };
 
     return (
@@ -111,7 +119,9 @@ export default function ConfirmationScreen({
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Service</p>
-                                    <p className="font-bold text-[#1a1a1a] mt-0.5">{serviceLabel(data.serviceType)}</p>
+                                    <p className="font-bold text-[#1a1a1a] mt-0.5 capitalize">
+                                        {serviceName || 'Loading service...'}
+                                    </p>
                                 </div>
                             </div>
 
@@ -121,9 +131,9 @@ export default function ConfirmationScreen({
                                     <FiClock size={18} className="text-yellow-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500 font-medium">Date & Time</p>
+                                    <p className="text-xs text-gray-500 font-medium">Pickup Date & Time</p>
                                     {data.dateType === 'flexible' ? (
-                                        <p className="font-bold text-[#1a1a1a] mt-0.5">Flexible dates (20% off)</p>
+                                        <p className="font-bold text-[#1a1a1a] mt-0.5">  Flexible pickup date (20% off)</p>
                                     ) : (
                                         <p className="font-bold text-[#1a1a1a] mt-0.5">
                                             {data.date ? new Date(data.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
@@ -190,6 +200,76 @@ export default function ConfirmationScreen({
                             </div>
                         </div>
 
+                        {/* Crew */}
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 font-medium mb-1">
+                                Moving crew
+                            </p>
+
+                            <p className="text-sm font-bold text-[#1a1a1a]">
+                                {data.helperCount > 0
+                                    ? 'Driver + professional helper'
+                                    : 'Driver only'}
+                            </p>
+                        </div>
+
+                        {/* Selected add-ons */}
+                        {(
+                            data.dismantleItems?.length > 0 ||
+                            data.assemblyItems?.length > 0 ||
+                            data.packingService
+                        ) && (
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <p className="font-bold text-[#1a1a1a] mb-3">
+                                        Additional Services
+                                    </p>
+
+                                    <div className="space-y-2">
+                                        {data.dismantleItems?.map((item, index) => (
+                                            <div
+                                                key={`dismantle-${item.itemId || index}`}
+                                                className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2"
+                                            >
+                                                <span className="text-gray-700">
+                                                    Dismantle: {item.name}
+                                                </span>
+
+                                                <span className="font-bold">
+                                                    ×{item.quantity}
+                                                </span>
+                                            </div>
+                                        ))}
+
+                                        {data.assemblyItems?.map((item, index) => (
+                                            <div
+                                                key={`assembly-${item.itemId || index}`}
+                                                className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2"
+                                            >
+                                                <span className="text-gray-700">
+                                                    Assemble: {item.name}
+                                                </span>
+
+                                                <span className="font-bold">
+                                                    ×{item.quantity}
+                                                </span>
+                                            </div>
+                                        ))}
+
+                                        {data.packingService && (
+                                            <div className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                                                <span className="text-gray-700">
+                                                    Professional packing
+                                                </span>
+
+                                                <span className="font-bold text-green-600">
+                                                    Selected
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                         {/* Total Price */}
                         <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                             <p className="text-xs text-gray-500 font-medium">Estimated Total</p>
@@ -202,10 +282,10 @@ export default function ConfirmationScreen({
                         <h3 className="text-xl font-black text-[#1a1a1a] mb-5">What's Next</h3>
                         <div className="space-y-3 mb-5">
                             {[
-                                'Team reviews your request within 2 hours',
-                                'Confirmation via WhatsApp or email',
-                                'You receive your final price & invoice',
-                                'Driver calls 30 mins before arrival',
+                                'Our team will review and confirm your booking details',
+                                'Your invoice will be sent and can be paid online',
+                                'Call customer care anytime for updates or changes',
+                                'Your driver will call approximately 30 minutes before arrival',
                             ].map((step, i) => (
                                 <div key={i} className="flex gap-3 items-start">
                                     <div className="w-6 h-6 bg-[#C0392B] text-white rounded-full flex items-center justify-center text-xs font-black shrink-0 mt-0.5">
@@ -218,16 +298,42 @@ export default function ConfirmationScreen({
 
                         {/* Contact buttons */}
                         <div className="flex gap-2 mb-3">
-                            <button className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm hover:shadow-md">
+                            <a
+                                href="https://wa.me/447424153126"
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Contact on WhatsApp"
+                                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm"
+                            >
                                 <FiMessageCircle size={18} />
-                            </button>
-                            <button className="flex-1 bg-[#C0392B] hover:bg-red-700 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm hover:shadow-md">
+                            </a>
+
+                            <a
+                                href="mailto:info@khanmoves.co.uk"
+                                aria-label="Send email"
+                                className="flex-1 bg-[#C0392B] hover:bg-red-700 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm"
+                            >
                                 <FiMail size={18} />
-                            </button>
-                            <button className="flex-1 bg-[#1a1a1a] hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm hover:shadow-md">
+                            </a>
+
+                            <a
+                                href="tel:07424153126"
+                                aria-label="Call customer care"
+                                className="flex-1 bg-[#1a1a1a] hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm"
+                            >
                                 <FiPhone size={18} />
-                            </button>
+                            </a>
                         </div>
+
+                        <p className="text-xs text-center text-gray-500 mb-3">
+                            Need help? Call{' '}
+                            <a
+                                href="tel:07424153126"
+                                className="font-bold text-[#C0392B] hover:underline"
+                            >
+                                07424153126
+                            </a>
+                        </p>
 
                         <button
                             onClick={() => navigate('/')}

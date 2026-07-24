@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-    FiX, FiChevronDown, FiEye, FiTrash2,
-    FiPhone, FiMail, FiMapPin, FiClock, FiPackage, FiDollarSign
-} from 'react-icons/fi';
+    FiX,
+    FiEye,
+    FiTrash2,
+    FiPhone,
+    FiMail,
+    FiMapPin,
+    FiClock,
+    FiPackage,
+    FiDollarSign,
+    FiLayers,
+    FiArrowRight
+} from "react-icons/fi";
 import api from "../../../api/api";
 import DeleteJobDialog from "../../../components/admin/DeleteJobDialog";
 import { toast } from "react-toastify";
@@ -11,57 +20,160 @@ import { toast } from "react-toastify";
 function SectionLoader() {
     return (
         <div className="flex flex-col items-center justify-center py-20">
-            <div className="relative w-12 h-12 mb-4">
+            <div className="relative mb-4 h-12 w-12">
                 <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
-                <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#C0392B] animate-spin" />
+                <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[#C0392B]" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-[#C0392B]/20 animate-pulse" />
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-[#C0392B]/20" />
                 </div>
             </div>
 
             <p className="text-sm font-semibold text-gray-400">
-                Loading Jobs...
+                Loading jobs...
             </p>
         </div>
     );
 }
 
+const formatJobDate = value => {
+    if (!value) return "To be arranged";
+
+    const date = new Date(`${value}T12:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+};
+
+const formatTimeSlot = value => {
+    const timeSlots = {
+        early: "6:00 AM – 6:00 PM",
+        morning: "8:00 AM – 6:00 PM",
+        afternoon: "9:00 AM – 4:00 PM",
+        flexible: "Flexible timing"
+    };
+
+    return timeSlots[value] || value || "To be arranged";
+};
+
+const getJobSchedule = job => {
+    if (job.dateType === "flexible") {
+        return {
+            type: "flexible",
+            label: "Flexible"
+        };
+    }
+
+    const pickupDate = job.date || "";
+    const deliveryDate = job.deliveryDate || "";
+
+    if (
+        pickupDate &&
+        deliveryDate &&
+        pickupDate === deliveryDate
+    ) {
+        return {
+            type: "same",
+            label: formatJobDate(pickupDate)
+        };
+    }
+
+    return {
+        type: "different",
+        pickup: formatJobDate(pickupDate),
+        delivery: formatJobDate(deliveryDate)
+    };
+};
+
+const STATUS_DETAILS = {
+    completed: {
+        label: "COMPLETED",
+        badge: "bg-green-100 text-green-800"
+    },
+    cancelled: {
+        label: "CANCELLED",
+        badge: "bg-amber-100 text-amber-800"
+    },
+    trash: {
+        label: "TRASH",
+        badge: "bg-red-100 text-red-800"
+    }
+};
+
 export default function JobsHistory() {
-    const [historyType, setHistoryType] = useState('completed');
+    const [historyType, setHistoryType] = useState("completed");
+
     const [completedJobs, setCompletedJobs] = useState([]);
+    const [cancelledJobs, setCancelledJobs] = useState([]);
+    const [trashJobs, setTrashJobs] = useState([]);
+
     const [selectedJob, setSelectedJob] = useState(null);
-    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedDate, setSelectedDate] = useState("");
+
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [trashJobs, setTrashJobs] = useState([]);
+
     const [deleteOne, setDeleteOne] = useState(null);
     const [deleteAll, setDeleteAll] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [movingToTrash, setMovingToTrash] = useState(false);
+
+    const getRequestParams = () => {
+        const params = {
+            page,
+            limit: 10
+        };
+
+        if (selectedDate) {
+            params.from = selectedDate;
+            params.to = selectedDate;
+        }
+
+        return params;
+    };
 
     const loadCompletedJobs = async () => {
         try {
             setLoading(true);
 
-            const params = {
-                page,
-                limit: 10,
-            };
-
-            if (selectedDate) {
-                params.from = selectedDate;
-                params.to = selectedDate;
-            }
-
             const { data } = await api.get("/jobs/history", {
-                params,
+                params: getRequestParams()
             });
 
-            setCompletedJobs(data.data);
-            setTotalPages(data.totalPages);
-
+            setCompletedJobs(data.data || []);
+            setTotalPages(data.totalPages || 1);
         } catch (err) {
-            toast.error("Failed to load completed jobs");
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to load completed jobs"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadCancelledJobs = async () => {
+        try {
+            setLoading(true);
+
+            const { data } = await api.get("/jobs/cancelled", {
+                params: getRequestParams()
+            });
+
+            setCancelledJobs(data.data || []);
+            setTotalPages(data.totalPages || 1);
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to load cancelled jobs"
+            );
         } finally {
             setLoading(false);
         }
@@ -71,605 +183,986 @@ export default function JobsHistory() {
         try {
             setLoading(true);
 
-            const params = {
-                page,
-                limit: 10,
-            };
-
-            if (selectedDate) {
-                params.from = selectedDate;
-                params.to = selectedDate;
-            }
-
             const { data } = await api.get("/jobs/trash", {
-                params,
+                params: getRequestParams()
             });
 
-            setTrashJobs(data.data);
-            setTotalPages(data.totalPages);
-
+            setTrashJobs(data.data || []);
+            setTotalPages(data.totalPages || 1);
         } catch (err) {
-            toast.error("Failed to load trash jobs");
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to load Trash jobs"
+            );
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
+        setSelectedJob(null);
+
         if (historyType === "completed") {
-
             loadCompletedJobs();
-
-        }
-
-        else {
-
+        } else if (historyType === "cancelled") {
+            loadCancelledJobs();
+        } else {
             loadTrashJobs();
-
         }
-
     }, [historyType, page, selectedDate]);
 
-    const deleteTrash = async (id) => {
-
-        if (!window.confirm("Delete this job permanently?")) return;
+    const moveCancelledToTrash = async job => {
+        setMovingToTrash(true);
 
         try {
+            await api.patch(`/jobs/${job._id}/trash`);
 
-            await api.delete(`/jobs/trash/${id}`);
+            setCancelledJobs(current =>
+                current.filter(item => item._id !== job._id)
+            );
 
-            toast.success("Job deleted");
+            setSelectedJob(null);
 
-            loadTrashJobs();
+            if (page > 1 && cancelledJobs.length === 1) {
+                setPage(current => current - 1);
+            }
 
+            toast.success("Job moved to Trash");
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to move job to Trash"
+            );
+        } finally {
+            setMovingToTrash(false);
         }
-
-        catch (err) {
-
-            toast.error("Delete failed");
-
-        }
-
     };
 
-    const deleteAllTrash = async () => {
+    const handleDeleteOne = async () => {
+        if (!deleteOne) return;
 
-        if (!window.confirm("Delete all trash jobs?")) return;
+        setDeleteLoading(true);
 
         try {
+            await api.delete(`/jobs/trash/${deleteOne._id}`);
 
+            toast.success("Job permanently deleted");
+
+            setDeleteOne(null);
+            setSelectedJob(null);
+
+            if (page > 1 && trashJobs.length === 1) {
+                setPage(current => current - 1);
+            } else {
+                loadTrashJobs();
+            }
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to delete job"
+            );
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
+    const handleClearTrash = async () => {
+        setDeleteLoading(true);
+
+        try {
             await api.delete("/jobs/trash");
 
+            setTrashJobs([]);
+            setDeleteAll(false);
+            setSelectedJob(null);
+            setPage(1);
+            setTotalPages(1);
+
             toast.success("Trash cleared");
-
-            loadTrashJobs();
-
+        } catch (err) {
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to clear Trash"
+            );
+        } finally {
+            setDeleteLoading(false);
         }
-
-        catch (err) {
-
-            toast.error("Failed");
-
-        }
-
     };
 
-    const JobCard = ({ job, type }) => (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition">
-            <div className="flex items-start justify-between mb-4">
-                <div>
-                    <h3 className="text-lg font-bold text-[#1a1a1a]">
-                        {job.customer?.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                        Ref: <span className="font-semibold text-[#C0392B]">
-                            {job.bookingRef}
-                        </span>
-                    </p>
-                </div>
-                <span className={`px-3 py-1 text-xs font-semibold rounded-full ${type === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                    {type === 'completed' ? 'COMPLETED' : 'DELETED'}
-                </span>
-            </div>
+    const currentJobs =
+        historyType === "completed"
+            ? completedJobs
+            : historyType === "cancelled"
+                ? cancelledJobs
+                : trashJobs;
 
-            <div className="grid sm:grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
-                <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Pickup</p>
-                    <p className="text-sm text-gray-700">{job.pickup?.address}</p>
-                </div>
-                <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Delivery</p>
-                    <p className="text-sm text-gray-700">{job.delivery?.address}</p>
-                </div>
-                <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Driver</p>
-                    <p className="text-sm font-semibold text-gray-700">{job.assignedDriverName || "Not Assigned"}</p>
-                </div>
-                <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Price</p>
-                    <p className="text-lg font-bold">
-                        £{job.totalPrice}
-                    </p>
-                </div>
-            </div>
+    const statusDetails =
+        STATUS_DETAILS[historyType] ||
+        STATUS_DETAILS.completed;
 
-            <div className="flex flex-wrap gap-2 items-center">
-                <button
-                    onClick={() => setSelectedJob(job)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition text-sm font-semibold"
-                >
-                    <FiEye size={16} /> View
-                </button>
+    const getEmptyContent = () => {
+        if (historyType === "completed") {
+            return {
+                title: "No Completed Jobs",
+                message: selectedDate
+                    ? "No completed jobs found on the selected date."
+                    : "Completed jobs will appear here."
+            };
+        }
 
-                {type === 'deleted' && (
-                    <button
-                        onClick={() => setDeleteOne(job)
-                        }
-                        className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm font-semibold"
+        if (historyType === "cancelled") {
+            return {
+                title: "No Cancelled Jobs",
+                message: selectedDate
+                    ? "No cancelled jobs found on the selected date."
+                    : "Cancelled jobs will appear here."
+            };
+        }
+
+        return {
+            title: "Trash Empty",
+            message: "No jobs are currently in Trash."
+        };
+    };
+
+    const JobCard = ({ job, type }) => {
+        const schedule = getJobSchedule(job);
+        const details = STATUS_DETAILS[type];
+
+        return (
+            <div className="rounded-xl border border-gray-200 bg-white p-5 transition hover:shadow-md">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                        <h3 className="text-lg font-bold text-[#1a1a1a]">
+                            {job.customer?.name || "—"}
+                        </h3>
+
+                        <p className="text-sm text-gray-500">
+                            Ref:{" "}
+                            <span className="font-semibold text-[#C0392B]">
+                                {job.bookingRef}
+                            </span>
+                        </p>
+                    </div>
+
+                    <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${details.badge}`}
                     >
-                        <FiTrash2 size={16} /> Clear
+                        {details.label}
+                    </span>
+                </div>
+
+                <div className="mb-4 grid gap-4 border-b border-gray-200 pb-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                            Route
+                        </p>
+
+                        <p className="text-sm font-semibold text-gray-700">
+                            {job.pickup?.postcode || "—"}
+                            {" → "}
+                            {job.delivery?.postcode || "—"}
+                        </p>
+
+                        <p className="mt-1 text-xs font-semibold text-[#C0392B]">
+                            {Number(job.distance || 0)} miles
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                            Pickup / Drop-off dates
+                        </p>
+
+                        {schedule.type === "flexible" && (
+                            <p className="text-sm font-semibold text-gray-700">
+                                Flexible
+                            </p>
+                        )}
+
+                        {schedule.type === "same" && (
+                            <p className="text-sm font-semibold text-gray-700">
+                                {schedule.label}
+                            </p>
+                        )}
+
+                        {schedule.type === "different" && (
+                            <div className="space-y-1">
+                                <p className="text-xs text-gray-700">
+                                    <span className="font-bold">
+                                        Pickup:
+                                    </span>{" "}
+                                    {schedule.pickup}
+                                </p>
+
+                                <p className="text-xs text-gray-700">
+                                    <span className="font-bold">
+                                        Drop-off:
+                                    </span>{" "}
+                                    {schedule.delivery}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                            Time windows
+                        </p>
+
+                        <p className="text-xs text-gray-700">
+                            <span className="font-bold">
+                                Pickup:
+                            </span>{" "}
+                            {job.dateType === "flexible"
+                                ? "Flexible"
+                                : formatTimeSlot(job.timeSlot)}
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-700">
+                            <span className="font-bold">
+                                Drop-off:
+                            </span>{" "}
+                            {formatTimeSlot(job.deliveryTimeSlot)}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                            Price
+                        </p>
+
+                        <p className="text-lg font-black text-[#1a1a1a]">
+                            £{Number(job.totalPrice || 0).toFixed(2)}
+                        </p>
+
+                        <p className="text-xs text-gray-500">
+                            {job.assignedDriverName || "Driver not assigned"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setSelectedJob(job)}
+                        className="flex items-center gap-2 rounded-lg bg-[#C0392B]/10 px-4 py-2 text-sm font-semibold text-[#C0392B] transition hover:bg-[#C0392B]/20"
+                    >
+                        <FiEye size={16} />
+                        View Details
                     </button>
-                )}
+
+                    {type === "cancelled" && (
+                        <button
+                            type="button"
+                            disabled={movingToTrash}
+                            onClick={() => moveCancelledToTrash(job)}
+                            className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-200 disabled:opacity-50"
+                        >
+                            <FiTrash2 size={16} />
+                            Move to Trash
+                        </button>
+                    )}
+
+                    {type === "trash" && (
+                        <button
+                            type="button"
+                            onClick={() => setDeleteOne(job)}
+                            className="flex items-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-200"
+                        >
+                            <FiTrash2 size={16} />
+                            Delete Permanently
+                        </button>
+                    )}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
-
+    const emptyContent = getEmptyContent();
 
     return (
         <div className="relative">
-            {/* Header */}
-            <h1 className="text-3xl font-bold text-[#1a1a1a] mb-2">Jobs History</h1>
-            <p className="text-gray-500 mb-8">View completed and deleted jobs.</p>
+            <h1 className="mb-2 text-3xl font-bold text-[#1a1a1a]">
+                Jobs History
+            </h1>
 
-            {/* Filter Dropdown */}
-            <div className="mb-8 flex gap-6 items-end flex-wrap lg:flex-nowrap">
-                <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">Filter by Type</label>
-                    <div className="relative w-full md:w-64">
-                        <select
-                            value={historyType}
-                            onChange={(e) => {
-                                setHistoryType(e.target.value);
+            <p className="mb-6 text-gray-500">
+                View completed, cancelled and deleted jobs.
+            </p>
+
+            {/* Tabs */}
+            <div className="mb-6 flex gap-1 overflow-x-auto border-b border-gray-200">
+                {[
+                    {
+                        id: "completed",
+                        label: "Completed"
+                    },
+                    {
+                        id: "cancelled",
+                        label: "Cancel"
+                    },
+                    {
+                        id: "trash",
+                        label: "Trash"
+                    }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                            setHistoryType(tab.id);
+                            setPage(1);
+                            setSelectedDate("");
+                            setSelectedJob(null);
+                        }}
+                        className={`shrink-0 border-b-2 px-5 py-3 text-sm font-bold transition ${historyType === tab.id
+                                ? "border-[#C0392B] text-[#C0392B]"
+                                : "border-transparent text-gray-500 hover:text-gray-800"
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Filters and Clear Trash */}
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+                <div className="flex flex-wrap items-end gap-3">
+                    <div>
+                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                            Filter by job date
+                        </label>
+
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            onChange={event => {
+                                setSelectedDate(event.target.value);
                                 setPage(1);
-
                             }}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20 transition text-gray-700 font-medium"
-                        >
-                            <option value="completed">Completed Jobs</option>
-                            <option value="trash">Trash ({trashJobs.length})</option>
-                        </select>
-                        <FiChevronDown className="absolute right-4 top-3.5 pointer-events-none text-gray-500" size={20} />
+                            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20"
+                        />
                     </div>
+
+                    {selectedDate && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSelectedDate("");
+                                setPage(1);
+                            }}
+                            className="rounded-lg bg-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-300"
+                        >
+                            Clear Filter
+                        </button>
+                    )}
                 </div>
 
-                {historyType === 'completed' && (
-                    <div className="flex gap-4 items-end">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Filter by Date</label>
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => {
-
-                                    setSelectedDate(e.target.value);
-
-                                    setPage(1);
-
-                                }}
-                                className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/20 transition"
-                            />
-                        </div>
-                        {selectedDate && (
-                            <button
-                                onClick={() => {
-
-                                    setSelectedDate("");
-
-                                    setPage(1);
-
-                                }}
-                                className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-semibold"
-                            >
-                                Clear Filter
-                            </button>
-                        )}
-                    </div>
+                {historyType === "trash" && trashJobs.length > 0 && (
+                    <button
+                        type="button"
+                        onClick={() => setDeleteAll(true)}
+                        className="flex items-center gap-2 rounded-xl bg-[#C0392B] px-5 py-3 text-sm font-bold text-white transition hover:bg-red-800"
+                    >
+                        <FiTrash2 size={17} />
+                        Clear Trash ({trashJobs.length})
+                    </button>
                 )}
             </div>
 
-            {/* Main Content */}
-            <div className="w-full">
+            {/* Jobs */}
+            {loading ? (
+                <SectionLoader />
+            ) : currentJobs.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
+                    <FiPackage
+                        size={34}
+                        className="mx-auto mb-3 text-gray-300"
+                    />
+
+                    <h3 className="font-bold text-gray-700">
+                        {emptyContent.title}
+                    </h3>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        {emptyContent.message}
+                    </p>
+                </div>
+            ) : (
                 <div className="space-y-4">
-                    {loading && <SectionLoader />}
-                    {historyType === 'completed' && (
-                        completedJobs.length === 0 ? (
-                            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                                <div className="py-10 text-center">
-                                    <FiPackage size={34} className="mx-auto text-gray-300 mb-3" />
-
-                                    <h3 className="font-bold text-gray-700">
-                                        No Completed Jobs
-                                    </h3>
-
-                                    <p className="text-sm text-gray-500 mt-1">
-                                        {selectedDate
-                                            ? "No completed jobs found on the selected date."
-                                            : "Completed jobs will appear here."}
-                                    </p>
-                                </div>
-                            </div>
-                        ) : (
-                            !loading && completedJobs.map(job => (
-                                <JobCard
-                                    key={job.id}
-                                    job={job}
-                                    type="completed"
-                                />
-                            ))
-                        )
-                    )}
-
-                    {historyType === 'trash' && (
-                        <>
-                            {trashJobs.length > 0 && (
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => setDeleteAll(true)}
-                                    className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 
-                                    transition text-sm font-bold uppercase tracking-wide mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <FiTrash2 size={18} /> disabled={trashJobs.length === 0}({trashJobs.length})
-                                </motion.button>
-                            )}
-
-                            {trashJobs.length === 0 ? (
-                                <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-                                    <div className="py-10 text-center">
-                                        <FiTrash2
-                                            size={34}
-                                            className="mx-auto text-red-200 mb-3"
-                                        />
-
-                                        <h3 className="font-bold text-gray-700">
-                                            Trash Empty
-                                        </h3>
-
-                                        <p className="text-sm text-gray-500 mt-1">
-                                            No cancelled jobs available.
-                                        </p>
-                                    </div>
-                                </div>
-                            ) : trashJobs.map(job => <JobCard key={job.id} job={job} type="deleted" />)}
-                        </>
-                    )}
+                    {currentJobs.map(job => (
+                        <JobCard
+                            key={job._id}
+                            job={job}
+                            type={historyType}
+                        />
+                    ))}
                 </div>
-                {totalPages > 1 && (
+            )}
 
-                    <div className="flex justify-center items-center gap-2 mt-8">
+            {/* Pagination */}
+            {!loading && totalPages > 1 && (
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setPage(current => current - 1)
+                        }
+                        disabled={page === 1}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 disabled:opacity-40"
+                    >
+                        Previous
+                    </button>
 
+                    {Array.from(
+                        { length: totalPages },
+                        (_, index) => index + 1
+                    ).map(pageNumber => (
                         <button
-
-                            onClick={() => setPage(page - 1)}
-
-                            disabled={page === 1}
-
-                            className="px-4 py-2 rounded-lg border border-gray-300 bg-white disabled:opacity-40"
-
+                            key={pageNumber}
+                            type="button"
+                            onClick={() => setPage(pageNumber)}
+                            className={`h-10 w-10 rounded-lg font-semibold transition ${page === pageNumber
+                                    ? "bg-[#C0392B] text-white"
+                                    : "border border-gray-300 bg-white hover:border-[#C0392B]"
+                                }`}
                         >
-                            Previous
+                            {pageNumber}
                         </button>
+                    ))}
 
-                        {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setPage(current => current + 1)
+                        }
+                        disabled={page === totalPages}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 disabled:opacity-40"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
 
-                            <button
-
-                                key={i}
-
-                                onClick={() => setPage(i + 1)}
-
-                                className={`w-10 h-10 rounded-lg font-semibold transition
-
-            ${page === i + 1
-
-                                        ? "bg-[#C0392B] text-white"
-
-                                        : "bg-white border border-gray-300 hover:border-[#C0392B]"
-
-                                    }`}
-
-                            >
-
-                                {i + 1}
-
-                            </button>
-
-                        ))}
-
-                        <button
-
-                            onClick={() => setPage(page + 1)}
-
-                            disabled={page === totalPages}
-
-                            className="px-4 py-2 rounded-lg border border-gray-300 bg-white disabled:opacity-40"
-
-                        >
-
-                            Next
-
-                        </button>
-
-                    </div>
-
-                )}
-            </div>
-
-            {/* Side Panel with Framer Motion */}
+            {/* Side Panel */}
             <AnimatePresence>
                 {selectedJob && (
                     <>
-                        {/* Backdrop */}
-                        <motion.div
+                        <motion.button
+                            type="button"
+                            aria-label="Close details"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedJob(null)}
-                            className="fixed inset-0 bg-black/50 z-40"
+                            className="fixed inset-0 z-40 bg-black/50"
                         />
 
-                        {/* Side Panel */}
                         <motion.div
-                            initial={{ x: '100%', opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: '100%', opacity: 0 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="fixed top-16 right-0 h-[calc(100vh-64px)] w-96 bg-white z-50 overflow-y-auto shadow-2xl"
+                            initial={{
+                                x: "100%",
+                                opacity: 0
+                            }}
+                            animate={{
+                                x: 0,
+                                opacity: 1
+                            }}
+                            exit={{
+                                x: "100%",
+                                opacity: 0
+                            }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30
+                            }}
+                            className="fixed right-0 top-16 z-50 h-[calc(100vh-64px)] w-full max-w-md overflow-y-auto bg-white shadow-2xl"
                         >
-                            {/* Header */}
-                            <div className="sticky top-0 bg-linear-to-r from-[#C0392B] to-red-700 text-white p-6 flex items-center justify-between">
+                            <div className="sticky top-0 z-10 flex items-center justify-between bg-linear-to-r from-[#C0392B] to-red-700 p-5 text-white">
                                 <div>
-                                    <h2 className="text-2xl font-bold">{selectedJob.customer?.name}</h2>
-                                    <p className="text-red-100 text-sm mt-1">Ref: {selectedJob.bookingRef}</p>
+                                    <h2 className="text-xl font-bold">
+                                        {selectedJob.customer?.name || "—"}
+                                    </h2>
+
+                                    <p className="mt-0.5 text-sm text-red-100">
+                                        Ref: {selectedJob.bookingRef}
+                                    </p>
                                 </div>
+
                                 <button
+                                    type="button"
                                     onClick={() => setSelectedJob(null)}
-                                    className="p-2 hover:bg-red-600 rounded-lg transition"
+                                    className="rounded-lg p-2 transition hover:bg-red-600"
                                 >
-                                    <FiX size={24} />
+                                    <FiX size={22} />
                                 </button>
                             </div>
 
-                            <div className="p-6 space-y-6">
-                                {/* Status Badge */}
-                                <span className={`inline-block px-4 py-2 text-xs font-bold rounded-full ${historyType === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                    }`}>
-                                    {historyType === 'completed' ? 'COMPLETED' : 'CANCELLED'}
+                            <div className="space-y-4 p-5">
+                                <span
+                                    className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${statusDetails.badge}`}
+                                >
+                                    {statusDetails.label}
                                 </span>
 
-                                {/* Contact Section */}
-                                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                                    <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Contact Information</h4>
+                                {/* Contact */}
+                                <div className="space-y-3 rounded-xl bg-gray-50 p-4">
+                                    <h4 className="text-xs font-bold uppercase text-gray-500">
+                                        Contact Information
+                                    </h4>
+
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-[#C0392B]/10 rounded-lg">
-                                            <FiMail className="text-[#C0392B]" size={18} />
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#C0392B]/10">
+                                            <FiPhone
+                                                className="text-[#C0392B]"
+                                                size={14}
+                                            />
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase">Email</p>
-                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.customer?.email || "—"}</p>
-                                        </div>
+
+                                        <p className="text-sm text-gray-700">
+                                            {selectedJob.customer?.phone || "—"}
+                                        </p>
                                     </div>
+
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-[#C0392B]/10 rounded-lg">
-                                            <FiPhone className="text-[#C0392B]" size={18} />
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#C0392B]/10">
+                                            <FiMail
+                                                className="text-[#C0392B]"
+                                                size={14}
+                                            />
                                         </div>
+
+                                        <p className="truncate text-sm text-gray-700">
+                                            {selectedJob.customer?.email || "—"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Pickup */}
+                                <div className="rounded-xl border border-red-100 bg-red-50 p-4">
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <FiMapPin
+                                            className="text-[#C0392B]"
+                                            size={17}
+                                        />
+
+                                        <h4 className="text-sm font-bold uppercase text-[#C0392B]">
+                                            Pickup
+                                        </h4>
+                                    </div>
+
+                                    <div className="space-y-2">
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase">Phone</p>
-                                            <p className="text-sm text-gray-700 font-medium">{selectedJob.customer?.phone || "—"}</p>
+                                            <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                Customer
+                                            </p>
+
+                                            <p className="text-sm font-bold text-[#1a1a1a]">
+                                                {selectedJob.customer?.name || "—"}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                Address
+                                            </p>
+
+                                            <p className="text-sm font-semibold text-gray-800">
+                                                {selectedJob.pickup?.address || "—"}
+                                            </p>
+
+                                            <p className="text-xs text-gray-500">
+                                                {selectedJob.pickup?.postcode || "—"}
+                                            </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                    Pickup date
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {selectedJob.dateType === "flexible"
+                                                        ? "Flexible"
+                                                        : formatJobDate(selectedJob.date)}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                    Time window
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {selectedJob.dateType === "flexible"
+                                                        ? "Flexible"
+                                                        : formatTimeSlot(selectedJob.timeSlot)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2 border-t border-red-100 pt-2">
+                                            <div>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Floor
+                                                </p>
+
+                                                <p className="text-xs font-semibold capitalize text-gray-700">
+                                                    {selectedJob.pickupFloor?.floorLevel || "Ground"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Lift
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {selectedJob.pickupFloor?.hasLift
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Parking
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {selectedJob.pickupFloor?.hasParking
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Pickup Section */}
-                                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FiMapPin className="text-blue-600" size={18} />
-                                        <h4 className="text-sm font-semibold text-blue-900 uppercase tracking-wide">Pickup</h4>
-                                    </div>
-                                    <p className="text-sm text-blue-900 font-medium mb-2">{selectedJob.pickup?.address}</p>
-                                    <p className="text-xs text-blue-700 mb-2">{selectedJob.pickupFloor?.floorLevel}</p>
-                                    <div className="flex items-center gap-2 text-xs text-blue-700">
-                                        <FiClock size={14} />
-                                        <span>{selectedJob.date}
+                                <div className="flex justify-center">
+                                    <FiArrowRight
+                                        size={18}
+                                        className="rotate-90 text-[#C0392B]"
+                                    />
+                                </div>
 
-                                            {selectedJob.timeSlot &&
-                                                <> · {selectedJob.timeSlot}</>}</span>
+                                {/* Delivery */}
+                                <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <FiMapPin
+                                            className="text-green-700"
+                                            size={17}
+                                        />
+
+                                        <h4 className="text-sm font-bold uppercase text-green-700">
+                                            Delivery
+                                        </h4>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                Customer
+                                            </p>
+
+                                            <p className="text-sm font-bold text-[#1a1a1a]">
+                                                {selectedJob.customer?.name || "—"}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                Address
+                                            </p>
+
+                                            <p className="text-sm font-semibold text-gray-800">
+                                                {selectedJob.delivery?.address || "—"}
+                                            </p>
+
+                                            <p className="text-xs text-gray-500">
+                                                {selectedJob.delivery?.postcode || "—"}
+                                            </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                    Delivery date
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {formatJobDate(
+                                                        selectedJob.deliveryDate
+                                                    )}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                    Time window
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {formatTimeSlot(
+                                                        selectedJob.deliveryTimeSlot
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2 border-t border-green-100 pt-2">
+                                            <div>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Floor
+                                                </p>
+
+                                                <p className="text-xs font-semibold capitalize text-gray-700">
+                                                    {selectedJob.deliveryFloor?.floorLevel || "Ground"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Lift
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {selectedJob.deliveryFloor?.hasLift
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] text-gray-400">
+                                                    Parking
+                                                </p>
+
+                                                <p className="text-xs font-semibold text-gray-700">
+                                                    {selectedJob.deliveryFloor?.hasParking
+                                                        ? "Yes"
+                                                        : "No"}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Delivery Section */}
-                                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FiMapPin className="text-orange-600" size={18} />
-                                        <h4 className="text-sm font-semibold text-orange-900 uppercase tracking-wide">Delivery</h4>
-                                    </div>
-                                    <p className="text-sm text-orange-900 font-medium mb-2">{selectedJob.delivery?.address}</p>
-                                    <p className="text-xs text-orange-700">{selectedJob.deliveryFloor?.floorLevel}</p>
+                                {/* Distance */}
+                                <div className="flex items-center justify-between rounded-xl border border-gray-100 bg-white p-4">
+                                    <span className="text-sm text-gray-500">
+                                        Total distance
+                                    </span>
+
+                                    <span className="text-base font-black text-[#C0392B]">
+                                        {Number(selectedJob.distance || 0)} miles
+                                    </span>
                                 </div>
 
-                                {/* Items Section */}
-                                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FiPackage className="text-[#C0392B]" size={18} />
-                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Items ({selectedJob.items.length})</h4>
+                                {/* Items */}
+                                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <FiPackage
+                                            className="text-[#C0392B]"
+                                            size={17}
+                                        />
+
+                                        <h4 className="text-sm font-bold uppercase text-gray-600">
+                                            Items ({selectedJob.items?.length || 0})
+                                        </h4>
                                     </div>
-                                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                                        {selectedJob.items.map((item, idx) => (
-                                            <motion.div
-                                                key={idx}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
-                                                className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition"
-                                            >
-                                                <span className="text-sm text-gray-700 font-medium">{item.name}</span>
-                                                <span className="text-xs bg-[#C0392B]/10 text-[#C0392B] px-2 py-1 rounded font-semibold">{item.volume?.toFixed(2)} m³</span>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-                                        <span className="text-sm font-semibold text-gray-700">Total Volume:</span>
-                                        <span className="text-lg font-bold text-[#C0392B]">{selectedJob.totalVolume?.toFixed(2)}m³</span>
+
+                                    {(selectedJob.items || []).length === 0 ? (
+                                        <p className="text-sm text-gray-400">
+                                            No items recorded.
+                                        </p>
+                                    ) : (
+                                        <div className="max-h-48 space-y-2 overflow-y-auto">
+                                            {(selectedJob.items || []).map(
+                                                (item, index) => (
+                                                    <div
+                                                        key={
+                                                            item.itemId ||
+                                                            `${item.name}-${index}`
+                                                        }
+                                                        className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2"
+                                                    >
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate text-sm font-semibold text-gray-700">
+                                                                {item.name}
+                                                            </p>
+
+                                                            <p className="text-[10px] text-gray-400">
+                                                                {Number(
+                                                                    item.volume || 0
+                                                                ).toFixed(2)}{" "}
+                                                                m³ each
+                                                            </p>
+                                                        </div>
+
+                                                        <span className="ml-2 shrink-0 rounded-full bg-[#C0392B]/10 px-2 py-1 text-xs font-bold text-[#C0392B]">
+                                                            ×{item.quantity || 1}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-3">
+                                        <span className="text-sm font-semibold text-gray-600">
+                                            Total Volume
+                                        </span>
+
+                                        <span className="font-bold text-[#C0392B]">
+                                            {Number(
+                                                selectedJob.totalVolume || 0
+                                            ).toFixed(2)}{" "}
+                                            m³
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Price Section */}
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <FiDollarSign className="text-green-600" size={18} />
-                                        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Price</h4>
-                                    </div>
-                                    <div className="flex items-baseline justify-between">
-                                        <span className="text-4xl font-bold text-green-600">£{selectedJob.totalPrice}</span>
-                                    </div>
-                                </div>
+                                {/* Cancellation reason */}
+                                {selectedJob.cancelReason && (
+                                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                                        <p className="mb-2 text-xs font-bold uppercase text-amber-700">
+                                            Cancellation Reason
+                                        </p>
 
-                                {/* Driver & Vehicle Info */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                        <p className="text-xs text-gray-500 uppercase font-semibold mb-2">Driver</p>
-                                        <p className="text-lg font-bold text-[#C0392B]">{selectedJob.assignedDriverName || "Not Assigned"}</p>
-                                    </div>
-                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                        <p className="text-xs text-gray-500 uppercase font-semibold mb-2">Vehicle</p>
-                                        <p className="text-lg font-bold text-[#C0392B]">{selectedJob.assignedVehicleReg || "Not Assigned"}</p>
-                                    </div>
-                                </div>
-
-                                {/* Special Instructions */}
-                                {selectedJob.specialInstructions && (
-                                    <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                                        <p className="text-xs text-yellow-700 uppercase font-semibold mb-2">⚠️ Special Instructions</p>
-                                        <p className="text-sm text-yellow-800">{selectedJob.specialInstructions}</p>
+                                        <p className="text-sm text-amber-800">
+                                            {selectedJob.cancelReason}
+                                        </p>
                                     </div>
                                 )}
 
-                                {/* Close Button */}
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
+                                {/* Price */}
+                                <div className="rounded-xl bg-[#1a1a1a] p-4">
+                                    <div className="mb-2 flex items-center gap-2">
+                                        <FiDollarSign
+                                            className="text-[#F1C40F]"
+                                            size={17}
+                                        />
+
+                                        <p className="text-xs font-bold uppercase text-gray-400">
+                                            Total Price
+                                        </p>
+                                    </div>
+
+                                    <p className="text-3xl font-black text-[#F1C40F]">
+                                        £{Number(
+                                            selectedJob.totalPrice || 0
+                                        ).toFixed(2)}
+                                    </p>
+                                </div>
+
+                                {/* Driver & Vehicle */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                        <p className="mb-1 text-xs font-semibold uppercase text-gray-500">
+                                            Driver
+                                        </p>
+
+                                        <p className="text-sm font-bold text-[#1a1a1a]">
+                                            {selectedJob.assignedDriverName ||
+                                                "Not Assigned"}
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                        <p className="mb-1 text-xs font-semibold uppercase text-gray-500">
+                                            Vehicle
+                                        </p>
+
+                                        <p className="text-sm font-bold text-[#1a1a1a]">
+                                            {selectedJob.assignedVehicleReg ||
+                                                "Not Assigned"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {selectedJob.specialInstructions && (
+                                    <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                                        <p className="mb-2 text-xs font-bold uppercase text-yellow-700">
+                                            Special Instructions
+                                        </p>
+
+                                        <p className="text-sm text-yellow-800">
+                                            {selectedJob.specialInstructions}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {historyType === "cancelled" && (
+                                    <button
+                                        type="button"
+                                        disabled={movingToTrash}
+                                        onClick={() =>
+                                            moveCancelledToTrash(selectedJob)
+                                        }
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-100 px-4 py-3 text-sm font-bold text-amber-800 transition hover:bg-amber-200 disabled:opacity-50"
+                                    >
+                                        <FiTrash2 size={17} />
+
+                                        {movingToTrash
+                                            ? "Moving..."
+                                            : "Move to Trash"}
+                                    </button>
+                                )}
+
+                                {historyType === "trash" && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setDeleteOne(selectedJob)
+                                        }
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-100 px-4 py-3 text-sm font-bold text-red-700 transition hover:bg-red-200"
+                                    >
+                                        <FiTrash2 size={17} />
+                                        Delete Permanently
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
                                     onClick={() => setSelectedJob(null)}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-bold uppercase tracking-wide"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-200"
                                 >
-                                    <FiX size={18} /> Close
-                                </motion.button>
+                                    <FiX size={17} />
+                                    Close
+                                </button>
                             </div>
                         </motion.div>
                     </>
                 )}
             </AnimatePresence>
+
             <DeleteJobDialog
-
-                open={!!deleteOne}
-
-                title="Delete Job?"
-
-                message={`Delete "${deleteOne?.bookingRef}" permanently?`}
-
+                open={Boolean(deleteOne)}
+                title="Delete Job Permanently?"
+                message={`Delete "${deleteOne?.bookingRef}" permanently? This action cannot be undone.`}
                 loading={deleteLoading}
-
-                onCancel={() => setDeleteOne(null)}
-
-                onConfirm={async () => {
-
-                    setDeleteLoading(true);
-
-                    try {
-
-                        await api.delete(`/jobs/trash/${deleteOne._id}`);
-
-                        toast.success("Job deleted");
-
+                onCancel={() => {
+                    if (!deleteLoading) {
                         setDeleteOne(null);
-
-                        if (page > 1 && trashJobs.length === 1) {
-
-                            setPage(page - 1);
-
-                        } else {
-
-                            loadTrashJobs();
-
-                        }
                     }
-
-                    catch {
-
-                        toast.error("Delete failed");
-
-                    }
-
-                    finally {
-
-                        setDeleteLoading(false);
-
-                    }
-
                 }}
-
+                onConfirm={handleDeleteOne}
             />
 
             <DeleteJobDialog
-
                 open={deleteAll}
-
                 title="Clear Trash?"
-
-                message="Delete all cancelled jobs permanently?"
-
+                message="Permanently delete every job currently in Trash? This action cannot be undone."
                 loading={deleteLoading}
-
-                onCancel={() => setDeleteAll(false)}
-
-                onConfirm={async () => {
-
-                    setDeleteLoading(true);
-
-                    try {
-
-                        await api.delete("/jobs/trash");
-
-                        toast.success("Trash cleared");
-
+                onCancel={() => {
+                    if (!deleteLoading) {
                         setDeleteAll(false);
-                        if (page > 1 && trashJobs.length === 1) {
-
-                            setPage(page - 1);
-
-                        } else {
-
-                            loadTrashJobs();
-
-                        }
-
                     }
-
-                    catch {
-
-                        toast.error("Failed");
-
-                    }
-
-                    finally {
-
-                        setDeleteLoading(false);
-
-                    }
-
                 }}
-
+                onConfirm={handleClearTrash}
             />
         </div>
     );

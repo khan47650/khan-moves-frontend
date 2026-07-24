@@ -113,10 +113,9 @@ export default function ServicesPage() {
             {loading
               ? Array(6).fill(0).map((_, i) => <ServiceCardSkeleton key={i} />)
               : services.map((service, idx) => {
-                const allItems = service.items || [];
-                const items = allItems.filter(it => !it.isPaused);
-                const previewItems = items.slice(0, 4);
-                const remaining = items.length - previewItems.length;
+                const categories = service.categories || [];
+                const previewCategories = categories.slice(0, 3);
+                const remaining = categories.length - previewCategories.length;
 
                 return (
                   <motion.div
@@ -134,27 +133,31 @@ export default function ServicesPage() {
 
                     {/* Content */}
                     <div className="p-6 flex flex-col flex-1">
-                      <p className="text-sm text-gray-500 mb-4">{items.length} items available</p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        {categories.length} {categories.length === 1 ? 'category' : 'categories'} available
+                      </p>
 
                       <ul className="space-y-2.5 mb-6 flex-1">
-                        {previewItems.length > 0 ? (
+                        {previewCategories.length > 0 ? (
                           <>
-                            {previewItems.map((item) => (
-                              <li key={item._id} className="flex items-start gap-2 text-sm">
-                                <FiCheckCircle size={15} className="text-green-600 mt-0.5 shrink-0" />
-                                <span className="text-gray-700 truncate">{item.name}</span>
-                                <span className="ml-auto text-xs text-gray-400 shrink-0">{item.volume} m³</span>
+                            {previewCategories.map(category => (
+                              <li key={category._id} className="flex items-center gap-2 text-sm">
+                                <FiCheckCircle size={15} className="text-green-600 shrink-0" />
+                                <span className="text-gray-700 truncate">{category.name}</span>
+                                <span className="ml-auto text-xs text-gray-400 shrink-0">
+                                  {category.items?.filter(item => !item.isPaused).length || 0} items
+                                </span>
                               </li>
                             ))}
                             {remaining > 0 && (
                               <li className="flex items-center gap-2 text-sm text-[#DC2626] font-semibold">
                                 <FiCheckCircle size={15} className="text-[#DC2626] shrink-0" />
-                                +{remaining} more items
+                                +{remaining} more {remaining === 1 ? 'category' : 'categories'}
                               </li>
                             )}
                           </>
                         ) : (
-                          <li className="text-sm text-gray-400 italic">No items listed yet.</li>
+                          <li className="text-sm text-gray-400 italic">No categories listed yet.</li>
                         )}
                       </ul>
 

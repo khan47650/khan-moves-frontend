@@ -22,8 +22,8 @@ function SectionLoader() {
 }
 
 export default function Tools() {
-    const [calculatorBase, setCalculatorBase] = useState(100);
-    const [calculatorDiscount, setCalculatorDiscount] = useState(0);
+    const [calculatorBase, setCalculatorBase] = useState("");
+    const [calculatorDiscount, setCalculatorDiscount] = useState("");
     const [links, setLinks] = useState([]);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -46,7 +46,20 @@ export default function Tools() {
         text: ""
     });
 
-    const final = calculatorBase - calculatorDiscount;
+    const basePrice = Math.max(
+        0,
+        Number(calculatorBase) || 0
+    );
+
+    const discount = Math.max(
+        0,
+        Number(calculatorDiscount) || 0
+    );
+
+    const final = Math.max(
+        0,
+        basePrice - discount
+    );
 
     useEffect(() => {
         fetchTools();
@@ -168,21 +181,77 @@ export default function Tools() {
                     </div>
 
                     <div className="space-y-4">
-                        <input
-                            type="number"
-                            value={calculatorBase}
-                            onChange={(e) => setCalculatorBase(Number(e.target.value))}
-                            className="w-full px-4 py-2 border rounded-lg"
-                            placeholder="Base Price"
-                        />
+                        <div>
+                            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500">
+                                Total Price
+                            </label>
 
-                        <input
-                            type="number"
-                            value={calculatorDiscount}
-                            onChange={(e) => setCalculatorDiscount(Number(e.target.value))}
-                            className="w-full px-4 py-2 border rounded-lg"
-                            placeholder="Discount"
-                        />
+                            <div className="relative">
+                                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                    £
+                                </span>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    value={calculatorBase}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+
+                                        if (
+                                            value === "" ||
+                                            Number(value) >= 0
+                                        ) {
+                                            setCalculatorBase(value);
+                                        }
+                                    }}
+                                    placeholder="Enter total price"
+                                    className="w-full rounded-xl border border-gray-200 py-3 pl-8 pr-4 outline-none transition focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/10"
+                                />
+                            </div>
+
+                            <p className="mt-1 text-xs text-gray-400">
+                                Enter the current total booking price.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500">
+                                Discount
+                            </label>
+
+                            <div className="relative">
+                                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                    £
+                                </span>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    value={calculatorDiscount}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+
+                                        if (
+                                            value === "" ||
+                                            Number(value) >= 0
+                                        ) {
+                                            setCalculatorDiscount(value);
+                                        }
+                                    }}
+                                    placeholder="Enter discount amount"
+                                    className="w-full rounded-xl border border-gray-200 py-3 pl-8 pr-4 outline-none transition focus:border-[#C0392B] focus:ring-2 focus:ring-[#C0392B]/10"
+                                />
+                            </div>
+
+                            <p className="mt-1 text-xs text-gray-400">
+                                This amount will be deducted from the total price.
+                            </p>
+                        </div>
 
                         <div className="p-4 bg-red-50 rounded-lg">
                             <p className="text-xs text-red-600">
