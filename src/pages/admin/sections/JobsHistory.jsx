@@ -7,10 +7,8 @@ import {
     FiPhone,
     FiMail,
     FiMapPin,
-    FiClock,
     FiPackage,
     FiDollarSign,
-    FiLayers,
     FiArrowRight
 } from "react-icons/fi";
 import api from "../../../api/api";
@@ -62,34 +60,6 @@ const formatTimeSlot = value => {
     return timeSlots[value] || value || "To be arranged";
 };
 
-const getJobSchedule = job => {
-    if (job.dateType === "flexible") {
-        return {
-            type: "flexible",
-            label: "Flexible"
-        };
-    }
-
-    const pickupDate = job.date || "";
-    const deliveryDate = job.deliveryDate || "";
-
-    if (
-        pickupDate &&
-        deliveryDate &&
-        pickupDate === deliveryDate
-    ) {
-        return {
-            type: "same",
-            label: formatJobDate(pickupDate)
-        };
-    }
-
-    return {
-        type: "different",
-        pickup: formatJobDate(pickupDate),
-        delivery: formatJobDate(deliveryDate)
-    };
-};
 
 const STATUS_DETAILS = {
     completed: {
@@ -326,118 +296,92 @@ export default function JobsHistory() {
     };
 
     const JobCard = ({ job, type }) => {
-        const schedule = getJobSchedule(job);
         const details = STATUS_DETAILS[type];
 
         return (
             <div className="rounded-xl border border-gray-200 bg-white p-5 transition hover:shadow-md">
-                <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="mb-3 flex items-start justify-between gap-3">
                     <div>
-                        <h3 className="text-lg font-bold text-[#1a1a1a]">
-                            {job.customer?.name || "—"}
-                        </h3>
-
                         <p className="text-sm text-gray-500">
                             Ref:{" "}
-                            <span className="font-semibold text-[#C0392B]">
+                            <span className="text-base font-bold text-[#C0392B]">
                                 {job.bookingRef}
                             </span>
+                        </p>
+
+                        <p className="mt-0.5 text-xs text-gray-400">
+                            {job.serviceType || "—"}
                         </p>
                     </div>
 
                     <span
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${details.badge}`}
+                        className={`rounded-full px-2.5 py-1 text-xs font-bold ${details.badge}`}
                     >
                         {details.label}
                     </span>
                 </div>
 
-                <div className="mb-4 grid gap-4 border-b border-gray-200 pb-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="mb-4 grid gap-3 border-b border-gray-100 pb-4 text-sm sm:grid-cols-2 xl:grid-cols-5">
                     <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
                             Route
                         </p>
 
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-gray-700">
                             {job.pickup?.postcode || "—"}
                             {" → "}
                             {job.delivery?.postcode || "—"}
                         </p>
 
-                        <p className="mt-1 text-xs font-semibold text-[#C0392B]">
+                        <p className="text-xs font-semibold text-[#C0392B]">
                             {Number(job.distance || 0)} miles
                         </p>
                     </div>
 
                     <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
-                            Pickup / Drop-off dates
+                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
+                            Pickup Date
                         </p>
 
-                        {schedule.type === "flexible" && (
-                            <p className="text-sm font-semibold text-gray-700">
-                                Flexible
-                            </p>
-                        )}
-
-                        {schedule.type === "same" && (
-                            <p className="text-sm font-semibold text-gray-700">
-                                {schedule.label}
-                            </p>
-                        )}
-
-                        {schedule.type === "different" && (
-                            <div className="space-y-1">
-                                <p className="text-xs text-gray-700">
-                                    <span className="font-bold">
-                                        Pickup:
-                                    </span>{" "}
-                                    {schedule.pickup}
-                                </p>
-
-                                <p className="text-xs text-gray-700">
-                                    <span className="font-bold">
-                                        Drop-off:
-                                    </span>{" "}
-                                    {schedule.delivery}
-                                </p>
-                            </div>
-                        )}
+                        <p className="font-semibold text-gray-700">
+                            {job.dateType === "flexible"
+                                ? "Flexible"
+                                : formatJobDate(job.date)}
+                        </p>
                     </div>
 
                     <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
-                            Time windows
+                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
+                            Pickup Time
                         </p>
 
-                        <p className="text-xs text-gray-700">
-                            <span className="font-bold">
-                                Pickup:
-                            </span>{" "}
+                        <p className="font-semibold text-gray-700">
                             {job.dateType === "flexible"
                                 ? "Flexible"
                                 : formatTimeSlot(job.timeSlot)}
                         </p>
+                    </div>
 
-                        <p className="mt-1 text-xs text-gray-700">
-                            <span className="font-bold">
-                                Drop-off:
-                            </span>{" "}
-                            {formatTimeSlot(job.deliveryTimeSlot)}
+                    <div>
+                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
+                            Estimated Delivery
+                        </p>
+
+                        <p className="font-semibold text-green-700">
+                            {job.estimatedDeliveryTime ||
+                                "To be arranged"}
                         </p>
                     </div>
 
                     <div>
-                        <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
+                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
                             Price
                         </p>
 
                         <p className="text-lg font-black text-[#1a1a1a]">
-                            £{Number(job.totalPrice || 0).toFixed(2)}
-                        </p>
-
-                        <p className="text-xs text-gray-500">
-                            {job.assignedDriverName || "Driver not assigned"}
+                            £{Number(
+                                job.totalPrice || 0
+                            ).toFixed(2)}
                         </p>
                     </div>
                 </div>
@@ -446,9 +390,9 @@ export default function JobsHistory() {
                     <button
                         type="button"
                         onClick={() => setSelectedJob(job)}
-                        className="flex items-center gap-2 rounded-lg bg-[#C0392B]/10 px-4 py-2 text-sm font-semibold text-[#C0392B] transition hover:bg-[#C0392B]/20"
+                        className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
                     >
-                        <FiEye size={16} />
+                        <FiEye size={14} />
                         View Details
                     </button>
 
@@ -456,11 +400,15 @@ export default function JobsHistory() {
                         <button
                             type="button"
                             disabled={movingToTrash}
-                            onClick={() => moveCancelledToTrash(job)}
-                            className="flex items-center gap-2 rounded-lg bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-200 disabled:opacity-50"
+                            onClick={() =>
+                                moveCancelledToTrash(job)
+                            }
+                            className="flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-800 transition hover:bg-amber-200 disabled:opacity-50"
                         >
-                            <FiTrash2 size={16} />
-                            Move to Trash
+                            <FiTrash2 size={14} />
+                            {movingToTrash
+                                ? "Moving..."
+                                : "Move to Trash"}
                         </button>
                     )}
 
@@ -468,9 +416,9 @@ export default function JobsHistory() {
                         <button
                             type="button"
                             onClick={() => setDeleteOne(job)}
-                            className="flex items-center gap-2 rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-200"
+                            className="flex items-center gap-1.5 rounded-lg bg-red-100 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-200"
                         >
-                            <FiTrash2 size={16} />
+                            <FiTrash2 size={14} />
                             Delete Permanently
                         </button>
                     )}
@@ -517,8 +465,8 @@ export default function JobsHistory() {
                             setSelectedJob(null);
                         }}
                         className={`shrink-0 border-b-2 px-5 py-3 text-sm font-bold transition ${historyType === tab.id
-                                ? "border-[#C0392B] text-[#C0392B]"
-                                : "border-transparent text-gray-500 hover:text-gray-800"
+                            ? "border-[#C0392B] text-[#C0392B]"
+                            : "border-transparent text-gray-500 hover:text-gray-800"
                             }`}
                     >
                         {tab.label}
@@ -624,8 +572,8 @@ export default function JobsHistory() {
                             type="button"
                             onClick={() => setPage(pageNumber)}
                             className={`h-10 w-10 rounded-lg font-semibold transition ${page === pageNumber
-                                    ? "bg-[#C0392B] text-white"
-                                    : "border border-gray-300 bg-white hover:border-[#C0392B]"
+                                ? "bg-[#C0392B] text-white"
+                                : "border border-gray-300 bg-white hover:border-[#C0392B]"
                                 }`}
                         >
                             {pageNumber}
@@ -792,7 +740,7 @@ export default function JobsHistory() {
 
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase text-gray-400">
-                                                    Time window
+                                                    Pickup Time
                                                 </p>
 
                                                 <p className="text-xs font-semibold text-gray-700">
@@ -886,30 +834,15 @@ export default function JobsHistory() {
                                             </p>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase text-gray-400">
-                                                    Delivery date
-                                                </p>
+                                        <div className="rounded-lg border border-green-100 bg-white/70 p-3">
+                                            <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                Estimated Delivery Time
+                                            </p>
 
-                                                <p className="text-xs font-semibold text-gray-700">
-                                                    {formatJobDate(
-                                                        selectedJob.deliveryDate
-                                                    )}
-                                                </p>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase text-gray-400">
-                                                    Time window
-                                                </p>
-
-                                                <p className="text-xs font-semibold text-gray-700">
-                                                    {formatTimeSlot(
-                                                        selectedJob.deliveryTimeSlot
-                                                    )}
-                                                </p>
-                                            </div>
+                                            <p className="mt-1 text-sm font-bold text-green-700">
+                                                {selectedJob.estimatedDeliveryTime ||
+                                                    "To be arranged"}
+                                            </p>
                                         </div>
 
                                         <div className="grid grid-cols-3 gap-2 border-t border-green-100 pt-2">
@@ -1056,31 +989,6 @@ export default function JobsHistory() {
                                             selectedJob.totalPrice || 0
                                         ).toFixed(2)}
                                     </p>
-                                </div>
-
-                                {/* Driver & Vehicle */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                        <p className="mb-1 text-xs font-semibold uppercase text-gray-500">
-                                            Driver
-                                        </p>
-
-                                        <p className="text-sm font-bold text-[#1a1a1a]">
-                                            {selectedJob.assignedDriverName ||
-                                                "Not Assigned"}
-                                        </p>
-                                    </div>
-
-                                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                        <p className="mb-1 text-xs font-semibold uppercase text-gray-500">
-                                            Vehicle
-                                        </p>
-
-                                        <p className="text-sm font-bold text-[#1a1a1a]">
-                                            {selectedJob.assignedVehicleReg ||
-                                                "Not Assigned"}
-                                        </p>
-                                    </div>
                                 </div>
 
                                 {selectedJob.specialInstructions && (

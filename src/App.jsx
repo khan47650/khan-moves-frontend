@@ -1,70 +1,150 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Header from './components/shared/Header';
-import Footer from './components/shared/Footer';
-import HomePage from './pages/HomePage';
-import ServicesPage from './pages/ServicesPage';
-import BookingPage from './pages/BookingPage';
-import ConfirmationPage from './pages/ConfirmationPage';
-import ContactPage from './pages/ContactPage';
-import TermsPage from './pages/TermsPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import SignIn from "./pages/SignIn";
-import SignUp from './pages/SignUp';
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation
+} from "react-router-dom";
 
-function AnimatedRoutes({ bookingData, setBookingData, avNumber, setAVNumber }) {
+import Header from "./components/shared/Header";
+import Footer from "./components/shared/Footer";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+
+import HomePage from "./pages/HomePage";
+import ServicesPage from "./pages/ServicesPage";
+import BookingPage from "./pages/BookingPage";
+import ConfirmationPage from "./pages/ConfirmationPage";
+import ContactPage from "./pages/ContactPage";
+import TermsPage from "./pages/TermsPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+
+function AnimatedRoutes({
+  bookingData,
+  setBookingData,
+  avNumber,
+  setAVNumber
+}) {
   const location = useLocation();
 
   return (
     <Routes location={location}>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/services" element={<ServicesPage />} />
+      <Route
+        path="/"
+        element={<HomePage />}
+      />
+
+      <Route
+        path="/services"
+        element={<ServicesPage />}
+      />
+
       <Route
         path="/booking"
-        element={<BookingPage setBookingData={setBookingData} setAVNumber={setAVNumber} />}
+        element={
+          <BookingPage
+            setBookingData={setBookingData}
+            setAVNumber={setAVNumber}
+          />
+        }
       />
+
       <Route
         path="/confirmation"
-        element={<ConfirmationPage bookingData={bookingData} avNumber={avNumber} />}
+        element={
+          <ConfirmationPage
+            bookingData={bookingData}
+            avNumber={avNumber}
+          />
+        }
       />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/signin" element={<SignIn />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/admin" element={<AdminDashboard />} />
+
+      <Route
+        path="/contact"
+        element={<ContactPage />}
+      />
+
+      <Route
+        path="/terms"
+        element={<TermsPage />}
+      />
+
+      <Route
+        path="/signin"
+        element={<SignIn />}
+      />
+
+      <Route
+        path="/signup"
+        element={<SignUp />}
+      />
+
+      {/* Protected Admin Routes */}
+      <Route element={<ProtectedAdminRoute />}>
+        <Route
+          path="/admin/*"
+          element={<AdminDashboard />}
+        />
+      </Route>
     </Routes>
   );
 }
 
 function Layout({ children }) {
   const location = useLocation();
-  const hideHeader = location.pathname.startsWith('/admin');
-  const hideFooter = ['/signin', '/signup', '/admin'].some(p =>
-    location.pathname.startsWith(p)
+
+  const isAdminPage =
+    location.pathname.startsWith(
+      "/admin"
+    );
+
+  const isAuthPage = [
+    "/signin",
+    "/signup"
+  ].some(path =>
+    location.pathname.startsWith(path)
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {!hideHeader && <Header />}
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      {!isAdminPage && <Header />}
 
-      <main className="grow">{children}</main>
+      <main className="grow">
+        {children}
+      </main>
 
-      {!hideFooter && <Footer />}
+      {!isAdminPage &&
+        !isAuthPage && (
+          <Footer />
+        )}
     </div>
   );
 }
+
 function App() {
-  const [bookingData, setBookingData] = useState(null);
-  const [avNumber, setAVNumber] = useState(null);
+  const [
+    bookingData,
+    setBookingData
+  ] = useState(null);
+
+  const [
+    avNumber,
+    setAVNumber
+  ] = useState(null);
 
   return (
     <Router>
       <Layout>
         <AnimatedRoutes
           bookingData={bookingData}
-          setBookingData={setBookingData}
+          setBookingData={
+            setBookingData
+          }
           avNumber={avNumber}
-          setAVNumber={setAVNumber}
+          setAVNumber={
+            setAVNumber
+          }
         />
       </Layout>
     </Router>

@@ -12,10 +12,13 @@ const COMPANY = {
 };
 
 const PERIOD_LABELS = {
+    today: "Today",
+    yesterday: "Yesterday",
+    last_7_days: "Last 7 Days",
+    this_month: "This Month",
+    this_year: "This Year",
     all: "All Time",
-    weekly: "Last 7 Days",
-    last_month: "Last Month",
-    last_year: "Last Year"
+    custom: "Custom Date Range"
 };
 
 const COLORS = {
@@ -27,148 +30,159 @@ const COLORS = {
     green: [22, 163, 74],
     greenBg: [236, 253, 245],
     orange: [234, 88, 12],
+    amber: [180, 83, 9],
     redDark: [220, 38, 38],
     redBg: [254, 242, 242],
     white: [255, 255, 255]
 };
 
-const numberValue = value => Number(value || 0);
+const numberValue = value =>
+    Number(value || 0);
 
 const getId = value =>
-    typeof value === "string" ? value : value?._id || "";
+    typeof value === "string"
+        ? value
+        : value?._id || "";
 
 const formatMoney = value =>
-    numberValue(value).toLocaleString("en-GB", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+    numberValue(value).toLocaleString(
+        "en-GB",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
 
 const formatDate = value => {
     if (!value) return "—";
 
-    const date = new Date(value);
+    const date =
+        typeof value === "string" &&
+            /^\d{4}-\d{2}-\d{2}$/.test(value)
+            ? new Date(`${value}T12:00:00`)
+            : new Date(value);
 
     if (Number.isNaN(date.getTime())) {
         return value;
     }
 
-    return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
+    return date.toLocaleDateString(
+        "en-GB",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
 };
 
 const getExpenseTotal = expense => {
-    const savedTotal = numberValue(expense.totalExpense);
-
-    if (savedTotal > 0) {
-        return savedTotal;
-    }
-
-    return (
+    const calculatedTotal =
         numberValue(expense.driverCharges) +
         numberValue(expense.nightStay) +
         numberValue(expense.meals) +
         numberValue(expense.fuel) +
         numberValue(expense.repair) +
-        numberValue(expense.other)
+        numberValue(expense.other);
+
+    if (calculatedTotal > 0) {
+        return calculatedTotal;
+    }
+
+    return numberValue(
+        expense.totalExpense
     );
 };
 
-const getJobDate = job => {
-    if (job.date) {
-        const moveDate = new Date(`${job.date}T12:00:00`);
+const DAY_MS =
+    24 * 60 * 60 * 1000;
 
-        if (!Number.isNaN(moveDate.getTime())) {
-            return moveDate;
+const getDriverPeriodTotals = details => {
+    const now = Date.now();
+
+    return (details || []).reduce(
+        (totals, detail) => {
+            const paymentDate = new Date(
+                detail.paidAt ||
+                detail.createdAt ||
+                detail.date ||
+                0
+            );
+
+            if (
+                Number.isNaN(
+                    paymentDate.getTime()
+                )
+            ) {
+                return totals;
+            }
+
+            const age =
+                now -
+                paymentDate.getTime();
+
+            if (age < 0) {
+                return totals;
+            }
+
+            const amount =
+                numberValue(
+                    detail.earnings
+                );
+
+            /*
+             * Exclusive buckets:
+             *
+             * Today:       0–24 hours
+             * Last 7 Days: 24 hours–7 days
+             * Last Month:  7–30 days
+             */
+            if (age < DAY_MS) {
+                totals.today += amount;
+            } else if (
+                age < DAY_MS * 7
+            ) {
+                totals.week += amount;
+            } else if (
+                age < DAY_MS * 30
+            ) {
+                totals.month += amount;
+            }
+
+            return totals;
+        },
+        {
+            today: 0,
+            week: 0,
+            month: 0
         }
-    }
-
-    return new Date(job.updatedAt || job.createdAt);
+    );
 };
 
-const isInPeriod = (dateValue, period) => {
-    if (period === "all") return true;
-
-    const date =
-        dateValue instanceof Date
-            ? dateValue
-            : new Date(dateValue);
-
-    if (Number.isNaN(date.getTime())) {
-        return false;
-    }
-
-    const now = new Date();
-
-    if (period === "weekly") {
-        const start = new Date(now);
-        start.setDate(start.getDate() - 7);
-        start.setHours(0, 0, 0, 0);
-
-        return date >= start && date <= now;
-    }
-
-    if (period === "last_month") {
-        const start = new Date(
-            now.getFullYear(),
-            now.getMonth() - 1,
-            1
-        );
-
-        const end = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            0,
-            23,
-            59,
-            59,
-            999
-        );
-
-        return date >= start && date <= end;
-    }
-
-    if (period === "last_year") {
-        const start = new Date(
-            now.getFullYear() - 1,
-            0,
-            1
-        );
-
-        const end = new Date(
-            now.getFullYear() - 1,
-            11,
-            31,
-            23,
-            59,
-            59,
-            999
-        );
-
-        return date >= start && date <= end;
-    }
-
-    return true;
-};
 
 const loadImage = async url => {
     const response = await fetch(url);
 
     if (!response.ok) {
-        throw new Error("Logo could not be loaded");
+        throw new Error(
+            "Logo could not be loaded"
+        );
     }
 
     const blob = await response.blob();
 
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+    return new Promise(
+        (resolve, reject) => {
+            const reader = new FileReader();
 
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
+            reader.onloadend = () =>
+                resolve(reader.result);
+
+            reader.onerror = reject;
+
+            reader.readAsDataURL(blob);
+        }
+    );
 };
 
 const drawSummaryCard = ({
@@ -180,17 +194,38 @@ const drawSummaryCard = ({
     value,
     valueColor
 }) => {
-    doc.setFillColor(...COLORS.lightGray);
-    doc.roundedRect(x, y, width, 22, 2, 2, "F");
+    doc.setFillColor(
+        ...COLORS.lightGray
+    );
+
+    doc.roundedRect(
+        x,
+        y,
+        width,
+        22,
+        2,
+        2,
+        "F"
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
     doc.setTextColor(...COLORS.gray);
-    doc.text(title.toUpperCase(), x + 4, y + 7);
 
-    doc.setFontSize(13);
+    doc.text(
+        title.toUpperCase(),
+        x + 4,
+        y + 7
+    );
+
+    doc.setFontSize(12);
     doc.setTextColor(...valueColor);
-    doc.text(value, x + 4, y + 17);
+
+    doc.text(
+        value,
+        x + 4,
+        y + 17
+    );
 };
 
 const drawQuickCard = ({
@@ -204,22 +239,50 @@ const drawQuickCard = ({
 }) => {
     doc.setDrawColor(...COLORS.border);
     doc.setFillColor(...COLORS.white);
-    doc.roundedRect(x, y, width, 20, 2, 2, "FD");
+
+    doc.roundedRect(
+        x,
+        y,
+        width,
+        20,
+        2,
+        2,
+        "FD"
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(6.5);
     doc.setTextColor(...COLORS.gray);
-    doc.text(title.toUpperCase(), x + 4, y + 6);
+
+    doc.text(
+        title.toUpperCase(),
+        x + 4,
+        y + 6
+    );
 
     doc.setFontSize(10);
     doc.setTextColor(...COLORS.dark);
-    doc.text(value, x + 4, y + 13);
+
+    doc.text(
+        value,
+        x + 4,
+        y + 13
+    );
 
     if (subtitle) {
-        doc.setFont("helvetica", "normal");
+        doc.setFont(
+            "helvetica",
+            "normal"
+        );
+
         doc.setFontSize(6);
         doc.setTextColor(...COLORS.gray);
-        doc.text(subtitle, x + 4, y + 17);
+
+        doc.text(
+            subtitle,
+            x + 4,
+            y + 17
+        );
     }
 };
 
@@ -230,16 +293,22 @@ const drawMainHeader = async ({
     generatedDate
 }) => {
     doc.setFillColor(...COLORS.red);
-    doc.rect(0, 0, pageWidth, 39, "F");
 
-    /*
-     * White circular background like the invoice logo.
-     */
+    doc.rect(
+        0,
+        0,
+        pageWidth,
+        39,
+        "F"
+    );
+
     doc.setFillColor(...COLORS.white);
     doc.circle(27, 19.5, 14, "F");
 
     try {
-        const logo = await loadImage(COMPANY.logo);
+        const logo = await loadImage(
+            COMPANY.logo
+        );
 
         doc.addImage(
             logo,
@@ -250,45 +319,93 @@ const drawMainHeader = async ({
             19
         );
     } catch {
-        doc.setFont("helvetica", "bold");
+        doc.setFont(
+            "helvetica",
+            "bold"
+        );
+
         doc.setFontSize(8);
         doc.setTextColor(...COLORS.red);
-        doc.text("KHAN", 27, 18, {
-            align: "center"
-        });
-        doc.text("MOVES", 27, 23, {
-            align: "center"
-        });
+
+        doc.text(
+            "KHAN",
+            27,
+            18,
+            {
+                align: "center"
+            }
+        );
+
+        doc.text(
+            "MOVES",
+            27,
+            23,
+            {
+                align: "center"
+            }
+        );
     }
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(...COLORS.white);
-    doc.text(COMPANY.name, 46, 16);
 
-    doc.setFont("helvetica", "normal");
+    doc.text(
+        COMPANY.name,
+        46,
+        16
+    );
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
     doc.setFontSize(8);
     doc.setTextColor(255, 220, 220);
-    doc.text(COMPANY.subtitle, 46, 23);
 
-    doc.setFont("helvetica", "normal");
+    doc.text(
+        COMPANY.subtitle,
+        46,
+        23
+    );
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
     doc.setFontSize(25);
     doc.setTextColor(...COLORS.white);
-    doc.text("EARNINGS REPORT", pageWidth - 13, 18, {
-        align: "right"
-    });
+
+    doc.text(
+        "EARNINGS REPORT",
+        pageWidth - 13,
+        18,
+        {
+            align: "right"
+        }
+    );
 
     doc.setFontSize(7.5);
     doc.setTextColor(255, 220, 220);
-    doc.text(periodLabel, pageWidth - 13, 27, {
-        align: "right"
-    });
+
+    doc.text(
+        periodLabel,
+        pageWidth - 13,
+        27,
+        {
+            align: "right"
+        }
+    );
 
     doc.text(
         `Generated: ${generatedDate}`,
         pageWidth - 13,
         33,
-        { align: "right" }
+        {
+            align: "right"
+        }
     );
 };
 
@@ -298,19 +415,37 @@ const drawContinuationHeader = ({
     periodLabel
 }) => {
     doc.setFillColor(...COLORS.red);
-    doc.rect(0, 0, pageWidth, 14, "F");
+
+    doc.rect(
+        0,
+        0,
+        pageWidth,
+        14,
+        "F"
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(...COLORS.white);
-    doc.text(COMPANY.name, 13, 9);
 
-    doc.setFont("helvetica", "normal");
+    doc.text(
+        COMPANY.name,
+        13,
+        9
+    );
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
     doc.text(
         `Earnings Report - ${periodLabel}`,
         pageWidth - 13,
         9,
-        { align: "right" }
+        {
+            align: "right"
+        }
     );
 };
 
@@ -322,11 +457,18 @@ const drawSectionTitle = ({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...COLORS.dark);
+
     doc.text(title, 13, y);
 
     doc.setDrawColor(...COLORS.red);
     doc.setLineWidth(0.7);
-    doc.line(13, y + 2.5, 44, y + 2.5);
+
+    doc.line(
+        13,
+        y + 2.5,
+        44,
+        y + 2.5
+    );
 };
 
 const drawFooter = ({
@@ -334,13 +476,19 @@ const drawFooter = ({
     pageWidth,
     pageHeight
 }) => {
-    const totalPages = doc.getNumberOfPages();
+    const totalPages =
+        doc.getNumberOfPages();
 
-    for (let page = 1; page <= totalPages; page += 1) {
+    for (
+        let page = 1;
+        page <= totalPages;
+        page += 1
+    ) {
         doc.setPage(page);
 
         doc.setDrawColor(...COLORS.border);
         doc.setLineWidth(0.3);
+
         doc.line(
             13,
             pageHeight - 17,
@@ -348,7 +496,11 @@ const drawFooter = ({
             pageHeight - 17
         );
 
-        doc.setFont("helvetica", "normal");
+        doc.setFont(
+            "helvetica",
+            "normal"
+        );
+
         doc.setFontSize(6.5);
         doc.setTextColor(...COLORS.gray);
 
@@ -356,38 +508,49 @@ const drawFooter = ({
             COMPANY.address,
             pageWidth / 2,
             pageHeight - 11,
-            { align: "center" }
+            {
+                align: "center"
+            }
         );
 
         doc.text(
             `${COMPANY.phone} · ${COMPANY.email}`,
             pageWidth / 2,
             pageHeight - 7,
-            { align: "center" }
+            {
+                align: "center"
+            }
         );
 
         doc.text(
             `Page ${page} of ${totalPages}`,
             pageWidth - 13,
             pageHeight - 7,
-            { align: "right" }
+            {
+                align: "right"
+            }
         );
     }
 };
 
 export const generateEarningsReport = async ({
     period,
-    jobs,
-    expenses,
-    drivers = []
+    periodLabel:
+    suppliedPeriodLabel,
+    jobs = [],
+    expenses = [],
+    driverEarnings = [],
+    summary = {}
 }) => {
     const periodLabel =
-        PERIOD_LABELS[period] || "Selected Period";
+        suppliedPeriodLabel ||
+        PERIOD_LABELS[period] ||
+        "Selected Period";
 
-    const filteredJobs = jobs.filter(job =>
-        isInPeriod(getJobDate(job), period)
-    );
-
+    /*
+     * Jobs already filtered and calculated
+     * by earningsUtils.
+     */
     const expensesByJob = new Map();
 
     expenses.forEach(expense => {
@@ -399,226 +562,286 @@ export const generateEarningsReport = async ({
 
         expensesByJob.set(
             key,
-            numberValue(expensesByJob.get(key)) +
+            numberValue(
+                expensesByJob.get(key)
+            ) +
             getExpenseTotal(expense)
         );
     });
 
-    const jobRows = filteredJobs.map(job => {
-        const revenue = numberValue(job.totalPrice);
+    const jobRows = jobs.map(job => {
+        const revenue =
+            job.revenue !== undefined
+                ? numberValue(job.revenue)
+                : numberValue(job.totalPrice);
 
-        const jobExpenses = numberValue(
-            expensesByJob.get(String(job._id))
-        );
+        const expenseTotal =
+            job.expenses !== undefined
+                ? numberValue(job.expenses)
+                : numberValue(
+                    expensesByJob.get(
+                        String(job._id)
+                    )
+                );
+
+        const net =
+            job.net !== undefined
+                ? numberValue(job.net)
+                : revenue - expenseTotal;
 
         return {
             id: job._id,
-            ref: job.bookingRef || "—",
-            customer: job.customer?.name || "—",
+            ref:
+                job.bookingRef ||
+                job.ref ||
+                "—",
+
+            customer:
+                job.customer?.name ||
+                job.customer ||
+                "—",
+
             driver:
                 job.assignedDriver?.name ||
                 job.assignedDriverName ||
                 "Unassigned",
-            driverId:
-                getId(job.assignedDriver) ||
-                job.assignedDriverName ||
-                "unassigned",
-            date: job.date
-                ? formatDate(`${job.date}T12:00:00`)
-                : formatDate(
-                    job.updatedAt || job.createdAt
-                ),
+
+            date: formatDate(
+                job.date ||
+                job.completedAt ||
+                job.updatedAt ||
+                job.createdAt
+            ),
+
             revenue,
-            expenses: jobExpenses,
-            net: revenue - jobExpenses
+            expenses: expenseTotal,
+            net
         };
     });
 
-    const grossRevenue = jobRows.reduce(
-        (sum, job) => sum + job.revenue,
-        0
-    );
-
-    const totalExpenses = expenses.reduce(
-        (sum, expense) =>
-            sum + getExpenseTotal(expense),
-        0
-    );
-
-    const netEarnings =
-        grossRevenue - totalExpenses;
-
-    const completedCount = jobRows.length;
-
-    const averageRevenue =
-        completedCount > 0
-            ? grossRevenue / completedCount
-            : 0;
-
-    const averageNet =
-        completedCount > 0
-            ? netEarnings / completedCount
-            : 0;
-
-    const profitMargin =
-        grossRevenue > 0
-            ? (netEarnings / grossRevenue) * 100
-            : 0;
-
-    const generalExpenses = expenses
-        .filter(expense => !getId(expense.job))
-        .reduce(
-            (sum, expense) =>
-                sum + getExpenseTotal(expense),
+    const calculatedGrossRevenue =
+        jobRows.reduce(
+            (total, job) =>
+                total + job.revenue,
             0
         );
 
+    const calculatedTotalExpenses =
+        expenses.reduce(
+            (total, expense) =>
+                total +
+                getExpenseTotal(expense),
+            0
+        );
+
+    const calculatedJobExpenses =
+        expenses
+            .filter(expense =>
+                Boolean(
+                    getId(expense.job)
+                )
+            )
+            .reduce(
+                (total, expense) =>
+                    total +
+                    getExpenseTotal(expense),
+                0
+            );
+
+    const calculatedNetEarnings =
+        calculatedGrossRevenue -
+        calculatedJobExpenses;
+
+    const calculatedBusinessProfit =
+        calculatedGrossRevenue -
+        calculatedTotalExpenses;
+
+    const grossRevenue =
+        summary.grossRevenue !== undefined
+            ? numberValue(
+                summary.grossRevenue
+            )
+            : calculatedGrossRevenue;
+
+    const totalExpenses =
+        summary.totalExpenses !== undefined
+            ? numberValue(
+                summary.totalExpenses
+            )
+            : calculatedTotalExpenses;
+
+    const netEarnings =
+        summary.netEarnings !== undefined
+            ? numberValue(
+                summary.netEarnings
+            )
+            : calculatedNetEarnings;
+
+    const businessProfit =
+        summary.businessProfit !== undefined
+            ? numberValue(
+                summary.businessProfit
+            )
+            : calculatedBusinessProfit;
+
+    const completedCount =
+        summary.completedCount !== undefined
+            ? numberValue(
+                summary.completedCount
+            )
+            : jobRows.length;
+
+    const profitMargin =
+        summary.profitMargin !== undefined
+            ? numberValue(
+                summary.profitMargin
+            )
+            : grossRevenue > 0
+                ? businessProfit /
+                grossRevenue *
+                100
+                : 0;
+
+    const calculatedHighestJob =
+        jobRows.length > 0
+            ? [...jobRows].sort(
+                (first, second) =>
+                    second.revenue -
+                    first.revenue
+            )[0]
+            : null;
+
+    const calculatedLowestJob =
+        jobRows.length > 0
+            ? [...jobRows].sort(
+                (first, second) =>
+                    first.revenue -
+                    second.revenue
+            )[0]
+            : null;
+
+    const highestRevenueJob =
+        summary.highestRevenueJob ||
+        calculatedHighestJob;
+
+    const lowestRevenueJob =
+        summary.lowestRevenueJob ||
+        calculatedLowestJob;
+
+    const getJobRevenue = job =>
+        numberValue(
+            job?.revenue ??
+            job?.totalPrice
+        );
+
+    const getJobReference = job =>
+        job?.bookingRef ||
+        job?.ref ||
+        "No completed job";
+
+    const isProfit =
+        businessProfit >= 0;
+
+    /*
+     * Meals removed.
+     * Other renamed to Congestion / ULEZ.
+     */
     const expenseCategories = [
         {
             name: "Driver Charges",
             amount: expenses.reduce(
-                (sum, item) =>
-                    sum + numberValue(item.driverCharges),
+                (total, item) =>
+                    total +
+                    numberValue(
+                        item.driverCharges
+                    ),
                 0
             )
         },
         {
             name: "Night Stay",
             amount: expenses.reduce(
-                (sum, item) =>
-                    sum + numberValue(item.nightStay),
-                0
-            )
-        },
-        {
-            name: "Meals",
-            amount: expenses.reduce(
-                (sum, item) =>
-                    sum + numberValue(item.meals),
+                (total, item) =>
+                    total +
+                    numberValue(
+                        item.nightStay
+                    ),
                 0
             )
         },
         {
             name: "Fuel",
             amount: expenses.reduce(
-                (sum, item) =>
-                    sum + numberValue(item.fuel),
+                (total, item) =>
+                    total +
+                    numberValue(
+                        item.fuel
+                    ),
                 0
             )
         },
         {
             name: "Repairs",
             amount: expenses.reduce(
-                (sum, item) =>
-                    sum + numberValue(item.repair),
+                (total, item) =>
+                    total +
+                    numberValue(
+                        item.repair
+                    ),
                 0
             )
         },
         {
-            name: "Other",
+            name:
+                "Congestion / ULEZ Charges",
             amount: expenses.reduce(
-                (sum, item) =>
-                    sum + numberValue(item.other),
+                (total, item) =>
+                    total +
+                    numberValue(
+                        item.other
+                    ),
                 0
             )
         }
     ];
 
-    let driverRows = [];
+    const driverSummaryRows =
+        driverEarnings.map(driver => {
+            const totals =
+                getDriverPeriodTotals(
+                    driver.details || []
+                );
 
-    if (period === "all") {
-        /*
-         * All-time driver earnings come directly
-         * from the Driver collection.
-         */
-        driverRows = drivers
-            .map(driver => ({
-                key: driver._id,
-                name: driver.name || "Unknown Driver",
-                jobs: numberValue(driver.totalJobs),
-                earnings: numberValue(driver.earnings)
-            }))
-            .filter(driver =>
-                driver.earnings > 0 || driver.jobs > 0
-            )
-            .sort((a, b) => b.earnings - a.earnings);
-    } else {
-        /*
-         * Filtered reports use only driverCharges
-         * from expenses in the selected period.
-         */
-        const driverMap = new Map();
+            return {
+                name:
+                    driver.name ||
+                    "Unknown Driver",
 
-        expenses.forEach(expense => {
-            const driverCharges =
-                numberValue(expense.driverCharges);
+                jobs:
+                    numberValue(
+                        driver.jobs
+                    ),
 
-            if (driverCharges <= 0) return;
+                earnings:
+                    numberValue(
+                        driver.earnings
+                    ),
 
-            const driverId = getId(expense.driver);
-
-            const driverName =
-                expense.driver?.name ||
-                expense.driverName ||
-                "Unknown Driver";
-
-            const key = driverId || driverName;
-
-            if (!driverMap.has(key)) {
-                driverMap.set(key, {
-                    key,
-                    name: driverName,
-                    earnings: 0,
-                    jobIds: new Set()
-                });
-            }
-
-            const driver = driverMap.get(key);
-
-            driver.earnings += driverCharges;
-
-            const jobId = getId(expense.job);
-
-            if (jobId) {
-                driver.jobIds.add(jobId);
-            }
+                today: totals.today,
+                week: totals.week,
+                month: totals.month
+            };
         });
-
-        driverRows = Array.from(driverMap.values())
-            .map(driver => ({
-                key: driver.key,
-                name: driver.name,
-                jobs: driver.jobIds.size,
-                earnings: driver.earnings
-            }))
-            .sort((a, b) => b.earnings - a.earnings);
-    }
-
-    const highestRevenueJob =
-        jobRows.length > 0
-            ? [...jobRows].sort(
-                (a, b) => b.revenue - a.revenue
-            )[0]
-            : null;
-
-    const lowestRevenueJob =
-        jobRows.length > 0
-            ? [...jobRows].sort(
-                (a, b) => a.revenue - b.revenue
-            )[0]
-            : null;
-
-    const highestPaidDriver =
-        driverRows[0] || null;
-
-    const isProfit = netEarnings >= 0;
 
     const generatedDate =
-        new Date().toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric"
-        });
+        new Date().toLocaleDateString(
+            "en-GB",
+            {
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }
+        );
 
     const doc = new jsPDF({
         orientation: "portrait",
@@ -627,8 +850,10 @@ export const generateEarningsReport = async ({
     });
 
     doc.setProperties({
-        title: `${COMPANY.name} Earnings Report`,
-        subject: `${periodLabel} earnings report`,
+        title:
+            `${COMPANY.name} Earnings Report`,
+        subject:
+            `${periodLabel} earnings report`,
         author: COMPANY.name
     });
 
@@ -645,45 +870,75 @@ export const generateEarningsReport = async ({
         generatedDate
     });
 
-    /*
-     * Report information line.
-     */
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(...COLORS.red);
-    doc.text("Report Period:", 13, 48);
 
-    doc.setFont("helvetica", "normal");
+    doc.text(
+        "Report Period:",
+        13,
+        48
+    );
+
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
     doc.setTextColor(...COLORS.dark);
-    doc.text(periodLabel, 34, 48);
+
+    doc.text(
+        periodLabel,
+        34,
+        48
+    );
 
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(...COLORS.dark);
+
     doc.text(
         "Completed Jobs:",
         pageWidth - 45,
         48,
-        { align: "right" }
+        {
+            align: "right"
+        }
     );
 
-    doc.setFont("helvetica", "normal");
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
     doc.text(
         String(completedCount),
         pageWidth - 13,
         48,
-        { align: "right" }
+        {
+            align: "right"
+        }
     );
 
     doc.setDrawColor(...COLORS.border);
-    doc.line(13, 53, pageWidth - 13, 53);
+
+    doc.line(
+        13,
+        53,
+        pageWidth - 13,
+        53
+    );
 
     /*
-     * Main summary.
+     * Company Finance Summary
      */
     const cardY = 59;
     const gap = 3;
+
     const cardWidth =
-        (pageWidth - 26 - gap * 3) / 4;
+        (
+            pageWidth -
+            26 -
+            gap * 3
+        ) / 4;
 
     drawSummaryCard({
         doc,
@@ -691,41 +946,69 @@ export const generateEarningsReport = async ({
         y: cardY,
         width: cardWidth,
         title: "Gross Revenue",
-        value: `£${formatMoney(grossRevenue)}`,
+        value:
+            `£${formatMoney(
+                grossRevenue
+            )}`,
         valueColor: COLORS.red
     });
 
     drawSummaryCard({
         doc,
-        x: 13 + cardWidth + gap,
+        x:
+            13 +
+            cardWidth +
+            gap,
         y: cardY,
         width: cardWidth,
         title: "Total Expenses",
-        value: `£${formatMoney(totalExpenses)}`,
+        value:
+            `£${formatMoney(
+                totalExpenses
+            )}`,
         valueColor: COLORS.orange
     });
 
     drawSummaryCard({
         doc,
-        x: 13 + (cardWidth + gap) * 2,
+        x:
+            13 +
+            (
+                cardWidth +
+                gap
+            ) * 2,
         y: cardY,
         width: cardWidth,
         title: "Net Earnings",
-        value: `${netEarnings < 0 ? "-" : ""
-            }£${formatMoney(Math.abs(netEarnings))}`,
+        value:
+            `${netEarnings < 0 ? "-" : ""}£${formatMoney(
+                Math.abs(
+                    netEarnings
+                )
+            )}`,
         valueColor:
-            isProfit
+            netEarnings >= 0
                 ? COLORS.green
                 : COLORS.redDark
     });
 
     drawSummaryCard({
         doc,
-        x: 13 + (cardWidth + gap) * 3,
+        x:
+            13 +
+            (
+                cardWidth +
+                gap
+            ) * 3,
         y: cardY,
         width: cardWidth,
-        title: "Profit Margin",
-        value: `${profitMargin.toFixed(1)}%`,
+        title: "Business Profit",
+        value:
+            `${businessProfit < 0 ? "-" : ""}£${formatMoney(
+                Math.abs(
+                    businessProfit
+                )
+            )}`,
         valueColor:
             isProfit
                 ? COLORS.green
@@ -733,7 +1016,7 @@ export const generateEarningsReport = async ({
     });
 
     /*
-     * Profit or loss banner.
+     * Always Business Profit label.
      */
     doc.setFillColor(
         ...(isProfit
@@ -761,33 +1044,37 @@ export const generateEarningsReport = async ({
     );
 
     doc.text(
-        isProfit
-            ? `BUSINESS PROFIT: £${formatMoney(
-                netEarnings
-            )}`
-            : `BUSINESS LOSS: £${formatMoney(
-                Math.abs(netEarnings)
-            )}`,
+        `BUSINESS PROFIT: ${businessProfit < 0
+            ? "-"
+            : ""
+        }£${formatMoney(
+            Math.abs(
+                businessProfit
+            )
+        )}`,
         18,
         94
     );
 
-    doc.setFont("helvetica", "normal");
+    doc.setFont(
+        "helvetica",
+        "normal"
+    );
+
     doc.setFontSize(7);
     doc.setTextColor(...COLORS.gray);
 
     doc.text(
-        `Average net per job: £${formatMoney(
-            averageNet
-        )} | General expenses: £${formatMoney(
-            generalExpenses
-        )}`,
+        `Profit margin: ${profitMargin.toFixed(
+            1
+        )}%`,
         18,
         100
     );
 
     /*
-     * Quick statistics.
+     * Quick Stats:
+     * only Highest and Lowest Revenue Job.
      */
     drawSectionTitle({
         doc,
@@ -796,65 +1083,59 @@ export const generateEarningsReport = async ({
     });
 
     const quickY = 120;
+
     const quickWidth =
-        (pageWidth - 26 - gap * 3) / 4;
+        (
+            pageWidth -
+            26 -
+            gap
+        ) / 2;
 
     drawQuickCard({
         doc,
         x: 13,
         y: quickY,
         width: quickWidth,
-        title: "Average Job Revenue",
-        value: `£${formatMoney(averageRevenue)}`,
-        subtitle: `${completedCount} completed jobs`
-    });
-
-    drawQuickCard({
-        doc,
-        x: 13 + quickWidth + gap,
-        y: quickY,
-        width: quickWidth,
-        title: "Highest Revenue Job",
-        value: `£${formatMoney(
-            highestRevenueJob?.revenue
-        )}`,
-        subtitle:
-            highestRevenueJob?.ref || "No job"
-    });
-
-    drawQuickCard({
-        doc,
-        x: 13 + (quickWidth + gap) * 2,
-        y: quickY,
-        width: quickWidth,
-        title: "Lowest Revenue Job",
-        value: `£${formatMoney(
-            lowestRevenueJob?.revenue
-        )}`,
-        subtitle:
-            lowestRevenueJob?.ref || "No job"
-    });
-
-    drawQuickCard({
-        doc,
-        x: 13 + (quickWidth + gap) * 3,
-        y: quickY,
-        width: quickWidth,
-        title: "Highest Paid Driver",
+        title:
+            "Highest Revenue Job",
         value:
-            highestPaidDriver?.name ||
-            "No driver",
+            `£${formatMoney(
+                getJobRevenue(
+                    highestRevenueJob
+                )
+            )}`,
         subtitle:
-            highestPaidDriver
-                ? `Earnings £${formatMoney(
-                    highestPaidDriver.earnings
-                )}`
-                : ""
+            getJobReference(
+                highestRevenueJob
+            )
     });
 
-    const continuationHook = data => {
+    drawQuickCard({
+        doc,
+        x:
+            13 +
+            quickWidth +
+            gap,
+        y: quickY,
+        width: quickWidth,
+        title:
+            "Lowest Revenue Job",
+        value:
+            `£${formatMoney(
+                getJobRevenue(
+                    lowestRevenueJob
+                )
+            )}`,
+        subtitle:
+            getJobReference(
+                lowestRevenueJob
+            )
+    });
+
+    const continuationHook = () => {
         const currentPage =
-            doc.internal.getCurrentPageInfo()
+            doc.internal
+                .getCurrentPageInfo()
                 .pageNumber;
 
         if (currentPage > 1) {
@@ -867,16 +1148,18 @@ export const generateEarningsReport = async ({
     };
 
     /*
-     * Driver earnings table.
+     * Completed Jobs immediately
+     * under Quick Statistics.
      */
     drawSectionTitle({
         doc,
-        title: "Driver Earnings",
+        title: "Completed Jobs",
         y: 151
     });
 
     autoTable(doc, {
         startY: 157,
+
         margin: {
             left: 13,
             right: 13,
@@ -886,50 +1169,101 @@ export const generateEarningsReport = async ({
 
         columns: [
             {
+                header: "Ref",
+                dataKey: "ref"
+            },
+            {
+                header: "Customer",
+                dataKey: "customer"
+            },
+            {
                 header: "Driver",
-                dataKey: "name"
+                dataKey: "driver"
             },
             {
-                header: "Completed Jobs",
-                dataKey: "jobs"
+                header: "Date",
+                dataKey: "date"
             },
             {
-                header: "Driver Earnings",
-                dataKey: "earningsText"
+                header: "Revenue",
+                dataKey: "revenueText"
             },
             {
-                header: "Earning Source",
-                dataKey: "source"
+                header: "Expenses",
+                dataKey: "expensesText"
+            },
+            {
+                header: "Net",
+                dataKey: "netText"
+            },
+            {
+                header: "Result",
+                dataKey: "result"
             }
         ],
 
         body:
-            driverRows.length > 0
-                ? driverRows.map(driver => ({
-                    name: driver.name,
-                    jobs: driver.jobs,
-                    earningsText:
+            jobRows.length > 0
+                ? jobRows.map(job => ({
+                    ref: job.ref,
+                    customer:
+                        job.customer,
+                    driver:
+                        job.driver,
+                    date: job.date,
+
+                    revenueText:
                         `£${formatMoney(
-                            driver.earnings
+                            job.revenue
                         )}`,
-                    source: "Driver Charges"
+
+                    expensesText:
+                        `£${formatMoney(
+                            job.expenses
+                        )}`,
+
+                    netText:
+                        `${job.net < 0
+                            ? "-"
+                            : "+"
+                        }£${formatMoney(
+                            Math.abs(
+                                job.net
+                            )
+                        )}`,
+
+                    result:
+                        job.net >= 0
+                            ? "PROFIT"
+                            : "LOSS",
+
+                    netValue:
+                        job.net
                 }))
                 : [{
-                    name: "No driver earnings found",
-                    jobs: "",
-                    earningsText: "",
-                    source: ""
+                    ref:
+                        "No completed jobs found",
+                    customer: "",
+                    driver: "",
+                    date: "",
+                    revenueText: "",
+                    expensesText: "",
+                    netText: "",
+                    result: "",
+                    netValue: 0
                 }],
 
         theme: "grid",
 
         styles: {
             font: "helvetica",
-            fontSize: 7.5,
-            cellPadding: 2.5,
-            lineColor: COLORS.border,
+            fontSize: 6.2,
+            cellPadding: 2,
+            lineColor:
+                COLORS.border,
             lineWidth: 0.2,
-            textColor: COLORS.dark
+            overflow: "linebreak",
+            valign: "middle"
         },
 
         headStyles: {
@@ -939,38 +1273,85 @@ export const generateEarningsReport = async ({
         },
 
         alternateRowStyles: {
-            fillColor: [249, 250, 251]
+            fillColor:
+                [249, 250, 251]
         },
 
         columnStyles: {
-            name: {
-                cellWidth: 65
+            ref: {
+                cellWidth: 21,
+                textColor:
+                    COLORS.red,
+                fontStyle: "bold"
             },
-            jobs: {
-                cellWidth: 35,
-                halign: "center"
+            customer: {
+                cellWidth: 28
             },
-            earningsText: {
-                cellWidth: 43,
-                halign: "right",
-                fontStyle: "bold",
-                textColor: COLORS.green
+            driver: {
+                cellWidth: 25
             },
-            source: {
-                cellWidth: 35,
+            date: {
+                cellWidth: 22
+            },
+            revenueText: {
+                cellWidth: 21,
+                halign: "right"
+            },
+            expensesText: {
+                cellWidth: 21,
+                halign: "right"
+            },
+            netText: {
+                cellWidth: 22,
+                halign: "right"
+            },
+            result: {
+                cellWidth: 18,
                 halign: "center"
             }
         },
 
-        willDrawPage: continuationHook
+        didParseCell: tableData => {
+            if (
+                tableData.section ===
+                "body" &&
+                [
+                    "netText",
+                    "result"
+                ].includes(
+                    tableData.column
+                        .dataKey
+                )
+            ) {
+                const net =
+                    numberValue(
+                        tableData.row
+                            .raw?.netValue
+                    );
+
+                tableData.cell.styles
+                    .fontStyle =
+                    "bold";
+
+                tableData.cell.styles
+                    .textColor =
+                    net >= 0
+                        ? COLORS.green
+                        : COLORS.redDark;
+            }
+        },
+
+        willDrawPage:
+            continuationHook
     });
 
     let currentY =
-        doc.lastAutoTable.finalY + 10;
+        doc.lastAutoTable.finalY +
+        10;
 
-    const ensureSpace = requiredHeight => {
+    const ensureSpace = height => {
         if (
-            currentY + requiredHeight >
+            currentY + height >
             pageHeight - 24
         ) {
             doc.addPage();
@@ -986,9 +1367,152 @@ export const generateEarningsReport = async ({
     };
 
     /*
-     * Expense category breakdown.
+     * Driver summary.
      */
-    ensureSpace(62);
+    ensureSpace(45);
+
+    drawSectionTitle({
+        doc,
+        title:
+            "Driver Earnings Summary",
+        y: currentY
+    });
+
+    autoTable(doc, {
+        startY: currentY + 6,
+
+        margin: {
+            left: 13,
+            right: 13,
+            top: 21,
+            bottom: 23
+        },
+
+        columns: [
+            {
+                header: "Driver",
+                dataKey: "name"
+            },
+            {
+                header: "Jobs",
+                dataKey: "jobs"
+            },
+            {
+                header: "Total Earned",
+                dataKey: "total"
+            },
+            {
+                header: "Today",
+                dataKey: "today"
+            },
+            {
+                header: "Last 7 Days",
+                dataKey: "week"
+            },
+            {
+                header: "Last Month",
+                dataKey: "month"
+            }
+        ],
+
+        body:
+            driverSummaryRows.length > 0
+                ? driverSummaryRows.map(
+                    driver => ({
+                        name:
+                            driver.name,
+                        jobs:
+                            driver.jobs,
+                        total:
+                            `£${formatMoney(
+                                driver.earnings
+                            )}`,
+                        today:
+                            `£${formatMoney(
+                                driver.today
+                            )}`,
+                        week:
+                            `£${formatMoney(
+                                driver.week
+                            )}`,
+                        month:
+                            `£${formatMoney(
+                                driver.month
+                            )}`
+                    })
+                )
+                : [{
+                    name:
+                        "No driver earnings found",
+                    jobs: "",
+                    total: "",
+                    today: "",
+                    week: "",
+                    month: ""
+                }],
+
+        theme: "grid",
+
+        styles: {
+            font: "helvetica",
+            fontSize: 7,
+            cellPadding: 2.3,
+            lineColor:
+                COLORS.border,
+            lineWidth: 0.2
+        },
+
+        headStyles: {
+            fillColor: COLORS.red,
+            textColor: COLORS.white,
+            fontStyle: "bold"
+        },
+
+        alternateRowStyles: {
+            fillColor:
+                [249, 250, 251]
+        },
+
+        columnStyles: {
+            name: {
+                cellWidth: 39
+            },
+            jobs: {
+                cellWidth: 18,
+                halign: "center"
+            },
+            total: {
+                cellWidth: 30,
+                halign: "right",
+                fontStyle: "bold",
+                textColor:
+                    COLORS.green
+            },
+            today: {
+                cellWidth: 29,
+                halign: "right"
+            },
+            week: {
+                cellWidth: 31,
+                halign: "right"
+            },
+            month: {
+                cellWidth: 31,
+                halign: "right"
+            }
+        },
+
+        willDrawPage:
+            continuationHook
+    });
+
+    currentY =
+        doc.lastAutoTable.finalY +
+        10;
+    /*
+     * Expense Breakdown last.
+     */
+    ensureSpace(55);
 
     drawSectionTitle({
         doc,
@@ -1008,7 +1532,8 @@ export const generateEarningsReport = async ({
 
         columns: [
             {
-                header: "Expense Category",
+                header:
+                    "Expense Category",
                 dataKey: "category"
             },
             {
@@ -1016,24 +1541,35 @@ export const generateEarningsReport = async ({
                 dataKey: "amount"
             },
             {
-                header: "Share of Expenses",
+                header:
+                    "Share of Expenses",
                 dataKey: "percentage"
             }
         ],
 
-        body: expenseCategories.map(category => ({
-            category: category.name,
-            amount:
-                `£${formatMoney(category.amount)}`,
-            percentage:
-                totalExpenses > 0
-                    ? `${(
-                        category.amount /
-                        totalExpenses *
-                        100
-                    ).toFixed(1)}%`
-                    : "0.0%"
-        })),
+        body:
+            expenseCategories.map(
+                category => ({
+                    category:
+                        category.name,
+
+                    amount:
+                        `£${formatMoney(
+                            category.amount
+                        )}`,
+
+                    percentage:
+                        totalExpenses > 0
+                            ? `${(
+                                category.amount /
+                                totalExpenses *
+                                100
+                            ).toFixed(
+                                1
+                            )}%`
+                            : "0.0%"
+                })
+            ),
 
         theme: "grid",
 
@@ -1041,7 +1577,8 @@ export const generateEarningsReport = async ({
             font: "helvetica",
             fontSize: 7.5,
             cellPadding: 2.5,
-            lineColor: COLORS.border,
+            lineColor:
+                COLORS.border,
             lineWidth: 0.2
         },
 
@@ -1052,7 +1589,8 @@ export const generateEarningsReport = async ({
         },
 
         alternateRowStyles: {
-            fillColor: [249, 250, 251]
+            fillColor:
+                [249, 250, 251]
         },
 
         columnStyles: {
@@ -1070,148 +1608,8 @@ export const generateEarningsReport = async ({
             }
         },
 
-        willDrawPage: continuationHook
-    });
-
-    currentY =
-        doc.lastAutoTable.finalY + 10;
-
-    /*
-     * Completed jobs detailed report.
-     */
-    ensureSpace(40);
-
-    drawSectionTitle({
-        doc,
-        title: "Completed Jobs",
-        y: currentY
-    });
-
-    autoTable(doc, {
-        startY: currentY + 6,
-
-        margin: {
-            left: 13,
-            right: 13,
-            top: 21,
-            bottom: 23
-        },
-
-        columns: [
-            { header: "Ref", dataKey: "ref" },
-            { header: "Customer", dataKey: "customer" },
-            { header: "Driver", dataKey: "driver" },
-            { header: "Date", dataKey: "date" },
-            { header: "Revenue", dataKey: "revenueText" },
-            { header: "Expenses", dataKey: "expensesText" },
-            { header: "Net", dataKey: "netText" },
-            { header: "Result", dataKey: "result" }
-        ],
-
-        body:
-            jobRows.length > 0
-                ? jobRows.map(job => ({
-                    ref: job.ref,
-                    customer: job.customer,
-                    driver: job.driver,
-                    date: job.date,
-                    revenueText:
-                        `£${formatMoney(job.revenue)}`,
-                    expensesText:
-                        `£${formatMoney(job.expenses)}`,
-                    netText:
-                        `${job.net < 0 ? "-" : "+"
-                        }£${formatMoney(
-                            Math.abs(job.net)
-                        )}`,
-                    result:
-                        job.net >= 0
-                            ? "PROFIT"
-                            : "LOSS",
-                    netValue: job.net
-                }))
-                : [{
-                    ref: "No completed jobs found",
-                    customer: "",
-                    driver: "",
-                    date: "",
-                    revenueText: "",
-                    expensesText: "",
-                    netText: "",
-                    result: "",
-                    netValue: 0
-                }],
-
-        theme: "grid",
-
-        styles: {
-            font: "helvetica",
-            fontSize: 6.2,
-            cellPadding: 2,
-            lineColor: COLORS.border,
-            lineWidth: 0.2,
-            overflow: "linebreak",
-            valign: "middle"
-        },
-
-        headStyles: {
-            fillColor: COLORS.red,
-            textColor: COLORS.white,
-            fontStyle: "bold"
-        },
-
-        alternateRowStyles: {
-            fillColor: [249, 250, 251]
-        },
-
-        columnStyles: {
-            ref: {
-                cellWidth: 21,
-                textColor: COLORS.red,
-                fontStyle: "bold"
-            },
-            customer: { cellWidth: 28 },
-            driver: { cellWidth: 25 },
-            date: { cellWidth: 22 },
-            revenueText: {
-                cellWidth: 21,
-                halign: "right"
-            },
-            expensesText: {
-                cellWidth: 21,
-                halign: "right"
-            },
-            netText: {
-                cellWidth: 22,
-                halign: "right"
-            },
-            result: {
-                cellWidth: 18,
-                halign: "center"
-            }
-        },
-
-        didParseCell: data => {
-            if (
-                data.section === "body" &&
-                ["netText", "result"].includes(
-                    data.column.dataKey
-                )
-            ) {
-                const net =
-                    numberValue(
-                        data.row.raw?.netValue
-                    );
-
-                data.cell.styles.fontStyle = "bold";
-                data.cell.styles.textColor =
-                    net >= 0
-                        ? COLORS.green
-                        : COLORS.redDark;
-            }
-        },
-
-        willDrawPage: continuationHook
+        willDrawPage:
+            continuationHook
     });
 
     drawFooter({
@@ -1220,13 +1618,22 @@ export const generateEarningsReport = async ({
         pageHeight
     });
 
-    const safePeriod = periodLabel
-        .replace(/\s+/g, "-")
-        .toLowerCase();
+    const safePeriod =
+        periodLabel
+            .replace(
+                /[^a-zA-Z0-9]+/g,
+                "-"
+            )
+            .replace(
+                /^-|-$/g,
+                ""
+            )
+            .toLowerCase();
 
-    const dateStamp = new Date()
-        .toISOString()
-        .slice(0, 10);
+    const dateStamp =
+        new Date()
+            .toISOString()
+            .slice(0, 10);
 
     doc.save(
         `Khan-Moves-Earnings-${safePeriod}-${dateStamp}.pdf`

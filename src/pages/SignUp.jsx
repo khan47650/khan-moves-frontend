@@ -1,162 +1,443 @@
-// SignUp.jsx - COMPLETE
-
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, {
+    useEffect,
+    useState
+} from "react";
 import {
-    FiUser, FiMail, FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight,
-    FiAlertCircle, FiCheckCircle,
-} from 'react-icons/fi';
-import AuthShell from '../components/AuthShell';
+    Link,
+    useNavigate
+} from "react-router-dom";
+import {
+    FiUser,
+    FiMail,
+    FiPhone,
+    FiLock,
+    FiEye,
+    FiEyeOff,
+    FiArrowRight,
+    FiAlertCircle
+} from "react-icons/fi";
+import AuthShell from "../components/AuthShell";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SignUp() {
     const navigate = useNavigate();
-    const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });
-    const [showPw, setShowPw] = useState(false);
-    const [error, setError] = useState('');
-    const [done, setDone] = useState(false);
 
-    const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+    const {
+        signup,
+        user,
+        isAuthenticated,
+        loading: authLoading
+    } = useAuth();
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setError('');
-        if (!form.name || !form.email || !form.password) {
-            setError('Please fill in all required fields.');
-            return;
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirm: ""
+    });
+
+    const [showPassword, setShowPassword] =
+        useState(false);
+
+    const [showConfirmPassword, setShowConfirmPassword] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
+
+    const [loading, setLoading] =
+        useState(false);
+
+    useEffect(() => {
+        if (
+            !authLoading &&
+            isAuthenticated &&
+            user
+        ) {
+            navigate(
+                user.role === "admin"
+                    ? "/admin"
+                    : "/",
+                {
+                    replace: true
+                }
+            );
         }
-        if (form.password.length < 6) {
-            setError('Password must be at least 6 characters.');
-            return;
+    }, [
+        authLoading,
+        isAuthenticated,
+        user,
+        navigate
+    ]);
+
+    const updateField = (
+        field,
+        value
+    ) => {
+        setForm(current => ({
+            ...current,
+            [field]: value
+        }));
+
+        if (error) {
+            setError("");
         }
-        if (form.password !== form.confirm) {
-            setError('Passwords do not match.');
-            return;
-        }
-        setDone(true);
     };
+
+    const handleSubmit = async event => {
+        event.preventDefault();
+
+        setError("");
+
+        const name =
+            form.name.trim();
+
+        const email =
+            form.email
+                .trim()
+                .toLowerCase();
+
+        const phone =
+            form.phone.trim();
+
+        if (
+            !name ||
+            !email ||
+            !form.password ||
+            !form.confirm
+        ) {
+            setError(
+                "Please fill in all required fields."
+            );
+            return;
+        }
+
+        if (
+            form.password.length < 6
+        ) {
+            setError(
+                "Password must be at least 6 characters."
+            );
+            return;
+        }
+
+        if (
+            form.password !==
+            form.confirm
+        ) {
+            setError(
+                "Passwords do not match."
+            );
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const authenticatedUser =
+                await signup({
+                    name,
+                    email,
+                    phone,
+                    password:
+                        form.password
+                });
+
+            navigate(
+                authenticatedUser.role ===
+                    "admin"
+                    ? "/admin"
+                    : "/",
+                {
+                    replace: true
+                }
+            );
+        } catch (requestError) {
+            setError(
+                requestError.response?.data
+                    ?.message ||
+                requestError.message ||
+                "Failed to create account."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (authLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-[#DC2626]" />
+
+                    <p className="text-sm font-semibold text-gray-500">
+                        Checking your session...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <AuthShell
-            heading={<>Create your <span className="text-yellow-400">Khan Moves</span> account</>}
-            subheading="Join us to book moves faster and track all your removals in one place."
-            features={['Faster repeat bookings', 'Save your addresses & items', 'Quote history & tracking']}
-        >
-
-            {done ? (
-                <div className="text-center py-6">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                        <FiCheckCircle size={36} className="text-green-600" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Account ready (demo)</h1>
-                    <p className="text-gray-600 mb-6">
-                        Sign-up isn't connected to a backend yet, but your details look good. You can sign in once accounts go live.
-                    </p>
-                    <Link
-                        to="/signin"
-                        className="inline-flex items-center justify-center gap-2 bg-[#DC2626] hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg transition"
-                    >
-                        Go to Sign in <FiArrowRight size={18} />
-                    </Link>
-                </div>
-            ) : (
+            heading={
                 <>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign up</h1>
-                    <p className="text-gray-600 mb-8">Create an account in less than a minute.</p>
-
-                    {error && (
-                        <div className="mb-5 flex items-center gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                            <FiAlertCircle size={16} className="shrink-0" /> {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <Field
-                            icon={FiUser}
-                            label="Full name"
-                            value={form.name}
-                            onChange={(v) => set('name', v)}
-                            placeholder="John Doe"
-                        />
-                        <Field
-                            icon={FiMail}
-                            label="Email address"
-                            type="email"
-                            value={form.email}
-                            onChange={(v) => set('email', v)}
-                            placeholder="john@example.com"
-                        />
-                        <Field
-                            icon={FiPhone}
-                            label="Phone number"
-                            type="tel"
-                            value={form.phone}
-                            onChange={(v) => set('phone', v)}
-                            placeholder="0121 555 6666"
-                        />
-
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-900 mb-2">Password</label>
-                            <div className="relative">
-                                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                <input
-                                    type={showPw ? 'text' : 'password'}
-                                    value={form.password}
-                                    onChange={(e) => set('password', e.target.value)}
-                                    placeholder="At least 6 characters"
-                                    className="w-full pl-10 pr-11 py-3 rounded-lg border-2 border-gray-300 focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626] outline-none transition"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPw((s) => !s)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#DC2626] transition"
-                                >
-                                    {showPw ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <Field
-                            icon={FiLock}
-                            label="Confirm password"
-                            type={showPw ? 'text' : 'password'}
-                            value={form.confirm}
-                            onChange={(v) => set('confirm', v)}
-                            placeholder="Re-enter password"
-                        />
-
-                        <button
-                            type="submit"
-                            className="w-full bg-[#DC2626] hover:bg-red-700 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2"
-                        >
-                            Create account <FiArrowRight size={18} />
-                        </button>
-                    </form>
-
-                    <p className="text-center text-sm text-gray-600 mt-6">
-                        Already have an account?{' '}
-                        <Link to="/signin" className="text-[#DC2626] font-semibold hover:underline transition">Sign in</Link>
-                    </p>
+                    Create your{" "}
+                    <span className="text-yellow-400">
+                        Khan Moves
+                    </span>{" "}
+                    account
                 </>
+            }
+            subheading="Join us to book moves faster and track all your removals in one place."
+            features={[
+                "Faster repeat bookings",
+                "Save your addresses & items",
+                "Quote history & tracking"
+            ]}
+        >
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">
+                Sign up
+            </h1>
+
+            <p className="mb-8 text-gray-600">
+                Create an account in less than a minute.
+            </p>
+
+            {error && (
+                <div className="mb-5 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    <FiAlertCircle
+                        size={17}
+                        className="mt-0.5 shrink-0"
+                    />
+
+                    <span>{error}</span>
+                </div>
             )}
+
+            <form
+                onSubmit={handleSubmit}
+                className="space-y-4"
+            >
+                <Field
+                    icon={FiUser}
+                    label="Full name"
+                    value={form.name}
+                    onChange={value =>
+                        updateField(
+                            "name",
+                            value
+                        )
+                    }
+                    placeholder="John Doe"
+                    autoComplete="name"
+                />
+
+                <Field
+                    icon={FiMail}
+                    label="Email address"
+                    type="email"
+                    value={form.email}
+                    onChange={value =>
+                        updateField(
+                            "email",
+                            value
+                        )
+                    }
+                    placeholder="john@example.com"
+                    autoComplete="email"
+                />
+
+                <Field
+                    icon={FiPhone}
+                    label="Phone number"
+                    type="tel"
+                    value={form.phone}
+                    onChange={value =>
+                        updateField(
+                            "phone",
+                            value
+                        )
+                    }
+                    placeholder="0121 555 6666"
+                    autoComplete="tel"
+                    required={false}
+                />
+
+                <PasswordField
+                    label="Password"
+                    value={form.password}
+                    onChange={value =>
+                        updateField(
+                            "password",
+                            value
+                        )
+                    }
+                    showPassword={
+                        showPassword
+                    }
+                    onToggle={() =>
+                        setShowPassword(
+                            current =>
+                                !current
+                        )
+                    }
+                    placeholder="At least 6 characters"
+                    autoComplete="new-password"
+                />
+
+                <PasswordField
+                    label="Confirm password"
+                    value={form.confirm}
+                    onChange={value =>
+                        updateField(
+                            "confirm",
+                            value
+                        )
+                    }
+                    showPassword={
+                        showConfirmPassword
+                    }
+                    onToggle={() =>
+                        setShowConfirmPassword(
+                            current =>
+                                !current
+                        )
+                    }
+                    placeholder="Re-enter password"
+                    autoComplete="new-password"
+                />
+
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#DC2626] py-3 font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {loading ? (
+                        <>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            Creating account...
+                        </>
+                    ) : (
+                        <>
+                            Create account
+                            <FiArrowRight
+                                size={18}
+                            />
+                        </>
+                    )}
+                </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link
+                    to="/signin"
+                    className="font-semibold text-[#DC2626] transition hover:underline"
+                >
+                    Sign in
+                </Link>
+            </p>
         </AuthShell>
     );
 }
 
-/* Input Field Component */
-function Field({ icon: Icon, label, value, onChange, placeholder, type = 'text' }) {
+function Field({
+    icon: Icon,
+    label,
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+    autoComplete,
+    required = true
+}) {
     return (
         <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">{label}</label>
+            <label className="mb-2 block text-sm font-semibold text-gray-900">
+                {label}
+            </label>
+
             <div className="relative">
-                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Icon
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+
                 <input
                     type={type}
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={event =>
+                        onChange(
+                            event.target.value
+                        )
+                    }
                     placeholder={placeholder}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-300 focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626] outline-none transition"
-                    required={type !== 'tel'}
+                    autoComplete={autoComplete}
+                    required={required}
+                    className="w-full rounded-lg border-2 border-gray-300 py-3 pl-10 pr-4 outline-none transition focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]"
                 />
+            </div>
+        </div>
+    );
+}
+
+function PasswordField({
+    label,
+    value,
+    onChange,
+    showPassword,
+    onToggle,
+    placeholder,
+    autoComplete
+}) {
+    return (
+        <div>
+            <label className="mb-2 block text-sm font-semibold text-gray-900">
+                {label}
+            </label>
+
+            <div className="relative">
+                <FiLock
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+
+                <input
+                    type={
+                        showPassword
+                            ? "text"
+                            : "password"
+                    }
+                    value={value}
+                    onChange={event =>
+                        onChange(
+                            event.target.value
+                        )
+                    }
+                    placeholder={placeholder}
+                    autoComplete={autoComplete}
+                    required
+                    className="w-full rounded-lg border-2 border-gray-300 py-3 pl-10 pr-11 outline-none transition focus:border-[#DC2626] focus:ring-1 focus:ring-[#DC2626]"
+                />
+
+                <button
+                    type="button"
+                    aria-label={
+                        showPassword
+                            ? "Hide password"
+                            : "Show password"
+                    }
+                    onClick={onToggle}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-[#DC2626]"
+                >
+                    {showPassword ? (
+                        <FiEyeOff size={18} />
+                    ) : (
+                        <FiEye size={18} />
+                    )}
+                </button>
             </div>
         </div>
     );

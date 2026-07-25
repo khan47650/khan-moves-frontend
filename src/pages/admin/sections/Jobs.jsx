@@ -6,13 +6,9 @@ import {
     FiPackage,
     FiPhone,
     FiMail,
-    FiClock,
     FiCheck,
     FiArrowRight,
-    FiLayers,
-    FiMessageSquare,
-    FiCalendar,
-    FiSave
+    FiMessageSquare
 } from "react-icons/fi";
 import { toast } from 'react-toastify';
 import api from '../../../api/api';
@@ -64,35 +60,6 @@ const formatTimeSlot = value => {
     return labels[value] || value || "To be arranged";
 };
 
-const getJobCardSchedule = job => {
-    if (job.dateType === "flexible") {
-        return {
-            type: "flexible",
-            label: "Flexible"
-        };
-    }
-
-    const pickupDate = job.date || "";
-    const deliveryDate = job.deliveryDate || "";
-
-    if (
-        pickupDate &&
-        deliveryDate &&
-        pickupDate === deliveryDate
-    ) {
-        return {
-            type: "same",
-            label: formatJobDate(pickupDate)
-        };
-    }
-
-    return {
-        type: "different",
-        pickup: formatJobDate(pickupDate),
-        delivery: formatJobDate(deliveryDate)
-    };
-};
-
 export default function Jobs() {
     const [activeTab, setActiveTab] = useState('active');
     const [jobs, setJobs] = useState({ active: [], on_way: [] });
@@ -104,17 +71,7 @@ export default function Jobs() {
     const [selectedVehicleId, setSelectedVehicleId] = useState('');
     const [assigning, setAssigning] = useState(false);
     const [updatingStatus, setUpdatingStatus] = useState(false);
-
     const [cancelTarget, setCancelTarget] = useState(null);
-    const [savingSchedule, setSavingSchedule] = useState(false);
-
-    const [scheduleData, setScheduleData] = useState({
-        date: "",
-        dateType: "specific",
-        timeSlot: "",
-        deliveryDate: "",
-        deliveryTimeSlot: ""
-    });
 
     useEffect(() => { fetchAll(); }, []);
 
@@ -138,14 +95,6 @@ export default function Jobs() {
 
     const openJob = async job => {
         setSelectedJob(job);
-
-        setScheduleData({
-            date: job.date || "",
-            dateType: job.dateType || "specific",
-            timeSlot: job.timeSlot || "",
-            deliveryDate: job.deliveryDate || "",
-            deliveryTimeSlot: job.deliveryTimeSlot || ""
-        });
 
         const driverId = getId(job.assignedDriver);
         const vehicleId = getId(job.assignedVehicle);
@@ -321,61 +270,6 @@ export default function Jobs() {
         }
     };
 
-    const handleSaveSchedule = async () => {
-        if (!selectedJob) return;
-
-        if (
-            scheduleData.dateType === "specific" &&
-            !scheduleData.date
-        ) {
-            toast.error("Please select a pickup date");
-            return;
-        }
-
-        setSavingSchedule(true);
-
-        try {
-            const response = await api.patch(
-                `/jobs/${selectedJob._id}/schedule`,
-                {
-                    date: scheduleData.date,
-                    dateType: scheduleData.dateType,
-                    timeSlot: scheduleData.timeSlot,
-                    deliveryDate: scheduleData.deliveryDate,
-                    deliveryTimeSlot:
-                        scheduleData.deliveryTimeSlot
-                }
-            );
-
-            const updatedJob = response.data?.data;
-
-            if (!updatedJob) {
-                throw new Error("Updated job was not returned");
-            }
-
-            setSelectedJob(updatedJob);
-
-            setJobs(previous => ({
-                ...previous,
-                [activeTab]: previous[activeTab].map(job =>
-                    job._id === updatedJob._id
-                        ? updatedJob
-                        : job
-                )
-            }));
-
-            toast.success("Job schedule updated");
-        } catch (err) {
-            toast.error(
-                err.response?.data?.message ||
-                err.message ||
-                "Failed to update schedule"
-            );
-        } finally {
-            setSavingSchedule(false);
-        }
-    };
-
     const handleCancelJob = async reason => {
         if (!cancelTarget) return;
 
@@ -441,8 +335,6 @@ export default function Jobs() {
             ) : (
                 <div className="space-y-3">
                     {currentJobs.map(job => {
-                        const schedule = getJobCardSchedule(job);
-
                         return (
                             <div
                                 key={job._id}
@@ -460,9 +352,9 @@ export default function Jobs() {
                                     </span>
                                 </div>
 
-                                <div className="grid gap-3 mb-4 pb-4 border-b border-gray-100 text-sm sm:grid-cols-2 xl:grid-cols-4">
+                                <div className="mb-4 grid gap-3 border-b border-gray-100 pb-4 text-sm sm:grid-cols-2 xl:grid-cols-5">
                                     <div>
-                                        <p className="text-xs text-gray-400 font-semibold mb-0.5">
+                                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
                                             Route
                                         </p>
 
@@ -478,65 +370,42 @@ export default function Jobs() {
                                     </div>
 
                                     <div>
-                                        <p className="text-xs text-gray-400 font-semibold mb-0.5">
-                                            Pickup / Drop-off dates
+                                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
+                                            Pickup Date
                                         </p>
 
-                                        {schedule.type === "flexible" && (
-                                            <p className="font-semibold text-gray-700">
-                                                Flexible
-                                            </p>
-                                        )}
-
-                                        {schedule.type === "same" && (
-                                            <p className="font-semibold text-gray-700">
-                                                {schedule.label}
-                                            </p>
-                                        )}
-
-                                        {schedule.type === "different" && (
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs text-gray-700">
-                                                    <span className="font-bold">
-                                                        Pickup:
-                                                    </span>{" "}
-                                                    {schedule.pickup}
-                                                </p>
-
-                                                <p className="text-xs text-gray-700">
-                                                    <span className="font-bold">
-                                                        Drop-off:
-                                                    </span>{" "}
-                                                    {schedule.delivery}
-                                                </p>
-                                            </div>
-                                        )}
+                                        <p className="font-semibold text-gray-700">
+                                            {job.dateType === "flexible"
+                                                ? "Flexible"
+                                                : formatJobDate(job.date)}
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <p className="text-xs text-gray-400 font-semibold mb-0.5">
-                                            Time windows
+                                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
+                                            Pickup Time
                                         </p>
 
-                                        <p className="text-xs text-gray-700">
-                                            <span className="font-bold">
-                                                Pickup:
-                                            </span>{" "}
+                                        <p className="font-semibold text-gray-700">
                                             {job.dateType === "flexible"
                                                 ? "Flexible"
                                                 : formatTimeSlot(job.timeSlot)}
                                         </p>
+                                    </div>
 
-                                        <p className="text-xs text-gray-700">
-                                            <span className="font-bold">
-                                                Drop-off:
-                                            </span>{" "}
-                                            {formatTimeSlot(job.deliveryTimeSlot)}
+                                    <div>
+                                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
+                                            Estimated Delivery
+                                        </p>
+
+                                        <p className="font-semibold text-green-700">
+                                            {job.estimatedDeliveryTime ||
+                                                "To be arranged"}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <p className="text-xs text-gray-400 font-semibold mb-0.5">
+                                        <p className="mb-0.5 text-xs font-semibold text-gray-400">
                                             Driver / Vehicle
                                         </p>
 
@@ -550,12 +419,28 @@ export default function Jobs() {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => openJob(job)}
-                                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-xs font-semibold"
-                                >
-                                    <FiEye size={14} /> View Details
-                                </button>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => openJob(job)}
+                                        className="flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
+                                    >
+                                        <FiEye size={14} />
+                                        View Details
+                                    </button>
+
+                                    {["active", "on_way"].includes(activeTab) && (
+                                        <button
+                                            type="button"
+                                            disabled={updatingStatus}
+                                            onClick={() => setCancelTarget(job)}
+                                            className="flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                                        >
+                                            <FiX size={14} />
+                                            Cancel Job
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
@@ -658,7 +543,7 @@ export default function Jobs() {
 
                                             <div>
                                                 <p className="text-[10px] font-bold uppercase text-gray-400">
-                                                    Time window
+                                                    Pickup Time
                                                 </p>
 
                                                 <p className="text-xs font-semibold text-gray-700">
@@ -734,28 +619,15 @@ export default function Jobs() {
                                             </p>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase text-gray-400">
-                                                    Delivery date
-                                                </p>
+                                        <div className="rounded-lg border border-green-100 bg-white/70 p-3">
+                                            <p className="text-[10px] font-bold uppercase text-gray-400">
+                                                Estimated Delivery Time
+                                            </p>
 
-                                                <p className="text-xs font-semibold text-gray-700">
-                                                    {formatJobDate(selectedJob.deliveryDate)}
-                                                </p>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-[10px] font-bold uppercase text-gray-400">
-                                                    Time window
-                                                </p>
-
-                                                <p className="text-xs font-semibold text-gray-700">
-                                                    {formatTimeSlot(
-                                                        selectedJob.deliveryTimeSlot
-                                                    )}
-                                                </p>
-                                            </div>
+                                            <p className="mt-1 text-sm font-bold text-green-700">
+                                                {selectedJob.estimatedDeliveryTime ||
+                                                    "To be arranged"}
+                                            </p>
                                         </div>
 
                                         <div className="grid grid-cols-3 gap-2 border-t border-green-100 pt-2">
@@ -801,176 +673,6 @@ export default function Jobs() {
                                     <span className="text-base font-black text-[#C0392B]">
                                         {Number(selectedJob.distance || 0)} miles
                                     </span>
-                                </div>
-
-                                {/* Schedule editor */}
-                                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                                    <div className="mb-4 flex items-center gap-2">
-                                        <FiCalendar
-                                            size={15}
-                                            className="text-[#C0392B]"
-                                        />
-
-                                        <h4 className="text-xs font-bold uppercase text-gray-600">
-                                            Manage schedule
-                                        </h4>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                                Pickup date type
-                                            </label>
-
-                                            <select
-                                                value={scheduleData.dateType}
-                                                onChange={event =>
-                                                    setScheduleData(current => ({
-                                                        ...current,
-                                                        dateType: event.target.value,
-                                                        date:
-                                                            event.target.value === "flexible"
-                                                                ? ""
-                                                                : current.date
-                                                    }))
-                                                }
-                                                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#C0392B]"
-                                            >
-                                                <option value="specific">
-                                                    Specific date
-                                                </option>
-
-                                                <option value="flexible">
-                                                    Flexible
-                                                </option>
-                                            </select>
-                                        </div>
-
-                                        {scheduleData.dateType === "specific" && (
-                                            <>
-                                                <div>
-                                                    <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                                        Pickup date
-                                                    </label>
-
-                                                    <input
-                                                        type="date"
-                                                        value={scheduleData.date}
-                                                        onChange={event =>
-                                                            setScheduleData(current => ({
-                                                                ...current,
-                                                                date: event.target.value
-                                                            }))
-                                                        }
-                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#C0392B]"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                                        Pickup time window
-                                                    </label>
-
-                                                    <select
-                                                        value={scheduleData.timeSlot}
-                                                        onChange={event =>
-                                                            setScheduleData(current => ({
-                                                                ...current,
-                                                                timeSlot: event.target.value
-                                                            }))
-                                                        }
-                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#C0392B]"
-                                                    >
-                                                        <option value="">
-                                                            To be arranged
-                                                        </option>
-                                                        <option value="early">
-                                                            6:00 AM – 6:00 PM
-                                                        </option>
-                                                        <option value="morning">
-                                                            8:00 AM – 6:00 PM
-                                                        </option>
-                                                        <option value="afternoon">
-                                                            9:00 AM – 4:00 PM
-                                                        </option>
-                                                        <option value="flexible">
-                                                            Flexible timing
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                            </>
-                                        )}
-
-                                        <div>
-                                            <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                                Delivery date
-                                            </label>
-
-                                            <input
-                                                type="date"
-                                                value={scheduleData.deliveryDate}
-                                                onChange={event =>
-                                                    setScheduleData(current => ({
-                                                        ...current,
-                                                        deliveryDate: event.target.value
-                                                    }))
-                                                }
-                                                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#C0392B]"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-1 block text-xs font-semibold text-gray-600">
-                                                Delivery time window
-                                            </label>
-
-                                            <select
-                                                value={scheduleData.deliveryTimeSlot}
-                                                onChange={event =>
-                                                    setScheduleData(current => ({
-                                                        ...current,
-                                                        deliveryTimeSlot: event.target.value
-                                                    }))
-                                                }
-                                                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-[#C0392B]"
-                                            >
-                                                <option value="">
-                                                    To be arranged
-                                                </option>
-                                                <option value="early">
-                                                    6:00 AM – 6:00 PM
-                                                </option>
-                                                <option value="morning">
-                                                    8:00 AM – 6:00 PM
-                                                </option>
-                                                <option value="afternoon">
-                                                    9:00 AM – 4:00 PM
-                                                </option>
-                                                <option value="flexible">
-                                                    Flexible timing
-                                                </option>
-                                            </select>
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            disabled={savingSchedule}
-                                            onClick={handleSaveSchedule}
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C0392B] py-2.5 text-sm font-bold text-white hover:bg-red-800 disabled:opacity-50"
-                                        >
-                                            {savingSchedule ? (
-                                                <>
-                                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                    Saving...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <FiSave size={15} />
-                                                    Save Schedule
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
                                 </div>
 
                                 {/* Items */}
@@ -1081,12 +783,11 @@ export default function Jobs() {
                                     )}
                                     <button
                                         type="button"
-                                        onClick={() => setCancelTarget(selectedJob)}
-                                        disabled={updatingStatus}
-                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl font-bold text-sm transition disabled:opacity-50"
+                                        onClick={() => setSelectedJob(null)}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-200"
                                     >
                                         <FiX size={16} />
-                                        Cancel Job
+                                        Close
                                     </button>
                                 </div>
                             </div>

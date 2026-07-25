@@ -60,19 +60,20 @@ export const formatDate = value => {
 };
 
 export const getExpenseTotal = expense => {
-    const storedTotal = numberValue(
-        expense.totalExpense
-    );
-
-    if (storedTotal > 0) return storedTotal;
-
-    return (
+    const calculatedTotal =
         numberValue(expense.driverCharges) +
         numberValue(expense.nightStay) +
         numberValue(expense.meals) +
         numberValue(expense.fuel) +
         numberValue(expense.repair) +
-        numberValue(expense.other)
+        numberValue(expense.other);
+
+    if (calculatedTotal > 0) {
+        return calculatedTotal;
+    }
+
+    return numberValue(
+        expense.totalExpense
     );
 };
 
@@ -242,9 +243,9 @@ const createDriverBreakdown = ({
             driver.jobIds.add(jobId);
         }
 
-        const detailKey =
-            jobId ||
-            `expense:${expense._id}`;
+        const detailKey = expense._id
+            ? `expense:${expense._id}`
+            : `expense:${jobId || "general"}:${driver.details.size}`;
 
         if (!driver.details.has(detailKey)) {
             driver.details.set(detailKey, {
@@ -255,9 +256,10 @@ const createDriverBreakdown = ({
                     expense.jobRef ||
                     "General",
                 date:
+                    expense.createdAt ||
+                    expense.updatedAt ||
                     expense.job?.date ||
-                    job?.date ||
-                    expense.createdAt,
+                    job?.date,
                 earnings: 0,
                 nightStay: false
             });

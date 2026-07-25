@@ -50,7 +50,8 @@ export default function BookingWizard() {
         assemblyCount: 0,
         specialInstructions: '',
         packingService: false,
-        distance: 25,
+        distance: 0,
+        estimatedDeliveryTime: "",
     });
 
     useEffect(() => {
@@ -63,19 +64,19 @@ export default function BookingWizard() {
     );
 
     // ── Correct price calculation per client formula ─────────────
-   const totalPrice=calculateTotalPrice({
-    distance:Number(bookingData.distance)||0,
-    volume:Number(totalVolume)||0,
-    pickupFloor:bookingData.pickupFloor,
-    deliveryFloor:bookingData.deliveryFloor,
-    helperCount:Number(bookingData.helperCount)||0,
-    dismantleCount:Number(bookingData.dismantleCount)||0,
-    assemblyCount:Number(bookingData.assemblyCount)||0,
-    packingService:Boolean(bookingData.packingService),
-    dateType:bookingData.dateType,
-    date:bookingData.date,
-    timeSlot:bookingData.timeSlot
-});
+    const totalPrice = calculateTotalPrice({
+        distance: Number(bookingData.distance) || 0,
+        volume: Number(totalVolume) || 0,
+        pickupFloor: bookingData.pickupFloor,
+        deliveryFloor: bookingData.deliveryFloor,
+        helperCount: Number(bookingData.helperCount) || 0,
+        dismantleCount: Number(bookingData.dismantleCount) || 0,
+        assemblyCount: Number(bookingData.assemblyCount) || 0,
+        packingService: Boolean(bookingData.packingService),
+        dateType: bookingData.dateType,
+        date: bookingData.date,
+        timeSlot: bookingData.timeSlot
+    });
 
     const handleChange = (key, value) => {
         setBookingData(prev => ({ ...prev, [key]: value }));
@@ -146,6 +147,8 @@ export default function BookingWizard() {
                 packingService: bookingData.packingService,
                 specialInstructions: bookingData.specialInstructions,
                 distance: bookingData.distance,
+                estimatedDeliveryTime:
+                    bookingData.estimatedDeliveryTime,
                 customer: customerData
             };
 

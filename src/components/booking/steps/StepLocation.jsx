@@ -108,21 +108,79 @@ export default function StepLocation({ data, onChange, errors }) {
       .then(json => {
         if (json.routes?.[0]) {
           const route = json.routes[0];
-          const miles = Math.round(route.distance * 0.000621371);
-          const mins = Math.round(route.duration / 60);
-          setDistance(miles); setTime(`${mins} mins`);
-          onChange('distance', miles);
+
+          const miles = Math.round(
+            route.distance * 0.000621371
+          );
+
+          const mins = Math.max(
+            1,
+            Math.round(route.duration / 60)
+          );
+
+          const estimatedTime = `${mins} mins`;
+
+          setDistance(miles);
+          setTime(estimatedTime);
+
+          onChange("distance", miles);
+          onChange(
+            "estimatedDeliveryTime",
+            estimatedTime
+          );
         }
       })
       .catch(() => {
         const R = 3959;
-        const dLat2 = (dLat - pLat) * Math.PI / 180, dLon2 = (dLng - pLng) * Math.PI / 180;
-        const a = Math.sin(dLat2 / 2) ** 2 + Math.cos(pLat * Math.PI / 180) * Math.cos(dLat * Math.PI / 180) * Math.sin(dLon2 / 2) ** 2;
-        const d = Math.round(2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-        setDistance(d); setTime(`${Math.round(d / 0.5)} mins`); onChange('distance', d);
-      })
-      .finally(() => setCalculating(false));
-  }, [data.pickup.lat, data.delivery.lat]);
+
+        const dLat2 =
+          (dLat - pLat) * Math.PI / 180;
+
+        const dLon2 =
+          (dLng - pLng) * Math.PI / 180;
+
+        const a =
+          Math.sin(dLat2 / 2) ** 2 +
+          Math.cos(pLat * Math.PI / 180) *
+          Math.cos(dLat * Math.PI / 180) *
+          Math.sin(dLon2 / 2) ** 2;
+
+        const fallbackDistance = Math.round(
+          2 *
+          R *
+          Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+          )
+        );
+
+        const fallbackMinutes = Math.max(
+          1,
+          Math.round(fallbackDistance / 0.5)
+        );
+
+        const estimatedTime =
+          `${fallbackMinutes} mins`;
+
+        setDistance(fallbackDistance);
+        setTime(estimatedTime);
+
+        onChange(
+          "distance",
+          fallbackDistance
+        );
+
+        onChange(
+          "estimatedDeliveryTime",
+          estimatedTime
+        );
+      }).finally(() => setCalculating(false));
+  }, [
+    data.pickup.lat,
+    data.pickup.lng,
+    data.delivery.lat,
+    data.delivery.lng
+  ]);
 
   const bothReady = data.pickup.lat && data.delivery.lat;
 
@@ -197,8 +255,11 @@ export default function StepLocation({ data, onChange, errors }) {
               pickupLng={data.pickup.lng}
               deliveryLat={data.delivery.lat}
               deliveryLng={data.delivery.lng}
-              distance={distance}
-              time={time}
+              distance={distance ?? data.distance}
+              time={
+                time ||
+                data.estimatedDeliveryTime
+              }
             />
           ) : (
             <div className="h-full bg-white rounded-2xl flex flex-col items-center justify-center gap-2 p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minHeight: '220px' }}>

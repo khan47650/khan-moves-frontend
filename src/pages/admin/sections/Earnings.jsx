@@ -107,38 +107,29 @@ export default function Earnings() {
             period === "custom" &&
             (!customRange.from || !customRange.to)
         ) {
-            toast.error(
-                "Select both custom dates"
-            );
+            toast.error("Select both custom dates");
             return;
         }
 
         try {
             setGeneratingReport(true);
 
-            /*
-             * The report receives the already filtered
-             * dashboard data. This keeps its values identical
-             * to the current view.
-             */
             await generateEarningsReport({
-                period: "all",
-                periodLabelOverride:
-                    data.periodLabel,
-                jobs: data.filteredJobs,
-                expenses:
-                    data.relevantExpenses,
-                drivers:
-                    data.driverEarnings.map(
-                        driver => ({
-                            _id: driver.key,
-                            name: driver.name,
-                            earnings:
-                                driver.earnings,
-                            totalJobs:
-                                driver.jobs
-                        })
-                    )
+                period,
+                periodLabel: data.periodLabel,
+                jobs: data.jobRows,
+                expenses: data.relevantExpenses,
+                driverEarnings: data.driverEarnings,
+                summary: {
+                    grossRevenue: data.grossRevenue,
+                    totalExpenses: data.totalExpenses,
+                    netEarnings: data.netEarnings,
+                    businessProfit: data.businessProfit,
+                    profitMargin: data.profitMargin,
+                    completedCount: data.completedCount,
+                    highestRevenueJob: data.highestRevenueJob,
+                    lowestRevenueJob: data.lowestRevenueJob
+                }
             });
 
             toast.success(
