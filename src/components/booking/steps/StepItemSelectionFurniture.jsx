@@ -6,6 +6,13 @@ import api from "../../../api/api";
 
 const UNIT_OPTIONS_DIM = ["cm", "m", "in", "ft", "mm"];
 const UNIT_OPTIONS_WEIGHT = ["kg", "lbs"];
+const DIMENSION_TO_METERS = {
+    mm: 0.001,
+    cm: 0.01,
+    m: 1,
+    in: 0.0254,
+    ft: 0.3048
+};
 
 function ItemLoader() {
     return (
@@ -150,10 +157,28 @@ export default function StepItemSelectionFurniture({
         onChange(items.filter(selected => !sameItem(selected, item)));
     };
 
-    const handleAddCustom = () => {
-        const name = custom.name.trim();
-        if (!name) return;
 
+    const dimensionFactor = DIMENSION_TO_METERS[custom.dimUnit] || 1;
+
+    const customVolume = Number((
+        Number(custom.length) *
+        Number(custom.width) *
+        Number(custom.height) *
+        Math.pow(dimensionFactor, 3)
+    ).toFixed(4));
+
+    const isCustomValid =
+        custom.name.trim() &&
+        Number(custom.length) > 0 &&
+        Number(custom.width) > 0 &&
+        Number(custom.height) > 0 &&
+        Number(custom.weight) > 0 &&
+        customVolume > 0;
+
+    const handleAddCustom = () => {
+        if (!isCustomValid) return;
+
+        const name = custom.name.trim();
         const existing = items.find(item =>
             item.custom && item.name.toLowerCase() === name.toLowerCase()
         );
@@ -169,10 +194,18 @@ export default function StepItemSelectionFurniture({
                 ...items,
                 {
                     name,
-                    volume: 100,
+                    volume: customVolume,
                     quantity: 1,
                     custom: true,
-                    dimensions: { ...custom }
+                    categoryName: "Custom Item",
+                    weight: Number(custom.weight),
+                    weightUnit: custom.weightUnit,
+                    dimensions: {
+                        length: Number(custom.length),
+                        width: Number(custom.width),
+                        height: Number(custom.height),
+                        unit: custom.dimUnit
+                    }
                 }
             ]);
         }
@@ -588,7 +621,7 @@ export default function StepItemSelectionFurniture({
 
                             <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                                    Estimated dimensions
+                                    Estimated dimensions *
                                 </label>
 
                                 <div className="grid grid-cols-4 gap-2">
@@ -646,7 +679,7 @@ export default function StepItemSelectionFurniture({
 
                             <div>
                                 <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                                    Estimated weight
+                                    Estimated weight *
                                 </label>
 
                                 <div className="flex gap-2">
@@ -689,7 +722,13 @@ export default function StepItemSelectionFurniture({
                             <button
                                 type="button"
                                 onClick={handleAddCustom}
-                                disabled={!custom.name.trim()}
+                                disabled={
+                                    !custom.name.trim() ||
+                                    Number(custom.length) <= 0 ||
+                                    Number(custom.width) <= 0 ||
+                                    Number(custom.height) <= 0 ||
+                                    Number(custom.weight) <= 0
+                                }
                                 className="flex-1 rounded-lg bg-[#1a1a1a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
                             >
                                 Add to move

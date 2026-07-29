@@ -16,6 +16,8 @@ const formatServiceName = (service = "") => {
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
+const money = value => Math.round(Number(value) || 0);
+
 const InfoRow = ({ label, value, highlight = false }) => (
     <div style={{ marginBottom: "11px" }}>
         <span
@@ -43,10 +45,10 @@ const InfoRow = ({ label, value, highlight = false }) => (
 
 const InvoicePreview = React.forwardRef(
     ({ booking, invoiceData = {} }, ref) => {
-        const basePrice = Number(booking?.totalPrice || 0);
-        const discount = Number(invoiceData?.discount || 0);
-        const tax = Number(invoiceData?.tax || 0);
-        const finalTotal = Math.max(0, basePrice - discount + tax);
+        const basePrice = money(booking?.totalPrice);
+        const discount = money(invoiceData?.discount);
+        const tax = money(invoiceData?.tax);
+        const finalTotal = Math.max(0, Math.round(basePrice - discount + tax));
 
         const issueDate = new Date().toLocaleDateString("en-GB", {
             day: "2-digit",
@@ -508,7 +510,7 @@ const InvoicePreview = React.forwardRef(
                                 }}
                             >
                                 <span>Base Price</span>
-                                <strong>£{basePrice.toFixed(2)}</strong>
+                                <strong>£{basePrice}</strong>
                             </div>
 
                             {discount > 0 && (
@@ -521,9 +523,7 @@ const InvoicePreview = React.forwardRef(
                                     }}
                                 >
                                     <span>Discount</span>
-                                    <strong>
-                                        -£{discount.toFixed(2)}
-                                    </strong>
+                                    <strong>-£{discount}</strong>
                                 </div>
                             )}
 
@@ -537,7 +537,7 @@ const InvoicePreview = React.forwardRef(
                                     }}
                                 >
                                     <span>Tax / VAT</span>
-                                    <strong>+£{tax.toFixed(2)}</strong>
+                                    <strong>+£{tax}</strong>
                                 </div>
                             )}
                         </div>
@@ -563,7 +563,7 @@ const InvoicePreview = React.forwardRef(
                                 fontSize: "28px",
                             }}
                         >
-                            £{finalTotal.toFixed(2)}
+                            £{finalTotal}
                         </div>
                     </div>
 

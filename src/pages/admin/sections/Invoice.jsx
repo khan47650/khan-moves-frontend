@@ -99,27 +99,10 @@ export default function Invoice() {
         );
     });
 
-    const basePrice = Math.max(
-        0,
-        Number(invoiceBasePrice) || 0
-    );
-
-    const discount = Math.max(
-        0,
-        Number(invoiceData.discount) || 0
-    );
-
-    const tax = Math.max(
-        0,
-        Number(invoiceData.tax) || 0
-    );
-
-    const finalTotal = Math.max(
-        0,
-        Math.round(
-            (basePrice - discount + tax) * 100
-        ) / 100
-    );
+    const basePrice = Math.max(0, Math.round(Number(invoiceBasePrice) || 0));
+    const discount = Math.max(0, Math.round(Number(invoiceData.discount) || 0));
+    const tax = Math.max(0, Math.round(Number(invoiceData.tax) || 0));
+    const finalTotal = Math.max(0, Math.round(basePrice - discount + tax));
 
 
     const previewBooking = selectedBooking
@@ -142,10 +125,7 @@ export default function Invoice() {
             return;
         }
 
-        const priceToSave = Math.max(
-            0,
-            Math.round(finalTotal * 100) / 100
-        );
+        const priceToSave = Math.max(0, Math.round(finalTotal));
 
         const printWindow = window.open(
             "",
@@ -288,9 +268,7 @@ export default function Invoice() {
                 tax: ""
             }));
 
-            toast.success(
-                `Price updated to £${priceToSave.toFixed(2)}. Invoice ready.`
-            );
+            toast.success(`Price updated to £${priceToSave}. Invoice ready.`);
         } catch (err) {
             printWindow.close();
 
@@ -387,10 +365,7 @@ export default function Invoice() {
                                         </p>
 
                                         <p className="shrink-0 text-sm font-bold text-[#C0392B]">
-                                            £
-                                            {Number(
-                                                booking.totalPrice || 0
-                                            ).toFixed(2)}
+                                            £{Math.round(Number(booking.totalPrice) || 0)}
                                         </p>
                                     </div>
                                 </button>
@@ -429,7 +404,7 @@ export default function Invoice() {
                                         </label>
 
                                         <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-bold text-[#C0392B]">
-                                            £{basePrice.toFixed(2)}
+                                            £{basePrice}
                                         </div>
                                     </div>
 
@@ -441,16 +416,13 @@ export default function Invoice() {
                                         <input
                                             type="number"
                                             min="0"
-                                            step="0.01"
+                                            step="1"
                                             value={invoiceData.discount}
-                                            onChange={(event) => {
-                                                const value = event.target.value;
-
-                                                if (value === "" || Number(value) >= 0) {
-                                                    setInvoiceData((current) => ({
-                                                        ...current,
-                                                        discount: value
-                                                    }));
+                                            onKeyDown={e => [".", ",", "e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+                                            onChange={e => {
+                                                const value = e.target.value;
+                                                if (value === "" || /^\d+$/.test(value)) {
+                                                    setInvoiceData(current => ({ ...current, discount: value }));
                                                 }
                                             }}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
@@ -465,16 +437,13 @@ export default function Invoice() {
                                         <input
                                             type="number"
                                             min="0"
-                                            step="0.01"
+                                            step="1"
                                             value={invoiceData.tax}
-                                            onChange={(event) => {
-                                                const value = event.target.value;
-
-                                                if (value === "" || Number(value) >= 0) {
-                                                    setInvoiceData((current) => ({
-                                                        ...current,
-                                                        tax: value
-                                                    }));
+                                            onKeyDown={e => [".", ",", "e", "E", "+", "-"].includes(e.key) && e.preventDefault()}
+                                            onChange={e => {
+                                                const value = e.target.value;
+                                                if (value === "" || /^\d+$/.test(value)) {
+                                                    setInvoiceData(current => ({ ...current, tax: value }));
                                                 }
                                             }}
                                             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-[#C0392B]"
@@ -508,7 +477,7 @@ export default function Invoice() {
                                         </p>
 
                                         <p className="text-2xl font-black text-[#1a1a1a]">
-                                            £{finalTotal.toFixed(2)}
+                                            £{finalTotal}
                                         </p>
                                     </div>
 

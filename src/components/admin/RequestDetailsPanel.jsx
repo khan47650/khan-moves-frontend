@@ -1,10 +1,36 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    FiCheck, FiClock, FiEdit2, FiMail,
-    FiMessageSquare, FiPackage, FiPhone, FiX
+    FiCheck, FiClock, FiDollarSign, FiEdit2, FiMail, FiMapPin,
+    FiMessageSquare, FiPackage, FiPhone, FiTruck, FiUser, FiX
 } from "react-icons/fi";
 import RequestEditForm from "./RequestEditForm";
+
+const TIME_SLOT_LABELS = {
+    early: "Early slot — 6:00 AM – 6:00 PM",
+    morning: "Morning slot — 8:00 AM – 6:00 PM",
+    nine_to_five: "9-to-5 slot — 9:00 AM – 5:00 PM",
+    afternoon: "Afternoon slot — 9:00 AM – 4:00 PM",
+    flexible: "Flexible timing"
+};
+
+const floorLabel = level => ({
+    ground: "Ground floor",
+    basement: "Basement (treated as 1st floor)",
+    "1st": "1st floor",
+    "2nd": "2nd floor",
+    "3rd": "3rd floor",
+    "4th+": "4th floor or above"
+}[level] || level || "—");
+
+const money = value => Math.round(Number(value) || 0);
+
+const parkingCharge = (hasParking, volume) => {
+    if (hasParking !== false) return 0;
+    if (Number(volume) >= 6) return 50;
+    if (Number(volume) >= 2) return 20;
+    return 0;
+};
 
 export default function RequestDetailsPanel({
     request,
@@ -25,6 +51,12 @@ export default function RequestDetailsPanel({
         setEditing(false);
         onUpdated(booking);
     };
+
+    const totalItems = (request?.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const dismantleCount = Number(request?.dismantleCount) || (request?.dismantleItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const assemblyCount = Number(request?.assemblyCount) || (request?.assemblyItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const pickupParkingCharge = parkingCharge(request?.pickupFloor?.hasParking, request?.totalVolume);
+    const deliveryParkingCharge = parkingCharge(request?.deliveryFloor?.hasParking, request?.totalVolume);
 
     return (
         <AnimatePresence>
@@ -58,8 +90,8 @@ export default function RequestDetailsPanel({
                         <div className="space-y-4 p-5">
                             <div className="flex items-center justify-between">
                                 <span className={`rounded-full px-3 py-1 text-xs font-bold ${request.status === "in_progress"
-                                        ? "bg-purple-100 text-purple-700"
-                                        : "bg-yellow-100 text-yellow-800"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-yellow-100 text-yellow-800"
                                     }`}>
                                     {request.status === "in_progress" ? "IN PROGRESS" : "PENDING"}
                                 </span>
@@ -89,11 +121,33 @@ export default function RequestDetailsPanel({
                                         <p className="truncate text-sm text-gray-700">{value}</p>
                                     </div>
                                 ))}
+
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#C0392B]/10">
+                                        <FiUser size={15} className="text-[#C0392B]" />
+                                    </div>
+                                    <p className="text-sm text-gray-700">
+                                        Business delivery: <strong>{request.customer?.businessDelivery ? "Yes" : "No"}</strong>
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="rounded-xl bg-gray-50 p-4">
-                                <h4 className="mb-2 text-xs font-bold uppercase text-gray-500">Service</h4>
-                                <p className="text-sm font-semibold">{request.serviceType || "—"}</p>
+                                <h4 className="mb-3 text-xs font-bold uppercase text-gray-500">Move Setup</h4>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">Service</span>
+                                        <span className="font-semibold capitalize">{request.serviceType?.replaceAll("_", " ") || "—"}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">Crew</span>
+                                        <span className="font-semibold">{request.helperCount > 0 ? "2 people" : "1 person"}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">Estimated delivery</span>
+                                        <span className="font-semibold">{request.estimatedDeliveryTime || "—"}</span>
+                                    </div>
+                                </div>
                             </div>
 
                             {editing ? (
@@ -105,30 +159,63 @@ export default function RequestDetailsPanel({
                             ) : (
                                 <>
                                     <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                                        <h4 className="mb-3 text-xs font-bold uppercase text-blue-500">Route</h4>
-                                        <p className="text-xs text-gray-500">Pickup</p>
-                                        <p className="text-sm font-bold">{request.pickup?.address || "—"}</p>
-                                        <p className="text-xs text-gray-500">{request.pickup?.postcode}</p>
+                                        <div className="mb-3 flex items-center gap-2">
+                                            <FiMapPin size={15} className="text-blue-600" />
+                                            <h4 className="text-xs font-bold uppercase text-blue-600">Route & Access</h4>
+                                        </div>
 
-                                        <div className="my-2 text-[#C0392B]">↓</div>
+                                        <div className="rounded-lg bg-white/70 p-3">
+                                            <p className="text-[10px] font-bold uppercase text-[#C0392B]">Pickup</p>
+                                            <p className="text-sm font-bold">{request.pickup?.address || "—"}</p>
+                                            <p className="text-xs text-gray-500">
+                                                {[request.pickup?.town, request.pickup?.region, request.pickup?.postcode].filter(Boolean).join(", ")}
+                                            </p>
+                                            <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
+                                                <div><p className="text-gray-400">Floor</p><p className="font-semibold">{floorLabel(request.pickupFloor?.floorLevel)}</p></div>
+                                                <div><p className="text-gray-400">Lift</p><p className="font-semibold">{request.pickupFloor?.hasLift ? "Available" : "No lift"}</p></div>
+                                                <div><p className="text-gray-400">Parking</p><p className="font-semibold">{request.pickupFloor?.hasParking ? "Available" : `No (+£${pickupParkingCharge})`}</p></div>
+                                            </div>
+                                        </div>
 
-                                        <p className="text-xs text-gray-500">Delivery</p>
-                                        <p className="text-sm font-bold">{request.delivery?.address || "—"}</p>
-                                        <p className="text-xs text-gray-500">{request.delivery?.postcode}</p>
+                                        <div className="my-2 text-center text-[#C0392B]">↓</div>
 
-                                        <p className="mt-2 text-xs text-gray-400">
-                                            {request.distance || 0} miles
-                                        </p>
+                                        <div className="rounded-lg bg-white/70 p-3">
+                                            <p className="text-[10px] font-bold uppercase text-green-700">Delivery</p>
+                                            <p className="text-sm font-bold">{request.delivery?.address || "—"}</p>
+                                            <p className="text-xs text-gray-500">
+                                                {[request.delivery?.town, request.delivery?.region, request.delivery?.postcode].filter(Boolean).join(", ")}
+                                            </p>
+                                            <div className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
+                                                <div><p className="text-gray-400">Floor</p><p className="font-semibold">{floorLabel(request.deliveryFloor?.floorLevel)}</p></div>
+                                                <div><p className="text-gray-400">Lift</p><p className="font-semibold">{request.deliveryFloor?.hasLift ? "Available" : "No lift"}</p></div>
+                                                <div><p className="text-gray-400">Parking</p><p className="font-semibold">{request.deliveryFloor?.hasParking ? "Available" : `No (+£${deliveryParkingCharge})`}</p></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 flex justify-between border-t border-blue-100 pt-3 text-xs">
+                                            <span className="text-gray-500">Distance</span>
+                                            <span className="font-bold">{Number(request.distance || 0).toFixed(1)} miles</span>
+                                        </div>
                                     </div>
 
                                     <div className="rounded-xl border p-4">
-                                        <h4 className="mb-2 text-xs font-bold uppercase text-gray-500">Date & Time</h4>
-                                        <div className="flex items-center gap-2">
-                                            <FiClock size={14} className="text-gray-400" />
-                                            <p className="text-sm text-gray-700">
-                                                {request.dateType === "flexible" ? "Flexible dates" : request.date || "—"}
-                                                {request.timeSlot && ` · ${request.timeSlot}`}
-                                            </p>
+                                        <h4 className="mb-3 text-xs font-bold uppercase text-gray-500">Date & Time</h4>
+                                        <div className="flex items-start gap-2">
+                                            <FiClock size={15} className="mt-0.5 text-gray-400" />
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-800">
+                                                    {request.dateType === "flexible"
+                                                        ? "Flexible dates (20% discount)"
+                                                        : request.date
+                                                            ? new Date(`${request.date}T12:00:00`).toLocaleDateString("en-GB", {
+                                                                weekday: "long", day: "numeric", month: "long", year: "numeric"
+                                                            })
+                                                            : "—"}
+                                                </p>
+                                                <p className="mt-1 text-xs text-gray-500">
+                                                    {request.dateType === "flexible" ? "Pickup time to be confirmed" : TIME_SLOT_LABELS[request.timeSlot] || request.timeSlot || "—"}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -136,18 +223,84 @@ export default function RequestDetailsPanel({
                                         <div className="mb-3 flex items-center gap-2">
                                             <FiPackage size={15} className="text-[#C0392B]" />
                                             <h4 className="text-xs font-bold uppercase text-gray-500">
-                                                Items ({request.items?.length || 0})
+                                                Items ({totalItems})
                                             </h4>
                                         </div>
 
                                         <div className="max-h-40 space-y-1.5 overflow-y-auto">
                                             {(request.items || []).map((item, index) => (
-                                                <div key={index} className="flex justify-between rounded-lg bg-gray-50 px-3 py-1.5 text-sm">
-                                                    <span className="truncate">{item.name}</span>
-                                                    <span className="font-bold text-gray-500">x{item.quantity}</span>
+                                                <div key={item.itemId || `${item.name}-${index}`} className="rounded-lg bg-gray-50 px-3 py-2 text-sm">
+                                                    <div className="flex justify-between gap-3">
+                                                        <span className="truncate font-semibold">{item.name}</span>
+                                                        <span className="font-bold text-gray-500">×{item.quantity}</span>
+                                                    </div>
+                                                    <div className="mt-1 flex justify-between text-[10px] text-gray-400">
+                                                        <span>{item.categoryName || "Uncategorised"}</span>
+                                                        <span>{Number(item.volume || 0).toFixed(2)} m³ each</span>
+                                                    </div>
                                                 </div>
                                             ))}
+
+                                            {!request.items?.length && (
+                                                <p className="text-xs text-gray-400">No items selected.</p>
+                                            )}
                                         </div>
+
+                                        <div className="rounded-xl border p-4">
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <FiPackage size={15} className="text-[#C0392B]" />
+                                                <h4 className="text-xs font-bold uppercase text-gray-500">Additional Services</h4>
+                                            </div>
+
+                                            <div className="space-y-3 text-xs">
+                                                {dismantleCount > 0 && (
+                                                    <div>
+                                                        <div className="flex justify-between font-semibold">
+                                                            <span>Dismantling ×{dismantleCount}</span>
+                                                            <span className="text-[#C0392B]">+£{dismantleCount * 20}</span>
+                                                        </div>
+                                                        <p className="mt-1 text-gray-500">
+                                                            {(request.dismantleItems || []).map(item => `${item.name} ×${item.quantity}`).join(", ") || "Items not specified"}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {assemblyCount > 0 && (
+                                                    <div className="border-t pt-3">
+                                                        <div className="flex justify-between font-semibold">
+                                                            <span>Assembly ×{assemblyCount}</span>
+                                                            <span className="text-[#C0392B]">+£{assemblyCount * 30}</span>
+                                                        </div>
+                                                        <p className="mt-1 text-gray-500">
+                                                            {(request.assemblyItems || []).map(item => `${item.name} ×${item.quantity}`).join(", ") || "Items not specified"}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {request.packingService && (
+                                                    <div className="flex justify-between border-t pt-3 font-semibold">
+                                                        <span>Professional packing</span>
+                                                        <span className="text-[#C0392B]">+£20</span>
+                                                    </div>
+                                                )}
+
+                                                {!dismantleCount && !assemblyCount && !request.packingService && (
+                                                    <p className="text-gray-400">No additional services selected.</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {request.multiTrip && Number(request.tripsNeeded) > 1 && (
+                                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                                                <div className="flex items-start gap-3">
+                                                    <FiTruck size={18} className="mt-0.5 text-blue-700" />
+                                                    <div>
+                                                        <p className="text-sm font-bold text-blue-900">{request.tripsNeeded} van trips required</p>
+                                                        <p className="mt-1 text-xs text-blue-700">{request.pricingNote || "Multiple van trips are included in the total price."}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="mt-3 flex justify-between border-t pt-3">
                                             <span className="text-xs text-gray-500">Total Volume</span>
@@ -157,11 +310,45 @@ export default function RequestDetailsPanel({
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-between rounded-xl bg-[#1a1a1a] p-4">
-                                        <span className="text-sm text-gray-400">Total Price</span>
-                                        <span className="text-2xl font-black text-[#F1C40F]">
-                                            £{request.totalPrice || 0}
-                                        </span>
+                                    <div className="overflow-hidden rounded-xl border border-gray-200">
+                                        <div className="flex items-center gap-2 bg-gray-50 px-4 py-3">
+                                            <FiDollarSign size={15} className="text-[#C0392B]" />
+                                            <h4 className="text-xs font-bold uppercase text-gray-500">Price Breakdown</h4>
+                                        </div>
+
+                                        <div className="space-y-2 p-4">
+                                            {(request.priceBreakdown || []).map((item, index) => (
+                                                <div key={`${item.label}-${index}`} className="flex justify-between gap-3 text-xs">
+                                                    <span className="text-gray-500">{item.label}</span>
+                                                    <span className={item.amount < 0 ? "font-bold text-green-600" : "font-bold"}>
+                                                        {item.amount < 0 ? "-" : "+"}£{money(Math.abs(item.amount))}
+                                                    </span>
+                                                </div>
+                                            ))}
+
+                                            {pickupParkingCharge > 0 && (
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-gray-500">Pickup parking adjustment</span>
+                                                    <span className="font-bold">+£{pickupParkingCharge}</span>
+                                                </div>
+                                            )}
+
+                                            {deliveryParkingCharge > 0 && (
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-gray-500">Delivery parking adjustment</span>
+                                                    <span className="font-bold">+£{deliveryParkingCharge}</span>
+                                                </div>
+                                            )}
+
+                                            {request.priceBreakdown?.length === 0 && (
+                                                <p className="text-xs text-gray-400">No saved price breakdown.</p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between bg-[#1a1a1a] p-4">
+                                            <span className="text-sm text-gray-400">Total Price</span>
+                                            <span className="text-2xl font-black text-[#F1C40F]">£{money(request.totalPrice)}</span>
+                                        </div>
                                     </div>
 
                                     {request.specialInstructions && (

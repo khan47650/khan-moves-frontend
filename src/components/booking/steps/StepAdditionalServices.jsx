@@ -124,13 +124,13 @@ export default function StepAdditionalServices({
                                 <div
                                     key={item.itemId || `${item.name}-${index}`}
                                     className={`flex items-center gap-3 p-3 rounded-xl border transition ${quantity > 0
-                                            ? "border-[#C0392B] bg-red-50"
-                                            : "border-gray-200 bg-white"
+                                        ? "border-[#C0392B] bg-red-50"
+                                        : "border-gray-200 bg-white"
                                         }`}
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${quantity > 0
-                                            ? "bg-[#C0392B] text-white"
-                                            : "bg-gray-100 text-gray-400"
+                                        ? "bg-[#C0392B] text-white"
+                                        : "bg-gray-100 text-gray-400"
                                         }`}>
                                         {quantity > 0
                                             ? <FiCheck size={14} />
@@ -286,8 +286,8 @@ export default function StepAdditionalServices({
                             </div>
 
                             <label className={`flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition ${data.packingService
-                                    ? "border-[#C0392B] bg-red-50"
-                                    : "border-gray-200 hover:border-gray-300"
+                                ? "border-[#C0392B] bg-red-50"
+                                : "border-gray-200 hover:border-gray-300"
                                 }`}>
                                 <input
                                     type="checkbox"
@@ -307,9 +307,8 @@ export default function StepAdditionalServices({
                                         Our team safely packs your belongings using quality materials.
                                     </p>
                                 </div>
-
                                 <span className="font-bold text-sm text-[#C0392B]">
-                                    +£49
+                                    +£20
                                 </span>
                             </label>
                         </div>
@@ -328,8 +327,8 @@ export default function StepAdditionalServices({
                             </div>
 
                             <span className={`text-[10px] font-semibold ${(data.specialInstructions || "").length >= 450
-                                    ? "text-red-600"
-                                    : "text-gray-400"
+                                ? "text-red-600"
+                                : "text-gray-400"
                                 }`}>
                                 {(data.specialInstructions || "").length}/450
                             </span>
@@ -368,7 +367,7 @@ export default function StepAdditionalServices({
                                     Dismantling ×{dismantleTotal}
                                 </span>
                                 <span className="font-semibold">
-                                    £{dismantleTotal * 20}
+                                    £{Math.round(dismantleTotal * 20)}
                                 </span>
                             </div>
 
@@ -377,18 +376,14 @@ export default function StepAdditionalServices({
                                     Assembly ×{assemblyTotal}
                                 </span>
                                 <span className="font-semibold">
-                                    £{assemblyTotal * 30}
+                                    £{Math.round(assemblyTotal * 30)}
                                 </span>
                             </div>
 
                             {data.packingService && (
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">
-                                        Packing service
-                                    </span>
-                                    <span className="font-semibold">
-                                        £49
-                                    </span>
+                                    <span className="text-gray-600">Packing service</span>
+                                    <span className="font-semibold">£20</span>
                                 </div>
                             )}
 
@@ -407,7 +402,7 @@ export default function StepAdditionalServices({
                                 Updated total
                             </span>
                             <span className="text-2xl font-black text-[#C0392B]">
-                                £{basePrice}
+                                £{Math.round(Number(basePrice) || 0)}
                             </span>
                         </div>
 

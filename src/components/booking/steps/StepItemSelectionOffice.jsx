@@ -20,6 +20,7 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
     const [openCategoryId, setOpenCategoryId] = useState(null);
     const [showCustomModal, setShowCustomModal] = useState(false);
     const [customName, setCustomName] = useState("");
+    const [customVolume, setCustomVolume] = useState("");
     const [loadingItems, setLoadingItems] = useState(true);
     const categoriesRef = useRef(null);
 
@@ -137,7 +138,9 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
 
     const handleAddCustom = () => {
         const name = customName.trim();
-        if (!name) return;
+        const volume = Number(customVolume);
+
+        if (!name || volume <= 0) return;
 
         const existing = items.find(item =>
             item.custom && item.name.toLowerCase() === name.toLowerCase()
@@ -154,7 +157,7 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
                 ...items,
                 {
                     name,
-                    volume: 100,
+                    volume,
                     quantity: 1,
                     custom: true,
                     categoryName: "Custom Item"
@@ -163,6 +166,7 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
         }
 
         setCustomName("");
+        setCustomVolume("");
         setShowCustomModal(false);
     };
 
@@ -345,8 +349,8 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
                                                             )
                                                         }
                                                         className={`flex h-13.25 w-full items-center gap-3 rounded-md border px-3 text-left transition ${isOpen
-                                                                ? "border-[#C0392B] bg-[#C0392B] text-white"
-                                                                : "border-gray-300 bg-white text-gray-800 hover:border-[#C0392B]"
+                                                            ? "border-[#C0392B] bg-[#C0392B] text-white"
+                                                            : "border-gray-300 bg-white text-gray-800 hover:border-[#C0392B]"
                                                             }`}
                                                     >
                                                         <FiPackage
@@ -364,8 +368,8 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
 
                                                         {selectedCount > 0 && (
                                                             <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold ${isOpen
-                                                                    ? "bg-white text-[#C0392B]"
-                                                                    : "bg-red-50 text-[#C0392B]"
+                                                                ? "bg-white text-[#C0392B]"
+                                                                : "bg-red-50 text-[#C0392B]"
                                                                 }`}>
                                                                 {selectedCount}
                                                             </span>
@@ -519,7 +523,11 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
             {showCustomModal && (
                 <div
                     className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4"
-                    onClick={() => setShowCustomModal(false)}
+                    onClick={() => {
+                        setShowCustomModal(false);
+                        setCustomName("");
+                        setCustomVolume("");
+                    }}
                 >
                     <div
                         className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
@@ -540,6 +548,7 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
                                 onClick={() => {
                                     setShowCustomModal(false);
                                     setCustomName("");
+                                    setCustomVolume("");
                                 }}
                                 className="rounded-lg p-1.5 hover:bg-gray-100"
                             >
@@ -547,9 +556,39 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
                             </button>
                         </div>
 
-                        <label className="mb-1.5 block text-xs font-semibold text-gray-600">
-                            Item name *
-                        </label>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                    Item name *
+                                </label>
+
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    value={customName}
+                                    onChange={e => setCustomName(e.target.value)}
+                                    placeholder="e.g. 3D Printer, Whiteboard, Server"
+                                    className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#C0392B]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                    Estimated volume (m³) *
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0.001"
+                                    step="0.001"
+                                    value={customVolume}
+                                    onChange={e => setCustomVolume(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && handleAddCustom()}
+                                    placeholder="e.g. 0.50"
+                                    className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-[#C0392B]"
+                                />
+                            </div>
+                        </div>
 
                         <input
                             type="text"
@@ -567,6 +606,7 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
                                 onClick={() => {
                                     setShowCustomModal(false);
                                     setCustomName("");
+                                    setCustomVolume("");
                                 }}
                                 className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50"
                             >
@@ -576,7 +616,7 @@ export default function StepItemSelectionOffice({ items, onChange, error, servic
                             <button
                                 type="button"
                                 onClick={handleAddCustom}
-                                disabled={!customName.trim()}
+                                disabled={!customName.trim() || Number(customVolume) <= 0}
                                 className="flex-1 rounded-lg bg-[#C0392B] px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 disabled:opacity-50"
                             >
                                 Add to move

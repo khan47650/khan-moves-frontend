@@ -1,10 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, FiPhone, FiTruck, FiArrowLeft } from 'react-icons/fi';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { toast } from 'react-toastify';
 import ConfirmationDialog from '../ConfirmationDialog';
 import ConfirmationScreen from '../ConfirmationScreen';
+
+const TIME_SLOT_LABELS = {
+    early: 'Early slot — 6:00 AM – 6:00 PM',
+    morning: 'Morning slot — 8:00 AM – 6:00 PM',
+    nine_to_five: '9-to-5 slot — 9:00 AM – 5:00 PM',
+    afternoon: 'Afternoon slot — 9:00 AM – 4:00 PM',
+    flexible: 'Flexible timing'
+};
 
 function ConfirmMap({ pickupLat, pickupLng, deliveryLat, deliveryLng, distance }) {
     const mapRef = useRef(null);
@@ -67,7 +75,8 @@ function ConfirmMap({ pickupLat, pickupLng, deliveryLat, deliveryLng, distance }
 
 export default function StepConfirmDetails({
     data, onEdit, onSubmit, errors, loading = false, totalPrice = 0,
-    totalVolume = 0, pickupLat, pickupLng, deliveryLat, deliveryLng, distance = 0,
+    totalVolume = 0, pickupLat, pickupLng, deliveryLat, deliveryLng,
+    distance = 0, pricingResult = {}
 }) {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -77,6 +86,8 @@ export default function StepConfirmDetails({
     const [submittedBooking, setSubmittedBooking] = useState(null);
 
     const hasCoords = pickupLat && deliveryLat;
+    const dismantleCount = Number(data.dismantleCount) || (data.dismantleItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const assemblyCount = Number(data.assemblyCount) || (data.assemblyItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
     const handleProceedClick = () => {
         if (!termsAccepted) {
@@ -122,9 +133,20 @@ export default function StepConfirmDetails({
 
     return (
         <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
-            <div className="max-w-7xl mx-auto mb-3">
-                <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">Confirm your details</h3>
-                <p className="text-gray-500 text-xs mt-0.5">Review everything before we book your move</p>
+            <div className="max-w-7xl mx-auto mb-3 flex items-start gap-3">
+                <button
+                    type="button"
+                    onClick={() => onEdit('services')}
+                    className="mt-0.5 w-9 h-9 shrink-0 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-[#C0392B] hover:border-[#C0392B] transition shadow-sm"
+                    aria-label="Go back"
+                >
+                    <FiArrowLeft size={18} />
+                </button>
+
+                <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">Confirm your details</h3>
+                    <p className="text-gray-500 text-xs mt-0.5">Review everything before we book your move</p>
+                </div>
             </div>
 
             <div className="max-w-7xl mx-auto">
@@ -204,13 +226,15 @@ export default function StepConfirmDetails({
                                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5"> Pickup date</p>
                                         <p className="text-sm font-bold text-[#1a1a1a]">
                                             {data.dateType === 'flexible' ? 'Flexible (20% off)' : data.date
-                                                ? new Date(data.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+                                                ? new Date(`${data.date}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
                                                 : '—'}
                                         </p>
                                     </div>
                                     <div className="flex-1 bg-[#F9F8F6] rounded-xl px-3 py-2">
                                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5"> Pickup time</p>
-                                        <p className="text-sm font-bold text-[#1a1a1a] capitalize">{data.timeSlot || 'TBC'}</p>
+                                        <p className="text-sm font-bold text-[#1a1a1a]">
+                                            {TIME_SLOT_LABELS[data.timeSlot] || 'TBC'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -248,94 +272,90 @@ export default function StepConfirmDetails({
                             </div>
 
                             {/* Added services */}
-                            {(
-                                data.dismantleItems?.length > 0 ||
-                                data.assemblyItems?.length > 0 ||
-                                data.packingService
-                            ) && (
-                                    <div className="pt-3 border-t border-gray-100">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <FiTool size={14} className="text-gray-500" />
+                            {(dismantleCount > 0 || assemblyCount > 0 || data.packingService) && (
+                                <div className="pt-3 border-t border-gray-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <FiTool size={14} className="text-gray-500" />
 
-                                            <span className="text-sm font-bold text-[#1a1a1a]">
-                                                Added services
-                                            </span>
+                                        <span className="text-sm font-bold text-[#1a1a1a]">
+                                            Added services
+                                        </span>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => onEdit('services')}
-                                                className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#C0392B] transition"
-                                            >
-                                                <FiEdit2 size={12} />
-                                                Edit
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {data.dismantleItems?.length > 0 && (
-                                                <div className="bg-[#F9F8F6] rounded-xl p-3">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-xs font-bold text-[#1a1a1a]">
-                                                            Dismantling
-                                                        </p>
-
-                                                        <span className="text-xs font-bold text-[#C0392B]">
-                                                            +£{data.dismantleCount * 20}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {data.dismantleItems.map((item, index) => (
-                                                            <span
-                                                                key={item.itemId || `${item.name}-${index}`}
-                                                                className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
-                                                            >
-                                                                {item.name} ×{item.quantity}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {data.assemblyItems?.length > 0 && (
-                                                <div className="bg-[#F9F8F6] rounded-xl p-3">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-xs font-bold text-[#1a1a1a]">
-                                                            Assembly
-                                                        </p>
-
-                                                        <span className="text-xs font-bold text-[#C0392B]">
-                                                            +£{data.assemblyCount * 30}
-                                                        </span>
-                                                    </div>
-
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {data.assemblyItems.map((item, index) => (
-                                                            <span
-                                                                key={item.itemId || `${item.name}-${index}`}
-                                                                className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
-                                                            >
-                                                                {item.name} ×{item.quantity}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {data.packingService && (
-                                                <div className="flex justify-between bg-[#F9F8F6] px-3 py-2 rounded-lg text-xs">
-                                                    <span className="text-gray-700">
-                                                        Professional packing service
-                                                    </span>
-
-                                                    <span className="font-bold text-[#C0392B]">
-                                                        +£49
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => onEdit('services')}
+                                            className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#C0392B] transition"
+                                        >
+                                            <FiEdit2 size={12} />
+                                            Edit
+                                        </button>
                                     </div>
-                                )}
+
+                                    <div className="space-y-2">
+                                        {dismantleCount > 0 && (
+                                            <div className="bg-[#F9F8F6] rounded-xl p-3">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <p className="text-xs font-bold text-[#1a1a1a]">
+                                                        Dismantling
+                                                    </p>
+
+                                                    <span className="text-xs font-bold text-[#C0392B]">
+                                                        +£{Math.round(dismantleCount * 20)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {(data.dismantleItems || []).map((item, index) => (
+                                                        <span
+                                                            key={item.itemId || `${item.name}-${index}`}
+                                                            className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
+                                                        >
+                                                            {item.name} ×{item.quantity}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {assemblyCount > 0 && (
+                                            <div className="bg-[#F9F8F6] rounded-xl p-3">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <p className="text-xs font-bold text-[#1a1a1a]">
+                                                        Assembly
+                                                    </p>
+
+                                                    <span className="text-xs font-bold text-[#C0392B]">
+                                                        +£{Math.round(assemblyCount * 30)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {(data.assemblyItems || []).map((item, index) => (
+                                                        <span
+                                                            key={item.itemId || `${item.name}-${index}`}
+                                                            className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
+                                                        >
+                                                            {item.name} ×{item.quantity}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.packingService && (
+                                            <div className="flex justify-between bg-[#F9F8F6] px-3 py-2 rounded-lg text-xs">
+                                                <span className="text-gray-700">
+                                                    Professional packing service
+                                                </span>
+
+                                                <span className="font-bold text-[#C0392B]">
+                                                    +£20
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Special instructions */}
                             {data.specialInstructions && (
@@ -373,7 +393,16 @@ export default function StepConfirmDetails({
                             )}
                             <div className="bg-white rounded-xl border-2 border-[#1a1a1a] p-4">
                                 <p className="text-xs text-gray-500 mb-1">Total to pay</p>
-                                <p className="text-3xl font-black text-[#1a1a1a] mb-3">£{totalPrice}</p>
+                                <p className="text-3xl font-black text-[#1a1a1a] mb-3">
+                                    £{Math.round(Number(totalPrice) || 0)}
+                                </p>
+
+                                {pricingResult.multiTrip && (
+                                    <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-blue-50 text-blue-800 text-xs">
+                                        <FiTruck size={15} className="shrink-0" />
+                                        <span><strong>{pricingResult.tripsNeeded}</strong> van trips included in this price.</span>
+                                    </div>
+                                )}
                                 <button
                                     onClick={handleProceedClick}
                                     disabled={loading || !termsAccepted}
@@ -383,6 +412,14 @@ export default function StepConfirmDetails({
                                         ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing</>
                                         : <><FiCheckCircle size={16} /> Proceed & Book</>}
                                 </button>
+                                <a
+                                    href="tel:+447424153126"
+                                    className="w-full mt-2 py-2.5 rounded-xl border-2 border-[#C0392B] text-[#C0392B] hover:bg-red-50 transition font-bold text-sm flex items-center justify-center gap-2"
+                                >
+                                    <FiPhone size={16} />
+                                    Call 07424 153126
+                                </a>
+
                                 {!termsAccepted && <p className="text-[10px] text-gray-400 text-center mt-2">Accept terms to continue</p>}
                             </div>
                         </div>

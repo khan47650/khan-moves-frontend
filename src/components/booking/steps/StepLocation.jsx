@@ -207,7 +207,7 @@ export default function StepLocation({ data, onChange, errors }) {
               onFloorChange={v => onChange('pickupFloor', { ...data.pickupFloor, floorLevel: v })}
               hasLift={data.pickupFloor?.hasLift ?? true}
               onLiftChange={v => onChange('pickupFloor', { ...data.pickupFloor, hasLift: v })}
-              hasParking={data.pickupFloor?.hasParking ?? true}
+              hasParking={data.pickupFloor?.hasParking ?? false}
               onParkingChange={v => onChange('pickupFloor', { ...data.pickupFloor, hasParking: v })}
             />
 
@@ -234,7 +234,7 @@ export default function StepLocation({ data, onChange, errors }) {
               onFloorChange={v => onChange('deliveryFloor', { ...data.deliveryFloor, floorLevel: v })}
               hasLift={data.deliveryFloor?.hasLift ?? true}
               onLiftChange={v => onChange('deliveryFloor', { ...data.deliveryFloor, hasLift: v })}
-              hasParking={data.deliveryFloor?.hasParking ?? true}
+              hasParking={data.deliveryFloor?.hasParking ?? false}
               onParkingChange={v => onChange('deliveryFloor', { ...data.deliveryFloor, hasParking: v })}
             />
           </div>

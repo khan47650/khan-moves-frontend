@@ -18,6 +18,7 @@ export default function StepItemSelectionVehicle({
     items, onChange, error, serviceType
 }) {
     const [name, setName] = useState("");
+    const [volume, setVolume] = useState("");
     const [weight, setWeight] = useState("");
     const [notes, setNotes] = useState("");
     const [categories, setCategories] = useState([]);
@@ -76,11 +77,13 @@ export default function StepItemSelectionVehicle({
             value.trim() !== selectedInventoryItem.name
         ) {
             setSelectedInventoryItem(null);
+            setVolume("");
         }
     };
 
     const quickAdd = item => {
         setName(item.name);
+        setVolume(String(item.volume || ""));
         setSelectedInventoryItem({
             ...item,
             itemId: item._id,
@@ -91,7 +94,23 @@ export default function StepItemSelectionVehicle({
 
     const handleAdd = () => {
         const itemName = name.trim();
+        const itemVolume = Number(volume);
+        const itemWeight = Number(weight);
+        const itemNotes = notes.trim();
+        const isCustomPart = !selectedInventoryItem;
+
         if (!itemName) return;
+
+        if (
+            isCustomPart &&
+            (
+                itemVolume <= 0 ||
+                itemWeight <= 0 ||
+                !itemNotes
+            )
+        ) {
+            return;
+        }
 
         const source = selectedInventoryItem || {
             name: itemName,
@@ -106,8 +125,11 @@ export default function StepItemSelectionVehicle({
                     ? {
                         ...item,
                         quantity: item.quantity + 1,
-                        weight: weight ? Number(weight) : item.weight,
-                        notes: notes.trim() || item.notes
+                        volume: selectedInventoryItem
+                            ? Number(selectedInventoryItem.volume)
+                            : itemVolume,
+                        weight: itemWeight > 0 ? itemWeight : item.weight,
+                        notes: itemNotes || item.notes
                     }
                     : item
             ));
@@ -117,18 +139,21 @@ export default function StepItemSelectionVehicle({
                 {
                     itemId: selectedInventoryItem?.itemId,
                     name: itemName,
-                    volume: selectedInventoryItem?.volume || 200,
+                    volume: selectedInventoryItem
+                        ? Number(selectedInventoryItem.volume)
+                        : itemVolume,
                     categoryId: selectedInventoryItem?.categoryId,
-                    categoryName: selectedInventoryItem?.categoryName,
-                    weight: weight ? Number(weight) : null,
-                    notes: notes.trim(),
+                    categoryName: selectedInventoryItem?.categoryName || "Custom Item",
+                    weight: itemWeight > 0 ? itemWeight : null,
+                    notes: itemNotes,
                     quantity: 1,
-                    custom: !selectedInventoryItem
+                    custom: isCustomPart
                 }
             ]);
         }
 
         setName("");
+        setVolume("");
         setWeight("");
         setNotes("");
         setSelectedInventoryItem(null);
@@ -223,15 +248,15 @@ export default function StepItemSelectionVehicle({
                                                         setSelectedInventoryItem(null);
                                                     }}
                                                     className={`relative min-w-37.5 md:min-w-43.75 px-4 py-4 border-r border-gray-200 text-center transition ${isSelected
-                                                            ? "bg-red-50 text-[#C0392B]"
-                                                            : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                                                        ? "bg-red-50 text-[#C0392B]"
+                                                        : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-800"
                                                         }`}
                                                 >
                                                     <FiTruck
                                                         size={19}
                                                         className={`mx-auto mb-2 ${isSelected
-                                                                ? "text-[#C0392B]"
-                                                                : "text-gray-300"
+                                                            ? "text-[#C0392B]"
+                                                            : "text-gray-300"
                                                             }`}
                                                     />
 
@@ -240,8 +265,8 @@ export default function StepItemSelectionVehicle({
                                                     </p>
 
                                                     <p className={`text-[10px] mt-1 ${isSelected
-                                                            ? "text-[#C0392B]/70"
-                                                            : "text-gray-400"
+                                                        ? "text-[#C0392B]/70"
+                                                        : "text-gray-400"
                                                         }`}>
                                                         {activeCount} part{activeCount !== 1 ? "s" : ""}
                                                     </p>
@@ -281,8 +306,8 @@ export default function StepItemSelectionVehicle({
                                                             type="button"
                                                             onClick={() => quickAdd(item)}
                                                             className={`px-3 py-1.5 text-xs font-medium rounded-full border transition ${isActive
-                                                                    ? "border-[#C0392B] bg-[#C0392B] text-white"
-                                                                    : "border-gray-200 text-gray-700 hover:border-[#C0392B] hover:text-[#C0392B]"
+                                                                ? "border-[#C0392B] bg-[#C0392B] text-white"
+                                                                : "border-gray-200 text-gray-700 hover:border-[#C0392B] hover:text-[#C0392B]"
                                                                 }`}
                                                         >
                                                             {item.name}
@@ -312,14 +337,36 @@ export default function StepItemSelectionVehicle({
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-600 mb-1.5">
-                                                    Approx. weight (kg)
+                                                    Volume (m³){!selectedInventoryItem && " *"}
                                                 </label>
+
                                                 <input
                                                     type="number"
-                                                    min="0"
+                                                    min="0.001"
+                                                    step="0.001"
+                                                    placeholder="e.g. 0.80"
+                                                    value={volume}
+                                                    readOnly={Boolean(selectedInventoryItem)}
+                                                    onChange={e => setVolume(e.target.value)}
+                                                    className={`w-full px-3.5 py-2.5 border border-gray-200 rounded-lg outline-none text-sm transition ${selectedInventoryItem
+                                                        ? "bg-gray-100 text-gray-500"
+                                                        : "focus:border-[#C0392B]"
+                                                        }`}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-600 mb-1.5">
+                                                    Approx. weight (kg){!selectedInventoryItem && " *"}
+                                                </label>
+
+                                                <input
+                                                    type="number"
+                                                    min="0.01"
+                                                    step="0.01"
                                                     placeholder="e.g. 50"
                                                     value={weight}
                                                     onChange={e => setWeight(e.target.value)}
@@ -329,8 +376,9 @@ export default function StepItemSelectionVehicle({
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-600 mb-1.5">
-                                                    Notes (optional)
+                                                    Notes{!selectedInventoryItem ? " *" : " (optional)"}
                                                 </label>
+
                                                 <input
                                                     type="text"
                                                     placeholder="e.g. Fragile, packed"
@@ -357,6 +405,9 @@ export default function StepItemSelectionVehicle({
                                                     onClick={() => {
                                                         setSelectedInventoryItem(null);
                                                         setName("");
+                                                        setVolume("");
+                                                        setWeight("");
+                                                        setNotes("");
                                                     }}
                                                     className="text-gray-400 hover:text-[#C0392B]"
                                                 >
@@ -368,7 +419,17 @@ export default function StepItemSelectionVehicle({
                                         <button
                                             type="button"
                                             onClick={handleAdd}
-                                            disabled={!name.trim()}
+                                            disabled={
+                                                !name.trim() ||
+                                                (
+                                                    !selectedInventoryItem &&
+                                                    (
+                                                        Number(volume) <= 0 ||
+                                                        Number(weight) <= 0 ||
+                                                        !notes.trim()
+                                                    )
+                                                )
+                                            }
                                             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#C0392B] text-white rounded-lg hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed transition text-sm font-semibold"
                                         >
                                             <FiPlus size={16} />

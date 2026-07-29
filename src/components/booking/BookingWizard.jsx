@@ -16,7 +16,7 @@ import StepItemSelectionPallets from './steps/StepItemSelectionPallets';
 import StepDatePrice from './steps/StepDatePrice';
 import StepAdditionalServices from './steps/StepAdditionalServices';
 import StepConfirmDetails from './steps/StepConfirmDetails';
-import { calculateTotalPrice } from '../../utils/priceCalculator';
+import { calculatePricing } from '../../utils/priceCalculator';
 
 const STEPS = [
     { id: 'service', label: 'What?', title: 'Service Type' },
@@ -37,8 +37,8 @@ export default function BookingWizard() {
         serviceType: location.state?.serviceType || '',
         pickup: { address: '', postcode: '', town: '', region: '', lat: null, lng: null },
         delivery: { address: '', postcode: '', town: '', region: '', lat: null, lng: null },
-        pickupFloor: { floorLevel: 'ground', hasLift: true, hasParking: true },
-        deliveryFloor: { floorLevel: 'ground', hasLift: true, hasParking: true },
+        pickupFloor: { floorLevel: 'ground', hasLift: true, hasParking: false },
+        deliveryFloor: { floorLevel: 'ground', hasLift: true, hasParking: false },
         items: [],
         dateType: 'specific',
         date: '',
@@ -60,11 +60,72 @@ export default function BookingWizard() {
 
     // ── Correct volume calculation ──────────────────────
     const totalVolume = bookingData.items.reduce(
-        (s, it) => s + (it.volume || 0) * (it.quantity || 1), 0
+        (sum, item) =>
+            sum +
+            (Number(item.volume) || 0) *
+            (Number(item.quantity) || 1),
+        0
     );
 
+    const getItemsValidationError = () => {
+        if (bookingData.items.length === 0) {
+            return "Please select at least one item";
+        }
+
+        const invalidBasicItem = bookingData.items.find(item =>
+            !item.name?.trim() ||
+            Number(item.volume) <= 0 ||
+            Number(item.quantity) <= 0
+        );
+
+        if (invalidBasicItem) {
+            return "Every selected item must have a valid name, volume and quantity";
+        }
+
+        const invalidFurnitureItem = bookingData.items.find(item =>
+            item.custom &&
+            ["furniture", "furniture_move"].includes(bookingData.serviceType) &&
+            (
+                Number(item.weight) <= 0 ||
+                Number(item.dimensions?.length) <= 0 ||
+                Number(item.dimensions?.width) <= 0 ||
+                Number(item.dimensions?.height) <= 0
+            )
+        );
+
+        if (invalidFurnitureItem) {
+            return "Complete all custom furniture dimensions and weight";
+        }
+
+        const invalidOfficeItem = bookingData.items.find(item =>
+            item.custom &&
+            ["office", "office_removal"].includes(bookingData.serviceType) &&
+            Number(item.volume) <= 0
+        );
+
+        if (invalidOfficeItem) {
+            return "Enter a valid volume for every custom office item";
+        }
+
+        const invalidVehicleItem = bookingData.items.find(item =>
+            item.custom &&
+            ["vehicle", "vehicle_parts"].includes(bookingData.serviceType) &&
+            (
+                Number(item.volume) <= 0 ||
+                Number(item.weight) <= 0 ||
+                !item.notes?.trim()
+            )
+        );
+
+        if (invalidVehicleItem) {
+            return "Complete volume, weight and notes for every custom vehicle part";
+        }
+
+        return "";
+    };
+
     // ── Correct price calculation per client formula ─────────────
-    const totalPrice = calculateTotalPrice({
+    const pricingResult = calculatePricing({
         distance: Number(bookingData.distance) || 0,
         volume: Number(totalVolume) || 0,
         pickupFloor: bookingData.pickupFloor,
@@ -78,9 +139,73 @@ export default function BookingWizard() {
         timeSlot: bookingData.timeSlot
     });
 
+    const totalPrice = pricingResult.total ?? 0;
+
     const handleChange = (key, value) => {
         setBookingData(prev => ({ ...prev, [key]: value }));
-        if (errors[key]) { const e = { ...errors }; delete e[key]; setErrors(e); }
+
+        if (errors[key]) {
+            const nextErrors = { ...errors };
+            delete nextErrors[key];
+            setErrors(nextErrors);
+        }
+    };
+
+    const getItemKey = item =>
+        item.itemId ||
+        item._id ||
+        item.name?.trim().toLowerCase();
+
+    const handleServiceChange = serviceType => {
+        setBookingData(prev => ({
+            ...prev,
+            serviceType,
+            items: [],
+            dismantleItems: [],
+            assemblyItems: [],
+            dismantleCount: 0,
+            assemblyCount: 0,
+            packingService: false
+        }));
+
+        setErrors({});
+    };
+
+    const handleItemsChange = nextItems => {
+        const selectedKeys = new Set(
+            nextItems.map(getItemKey).filter(Boolean)
+        );
+
+        setBookingData(prev => {
+            const dismantleItems = (prev.dismantleItems || []).filter(item =>
+                selectedKeys.has(getItemKey(item))
+            );
+
+            const assemblyItems = (prev.assemblyItems || []).filter(item =>
+                selectedKeys.has(getItemKey(item))
+            );
+
+            return {
+                ...prev,
+                items: nextItems,
+                dismantleItems,
+                assemblyItems,
+                dismantleCount: dismantleItems.reduce(
+                    (sum, item) => sum + Number(item.quantity || 0),
+                    0
+                ),
+                assemblyCount: assemblyItems.reduce(
+                    (sum, item) => sum + Number(item.quantity || 0),
+                    0
+                )
+            };
+        });
+
+        setErrors(prev => {
+            const nextErrors = { ...prev };
+            delete nextErrors.items;
+            return nextErrors;
+        });
     };
 
     const validateStep = () => {
@@ -93,10 +218,15 @@ export default function BookingWizard() {
                 if (!bookingData.pickup.postcode) e.pickupPostcode = 'Pickup postcode required';
                 if (!bookingData.delivery.postcode) e.deliveryPostcode = 'Delivery postcode required';
                 break;
-            case 'items':
-                if (bookingData.items.length === 0) e.items = 'Please select at least one item';
+            case 'items': {
+                const itemsError = getItemsValidationError();
+                if (itemsError) e.items = itemsError;
                 break;
+            }
             case 'datePrice':
+                if (pricingResult.requiresContactSupport) {
+                    e.pricing = 'Please contact customer support for a confirmed quote.';
+                }
                 if (bookingData.dateType === 'specific') {
                     if (!bookingData.date) e.date = 'Please select a date';
                     if (!bookingData.timeSlot) e.timeSlot = 'Please select a time slot';
@@ -111,8 +241,13 @@ export default function BookingWizard() {
     };
 
     const handleNext = () => {
+        if (STEPS[currentStep].id === 'datePrice' && pricingResult.requiresContactSupport) {
+            toast.error(pricingResult.note || 'Please contact customer support for a confirmed quote.');
+            return;
+        }
+
         if (validateStep() && currentStep < STEPS.length - 1) {
-            setCurrentStep(currentStep + 1);
+            setCurrentStep(prev => prev + 1);
             window.scrollTo(0, 0);
         }
     };
@@ -126,6 +261,26 @@ export default function BookingWizard() {
 
     // ── API call — only fires when user confirms dialog ─────────────────────
     const handleSubmit = async customerData => {
+        const itemsError = getItemsValidationError();
+
+        if (itemsError) {
+            setErrors({ items: itemsError });
+            toast.error(itemsError);
+            setCurrentStep(STEPS.findIndex(step => step.id === "items"));
+            window.scrollTo(0, 0);
+            return null;
+        }
+
+        if (pricingResult.requiresContactSupport) {
+            toast.error(
+                pricingResult.note ||
+                'Please contact customer support for a confirmed quote.'
+            );
+            return null;
+        }
+
+        setLoading(true);
+
         setLoading(true);
 
         try {
@@ -147,8 +302,7 @@ export default function BookingWizard() {
                 packingService: bookingData.packingService,
                 specialInstructions: bookingData.specialInstructions,
                 distance: bookingData.distance,
-                estimatedDeliveryTime:
-                    bookingData.estimatedDeliveryTime,
+                estimatedDeliveryTime: bookingData.estimatedDeliveryTime,
                 customer: customerData
             };
 
@@ -165,9 +319,13 @@ export default function BookingWizard() {
         }
     };
 
-    const handleEdit = (stepId) => {
-        const idx = STEPS.findIndex(s => s.id === stepId);
-        if (idx !== -1) { setCurrentStep(idx); window.scrollTo(0, 0); }
+    const handleEdit = stepId => {
+        const idx = STEPS.findIndex(step => step.id === stepId);
+
+        if (idx !== -1) {
+            setCurrentStep(idx);
+            window.scrollTo(0, 0);
+        }
     };
 
     const step = STEPS[currentStep];
@@ -176,11 +334,11 @@ export default function BookingWizard() {
 
     const itemProps = {
         items: bookingData.items,
-        onChange: its => handleChange('items', its),
+        onChange: handleItemsChange,
         error: errors.items,
         pickup: bookingData.pickup,
         delivery: bookingData.delivery,
-        serviceType: bookingData.serviceType,
+        serviceType: bookingData.serviceType
     };
 
     return (
@@ -256,7 +414,7 @@ export default function BookingWizard() {
                         {step.id === 'service' && (
                             <StepServiceType
                                 value={bookingData.serviceType}
-                                onChange={v => handleChange('serviceType', v)}
+                                onChange={handleServiceChange}
                                 error={errors.serviceType}
                             />
                         )}
@@ -310,6 +468,7 @@ export default function BookingWizard() {
                                 errors={errors}
                                 loading={loading}
                                 totalPrice={totalPrice}
+                                pricingResult={pricingResult}
                                 totalVolume={totalVolume}
                                 pickupLat={bookingData.pickup.lat}
                                 pickupLng={bookingData.pickup.lng}
@@ -334,7 +493,8 @@ export default function BookingWizard() {
                         {currentStep < STEPS.length - 1 && (
                             <button
                                 onClick={handleNext}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-bold text-sm shadow-sm"
+                                disabled={step.id === 'datePrice' && pricingResult.requiresContactSupport}
+                                className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-bold text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Next <FiChevronRight size={18} />
                             </button>
@@ -345,3 +505,4 @@ export default function BookingWizard() {
         </div>
     );
 }
+
