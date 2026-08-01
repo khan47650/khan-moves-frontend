@@ -192,7 +192,7 @@ export default function StepItemSelectionVehicle({
     );
 
     return (
-        <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+        <div className="-mx-4 px-4 py-4">
             <div className="max-w-7xl mx-auto mb-3">
                 <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
                     What parts are you moving?
@@ -211,7 +211,7 @@ export default function StepItemSelectionVehicle({
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
                     <div
-                        className="bg-white rounded-2xl overflow-hidden"
+                        className="bg-[#FDFBF8] rounded-2xl overflow-hidden"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
                     >
                         {loading ? (
@@ -450,7 +450,7 @@ export default function StepItemSelectionVehicle({
                 <div className="lg:col-span-1 flex">
                     <div className="sticky top-20 w-full flex">
                         <div
-                            className="bg-white rounded-2xl p-4 flex flex-col w-full h-full"
+                            className="bg-[#FDFBF8] rounded-2xl p-4 flex flex-col w-full h-full"
                             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
                         >
                             <div className="flex items-center justify-between mb-3">

@@ -233,7 +233,11 @@ export default function StepItemSelectionFurniture({
         return (
             <div
                 key={item.itemId || item._id}
-                className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-0 hover:bg-gray-50"
+                onClick={() => count === 0 && handleAdd(item)}
+                className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-0 transition ${count === 0
+                    ? "cursor-pointer hover:bg-gray-50"
+                    : ""
+                    }`}
             >
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-gray-700">
@@ -247,7 +251,10 @@ export default function StepItemSelectionFurniture({
                 {count === 0 ? (
                     <button
                         type="button"
-                        onClick={() => handleAdd(item)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdd(item);
+                        }}
                         className="flex shrink-0 items-center gap-1 text-sm font-medium text-[#C0392B] hover:text-red-700"
                     >
                         <FiPlus size={13} />
@@ -257,7 +264,10 @@ export default function StepItemSelectionFurniture({
                     <div className="flex shrink-0 items-center gap-1.5">
                         <button
                             type="button"
-                            onClick={() => handleRemove(item)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemove(item);
+                            }}
                             className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:bg-[#1a1a1a] hover:text-white"
                         >
                             <FiMinus size={11} />
@@ -269,7 +279,10 @@ export default function StepItemSelectionFurniture({
 
                         <button
                             type="button"
-                            onClick={() => handleAdd(item)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAdd(item);
+                            }}
                             className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:bg-[#1a1a1a] hover:text-white"
                         >
                             <FiPlus size={11} />
@@ -281,7 +294,7 @@ export default function StepItemSelectionFurniture({
     };
 
     return (
-        <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+        <div className="-mx-4 px-4 py-4">
             <div className="max-w-7xl mx-auto mb-3">
                 <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
                     What are you moving?
@@ -300,7 +313,7 @@ export default function StepItemSelectionFurniture({
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-stretch">
                 <div className="flex-1 min-w-0">
                     <div
-                        className="bg-white rounded-2xl p-4 md:p-6 h-full border border-gray-200"
+                        className="bg-[#FDFBF8] rounded-2xl p-4 md:p-6 h-full border border-gray-200"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
                     >
                         {/* Search */}
@@ -500,7 +513,7 @@ export default function StepItemSelectionFurniture({
                 <div className="w-full lg:w-80 flex">
                     <div className="sticky top-20 w-full flex">
                         <div
-                            className="bg-white rounded-2xl p-4 flex flex-col w-full h-full"
+                            className="bg-[#FDFBF8] rounded-2xl p-4 flex flex-col w-full h-full"
                             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                         >
                             <div className="flex items-center justify-between gap-2 mb-3">
@@ -536,7 +549,10 @@ export default function StepItemSelectionFurniture({
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleRemove(item)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemove(item);
+                                                    }}
                                                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-[#1a1a1a] hover:text-white"
                                                 >
                                                     <FiMinus size={9} />
@@ -548,7 +564,10 @@ export default function StepItemSelectionFurniture({
 
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleAdd(item)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleAdd(item);
+                                                    }}
                                                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:bg-[#1a1a1a] hover:text-white"
                                                 >
                                                     <FiPlus size={9} />

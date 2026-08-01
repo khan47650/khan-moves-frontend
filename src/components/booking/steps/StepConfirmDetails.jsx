@@ -132,7 +132,7 @@ export default function StepConfirmDetails({
     }
 
     return (
-        <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+        <div className="-mx-4 px-4 py-4">
             <div className="max-w-7xl mx-auto mb-3 flex items-start gap-3">
                 <button
                     type="button"
@@ -150,70 +150,150 @@ export default function StepConfirmDetails({
             </div>
 
             <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                    <div className="flex gap-5 flex-col lg:flex-row">
+                <div className="bg-[#FDFBF8] rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
 
                         {/* ── LEFT ── */}
-                        <div className="flex-1 min-w-0 space-y-4">
-
-                            {/* Route */}
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FiMapPin size={14} className="text-gray-500" />
-                                    <span className="text-sm font-bold text-[#1a1a1a]">Route</span>
-                                    <button onClick={() => onEdit('location')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
-                                        <FiEdit2 size={12} /> Edit
-                                    </button>
-                                </div>
-                                <div className="flex gap-2 flex-col sm:flex-row">
-                                    <div className="flex-1 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
-                                        <div className="flex items-center gap-1.5 mb-1">
-                                            <div className="w-2 h-2 rounded-full bg-[#C0392B]" />
-                                            <span className="text-[10px] font-bold text-[#C0392B] uppercase tracking-wide">Pickup</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-[#1a1a1a]">{data.pickup.address || '—'}</p>
-                                        <p className="text-xs text-gray-500">{data.pickup.postcode}</p>
-                                        {data.pickupFloor?.floorLevel && (
-                                            <p className="text-xs text-gray-400 capitalize mt-0.5">{data.pickupFloor.floorLevel.replace('ground', 'Ground floor')}</p>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 bg-green-50 border border-green-100 rounded-xl px-3 py-2.5">
-                                        <div className="flex items-center gap-1.5 mb-1">
-                                            <div className="w-2 h-2 rounded-full bg-[#27AE60]" />
-                                            <span className="text-[10px] font-bold text-green-700 uppercase tracking-wide">Delivery</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-[#1a1a1a]">{data.delivery.address || '—'}</p>
-                                        <p className="text-xs text-gray-500">{data.delivery.postcode}</p>
-                                        {data.deliveryFloor?.floorLevel && (
-                                            <p className="text-xs text-gray-400 capitalize mt-0.5">{data.deliveryFloor.floorLevel.replace('ground', 'Ground floor')}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="space-y-4">
 
                             {/* Items summary */}
-                            <div className="pt-3 border-t border-gray-100">
+                            {/* Items summary */}
+
+                            <div className="pt-2 border-t border-gray-100">
+
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-sm font-bold text-[#1a1a1a]">Items</span>
-                                    <button onClick={() => onEdit('items')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
-                                        <FiEdit2 size={12} /> Edit
+
+                                    <span className="text-sm font-bold text-[#1a1a1a]">
+                                        Items
+                                    </span>
+
+                                    <button
+                                        onClick={() => onEdit("items")}
+                                        className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#C0392B]"
+                                    >
+                                        <FiEdit2 size={12} />
+                                        Edit
                                     </button>
+
                                 </div>
-                                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                                    {data.items.length > 0 ? data.items.map((it, i) => (
-                                        <div key={i} className="flex items-center justify-between bg-[#F9F8F6] px-3 py-2 rounded-lg text-xs">
-                                            <span className="text-gray-700 font-medium truncate flex-1">{it.name}</span>
-                                            <span className="text-gray-500 font-bold shrink-0 ml-2">×{it.quantity}</span>
+
+                                <div className="space-y-1 max-h-24 overflow-y-auto pr-1">
+
+                                    {data.items.map((item, index) => (
+
+                                        <div
+                                            key={index}
+                                            className="flex justify-between items-center bg-[#F9F8F6] rounded-lg px-3 py-1.5"
+                                        >
+
+                                            <span className="truncate text-xs font-medium">
+                                                {item.name}
+                                            </span>
+
+                                            <span className="text-xs font-bold">
+                                                ×{item.quantity}
+                                            </span>
+
                                         </div>
-                                    )) : (
-                                        <p className="text-xs text-gray-400">No items added.</p>
-                                    )}
+
+                                    ))}
+
                                 </div>
-                                <p className="text-xs text-gray-400 mt-2">Total volume: <span className="font-semibold text-[#1a1a1a]">{totalVolume.toFixed(2)} m³</span></p>
+
+                                <div className="mt-2 flex items-center justify-between text-xs">
+
+                                    <span className="text-gray-500">
+                                        Total Items
+                                    </span>
+
+                                    <span className="font-bold">
+                                        {data.items.reduce(
+                                            (t, i) => t + Number(i.quantity || 0),
+                                            0
+                                        )}
+                                    </span>
+
+                                </div>
+
                             </div>
 
-                            {/* Date & Time */}
+                            {/* Pickup & Crew */}
+
                             <div className="pt-3 border-t border-gray-100">
+
+                                <div className="flex items-center gap-2 mb-2">
+
+                                    <FiCalendar size={14} className="text-gray-500" />
+
+                                    <span className="text-sm font-bold text-[#1a1a1a]">
+                                        Pickup & Crew
+                                    </span>
+
+                                    <button
+                                        onClick={() => onEdit("datePrice")}
+                                        className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#C0392B]"
+                                    >
+                                        <FiEdit2 size={12} />
+                                        Edit
+                                    </button>
+
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+
+                                    <div className="bg-[#F9F8F6] rounded-lg px-3 py-2">
+
+                                        <p className="text-[10px] uppercase text-gray-400 font-bold">
+                                            Date
+                                        </p>
+
+                                        <p className="text-xs font-bold">
+
+                                            {data.dateType === "flexible"
+                                                ? "Flexible"
+                                                : new Date(`${data.date}T12:00:00`).toLocaleDateString(
+                                                    "en-GB",
+                                                    {
+                                                        day: "numeric",
+                                                        month: "short"
+                                                    }
+                                                )}
+
+                                        </p>
+
+                                    </div>
+
+                                    <div className="bg-[#F9F8F6] rounded-lg px-3 py-2">
+
+                                        <p className="text-[10px] uppercase text-gray-400 font-bold">
+                                            Time
+                                        </p>
+
+                                        <p className="text-xs font-bold">
+                                            {TIME_SLOT_LABELS[data.timeSlot] || "TBC"}
+                                        </p>
+
+                                    </div>
+
+                                    <div className="bg-[#F9F8F6] rounded-lg px-3 py-2">
+
+                                        <p className="text-[10px] uppercase text-gray-400 font-bold">
+                                            Crew
+                                        </p>
+
+                                        <p className="text-xs font-bold">
+                                            {data.helperCount > 0
+                                                ? "Driver + Helper"
+                                                : "Driver Only"}
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            {/* Date & Time */}
+                            {/* <div className="pt-3 border-t border-gray-100">
                                 <div className="flex items-center gap-2 mb-2">
                                     <FiCalendar size={14} className="text-gray-500" />
                                     <span className="text-sm font-bold text-[#1a1a1a]">Pickup date & time</span>
@@ -237,9 +317,9 @@ export default function StepConfirmDetails({
                                         </p>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
                             {/* Moving crew */}
-                            <div className="pt-3 border-t border-gray-100">
+                            {/* <div className="pt-3 border-t border-gray-100">
                                 <div className="flex items-center gap-2 mb-2">
                                     <FiTool size={14} className="text-gray-500" />
                                     <span className="text-sm font-bold text-[#1a1a1a]">
@@ -269,7 +349,7 @@ export default function StepConfirmDetails({
                                             : 'One-person crew with customer assistance'}
                                     </p>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Added services */}
                             {(dismantleCount > 0 || assemblyCount > 0 || data.packingService) && (
@@ -384,29 +464,67 @@ export default function StepConfirmDetails({
                         </div>
 
                         {/* ── RIGHT: Map + Price ── */}
-                        <div className="lg:w-60 shrink-0 flex flex-col gap-3">
+                        <div className="space-y-3">
                             {hasCoords && (
                                 <div className="rounded-xl overflow-hidden border border-gray-100">
                                     <ConfirmMap pickupLat={pickupLat} pickupLng={pickupLng}
                                         deliveryLat={deliveryLat} deliveryLng={deliveryLng} distance={distance} />
                                 </div>
                             )}
-                            <div className="bg-white rounded-xl border-2 border-[#1a1a1a] p-4">
-                                <p className="text-xs text-gray-500 mb-1">Total to pay</p>
-                                <p className="text-3xl font-black text-[#1a1a1a] mb-3">
+                            {/* Route */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <FiMapPin size={14} className="text-gray-500" />
+                                    <span className="text-sm font-bold text-[#1a1a1a]">Route</span>
+                                    <button onClick={() => onEdit('location')} className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#1a1a1a] transition">
+                                        <FiEdit2 size={12} /> Edit
+                                    </button>
+                                </div>
+                                <div className="flex gap-2 flex-col sm:flex-row">
+                                    <div className="flex-1 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <div className="w-2 h-2 rounded-full bg-[#C0392B]" />
+                                            <span className="text-[10px] font-bold text-[#C0392B] uppercase tracking-wide">Pickup</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-[#1a1a1a]">{data.pickup.address || '—'}</p>
+                                        <p className="text-xs text-gray-500">{data.pickup.postcode}</p>
+                                        {data.pickupFloor?.floorLevel && (
+                                            <p className="text-xs text-gray-400 capitalize mt-0.5">{data.pickupFloor.floorLevel.replace('ground', 'Ground floor')}</p>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 bg-green-50 border border-green-100 rounded-xl px-3 py-2.5">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <div className="w-2 h-2 rounded-full bg-[#27AE60]" />
+                                            <span className="text-[10px] font-bold text-green-700 uppercase tracking-wide">Delivery</span>
+                                        </div>
+                                        <p className="text-sm font-bold text-[#1a1a1a]">{data.delivery.address || '—'}</p>
+                                        <p className="text-xs text-gray-500">{data.delivery.postcode}</p>
+                                        {data.deliveryFloor?.floorLevel && (
+                                            <p className="text-xs text-gray-400 capitalize mt-0.5">{data.deliveryFloor.floorLevel.replace('ground', 'Ground floor')}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-[#FDFBF8] rounded-xl border-2 border-[#1a1a1a] px-3 py-2.5">
+                                <p className="text-[11px] text-gray-500">
+                                    Total to pay
+                                </p>
+                                <p className="text-[38px] leading-none font-black text-[#1a1a1a] mb-1">
                                     £{Math.round(Number(totalPrice) || 0)}
                                 </p>
 
                                 {pricingResult.multiTrip && (
-                                    <div className="flex items-center gap-2 mb-3 p-2.5 rounded-lg bg-blue-50 text-blue-800 text-xs">
-                                        <FiTruck size={15} className="shrink-0" />
-                                        <span><strong>{pricingResult.tripsNeeded}</strong> van trips included in this price.</span>
+                                    <div className="flex items-center gap-1.5 mb-2 p-2 rounded-md bg-blue-50 text-[11px] text-blue-800">
+                                        <FiTruck size={13} className="shrink-0" />
+                                        <span className="leading-4">
+                                            <strong>{pricingResult.tripsNeeded} trips</strong> included
+                                        </span>
                                     </div>
                                 )}
                                 <button
                                     onClick={handleProceedClick}
                                     disabled={loading || !termsAccepted}
-                                    className={`w-full py-3 rounded-xl font-bold text-white text-sm transition flex items-center justify-center gap-2 ${termsAccepted && !loading ? 'bg-green-600 hover:bg-green-700 shadow-sm' : 'bg-gray-300 cursor-not-allowed'}`}
+                                    className={`w-full py-2.5 rounded-lg font-bold text-white text-sm transition flex items-center justify-center gap-2 ${termsAccepted && !loading ? 'bg-green-600 hover:bg-green-700 shadow-sm' : 'bg-gray-300 cursor-not-allowed'}`}
                                 >
                                     {loading
                                         ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing</>
@@ -414,13 +532,13 @@ export default function StepConfirmDetails({
                                 </button>
                                 <a
                                     href="tel:+447424153126"
-                                    className="w-full mt-2 py-2.5 rounded-xl border-2 border-[#C0392B] text-[#C0392B] hover:bg-red-50 transition font-bold text-sm flex items-center justify-center gap-2"
+                                    className="w-full mt-1.5 py-2 rounded-lg border-2 border-[#C0392B] text-[#C0392B] hover:bg-red-50 transition font-bold text-sm flex items-center justify-center gap-2"
                                 >
                                     <FiPhone size={16} />
                                     Call 07424 153126
                                 </a>
 
-                                {!termsAccepted && <p className="text-[10px] text-gray-400 text-center mt-2">Accept terms to continue</p>}
+                                {!termsAccepted && <p className="text-[8px] leading-none text-gray-400 text-center mt-0.5">Accept terms to continue</p>}
                             </div>
                         </div>
                     </div>

@@ -37,8 +37,8 @@ export default function BookingWizard() {
         serviceType: location.state?.serviceType || '',
         pickup: { address: '', postcode: '', town: '', region: '', lat: null, lng: null },
         delivery: { address: '', postcode: '', town: '', region: '', lat: null, lng: null },
-        pickupFloor: { floorLevel: 'ground', hasLift: true, hasParking: false },
-        deliveryFloor: { floorLevel: 'ground', hasLift: true, hasParking: false },
+        pickupFloor: { floorLevel: 'ground', hasLift: false, hasParking: false },
+        deliveryFloor: { floorLevel: 'ground', hasLift: false, hasParking: false },
         items: [],
         dateType: 'specific',
         date: '',
@@ -55,7 +55,16 @@ export default function BookingWizard() {
     });
 
     useEffect(() => {
-        if (location.state?.serviceType) setCurrentStep(1);
+        // Always start booking page from top
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "instant" // ya "auto"
+        });
+
+        if (location.state?.serviceType) {
+            setCurrentStep(1);
+        }
     }, [location.state]);
 
     // ── Correct volume calculation ──────────────────────
@@ -343,8 +352,8 @@ export default function BookingWizard() {
 
     return (
         <div className="min-h-screen bg-[#F5F1ED]">
-            <div className={`max-w-7xl mx-auto px-4 ${isConfirm ? 'pt-0' : 'pt-4'}`}>
-                {!isConfirm && (
+            <div className={`max-w-7xl mx-auto px-4 ${isConfirm ? 'pt-0' : 'pt-1'}`}>
+                {/* {!isConfirm && (
                     <>
                         <div className="mb-3">
                             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Get Your Moving Quote</h1>
@@ -400,7 +409,7 @@ export default function BookingWizard() {
                             </a>
                         </div>
                     </>
-                )}
+                )} */}
 
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -409,7 +418,7 @@ export default function BookingWizard() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.25 }}
-                        className="mb-4"
+                        className="mb-0"
                     >
                         {step.id === 'service' && (
                             <StepServiceType
@@ -481,7 +490,7 @@ export default function BookingWizard() {
                 </AnimatePresence>
 
                 {!isConfirm && (
-                    <div className="flex gap-4 justify-between items-center pb-6">
+                    <div className="flex gap-4 justify-between items-center pb-0">
                         <button
                             onClick={handlePrev}
                             disabled={currentStep === 0}

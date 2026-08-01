@@ -74,7 +74,15 @@ export default function HomePage() {
     fetchServices();
   }, []);
 
-  const goToBooking = (slug) => navigate('/booking', { state: { serviceType: slug } });
+  const goToBooking = (slug) => {
+    window.scrollTo(0, 0);
+
+    navigate('/booking', {
+      state: {
+        serviceType: slug
+      }
+    });
+  };
   const selectedService = services.find(s => s.slug === selectedQuote);
 
   return (

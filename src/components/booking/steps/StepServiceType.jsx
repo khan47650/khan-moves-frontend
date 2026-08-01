@@ -49,7 +49,7 @@ export default function StepServiceType({ value, onChange, error }) {
     }, []);
 
     return (
-        <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+        <div className="-mx-4 px-4 py-4">
             {/* Heading */}
             <div className="max-w-7xl mx-auto mb-3">
                 <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
@@ -69,7 +69,7 @@ export default function StepServiceType({ value, onChange, error }) {
             {/* Service cards grid */}
             <div className="max-w-7xl mx-auto">
                 <div
-                    className="bg-white rounded-2xl p-4 md:p-6"
+                    className="bg-[#FDFBF8] rounded-2xl p-4 md:p-6"
                     style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
                 >
                     {loading ? (

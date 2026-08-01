@@ -4,6 +4,7 @@ import React, {
 } from "react";
 import {
   FiAlertTriangle,
+  FiCalendar,
   FiCheck,
   FiChevronLeft,
   FiChevronRight,
@@ -13,7 +14,11 @@ import {
   FiTag,
   FiTruck,
   FiUser,
-  FiX
+  FiUsers,
+  FiX,
+  FiNavigation,
+  FiBox,
+  FiUsers as FiPeople
 } from "react-icons/fi";
 import {
   calculatePricing
@@ -40,14 +45,14 @@ const TIME_SLOTS = [
     label: "9:00 AM – 5:00 PM",
     badge: "+£15",
     badgeColor:
-      "bg-amber-400 text-[#1a1a1a]"
+      "bg-green-600 text-[#1a1a1a]"
   },
   {
     value: "afternoon",
     label: "9:00 AM – 4:00 PM",
     badge: "+£20",
     badgeColor:
-      "bg-amber-400 text-[#1a1a1a]"
+      "bg-green-600 text-[#1a1a1a]"
   },
   {
     value: "flexible",
@@ -224,21 +229,31 @@ export default function StepDatePrice({
     pricingResult
       .requiresContactSupport;
 
-  const isDateDisabled =
-    dateStr => {
-      if (
-        dateStr <
-        ukNow.date
-      ) {
-        return true;
-      }
+  const isDateDisabled = dateStr => {
+    const selectedDate = new Date(`${dateStr}T00:00:00`);
 
-      if (dateStr === ukNow.date && ukNow.hour >= 14) {
-        return true;
-      }
+    const today = new Date(`${ukNow.date}T00:00:00`);
 
-      return false;
-    };
+    // Past dates
+    if (selectedDate < today) {
+      return true;
+    }
+
+    // Same day after 2 PM UK time
+    if (dateStr === ukNow.date && ukNow.hour >= 14) {
+      return true;
+    }
+
+    // Booking allowed only for next 3 months
+    const lastAllowedDate = new Date(today);
+    lastAllowedDate.setMonth(lastAllowedDate.getMonth() + 3);
+
+    if (selectedDate > lastAllowedDate) {
+      return true;
+    }
+
+    return false;
+  };
 
   const buildDays = () => {
     const firstDay =
@@ -270,18 +285,29 @@ export default function StepDatePrice({
 
     const days = [];
 
-    for (
-      let index = 0;
-      index < offset;
-      index += 1
-    ) {
+    const visibleStart = Math.max(
+      1,
+      new Date(ukNow.date).getDate() - 3
+    );
+
+    // sirf utni empty cells jitni zaroori hain
+    const startWeekDay = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      visibleStart
+    ).getDay();
+
+    const visibleOffset =
+      startWeekDay === 0 ? 6 : startWeekDay - 1;
+
+    for (let i = 0; i < visibleOffset; i++) {
       days.push(null);
     }
 
     for (
-      let day = 1;
+      let day = visibleStart;
       day <= totalDays;
-      day += 1
+      day++
     ) {
       const currentDate =
         new Date(
@@ -421,7 +447,7 @@ export default function StepDatePrice({
     };
 
   return (
-    <div className="-mx-4 bg-[#F9F8F6] px-4 py-4">
+    <div className="-mx-4 px-4 py-4">
       <div className="mx-auto mb-3 max-w-7xl">
         <h3 className="text-xl font-bold text-[#1a1a1a] md:text-2xl">
           When should we collect your items?
@@ -475,69 +501,95 @@ export default function StepDatePrice({
       )}
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        <div className="space-y-3 lg:col-span-2">
-          <div
-            className="rounded-2xl bg-white p-4"
-            style={{
-              boxShadow:
-                "0 2px 12px rgba(0,0,0,0.06)"
-            }}
-          >
-            <label
-              className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 transition ${isFlexible
-                ? "border-green-500 bg-green-50"
-                : "border-gray-200 hover:border-gray-300"
-                }`}
-            >
-              <input
-                type="checkbox"
-                checked={
-                  isFlexible
-                }
-                onChange={event =>
-                  handleFlexibleChange(
-                    event.target
-                      .checked
-                  )
-                }
-                className="mt-0.5 h-4 w-4 shrink-0 accent-green-500"
-              />
-
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-bold text-[#1a1a1a]">
-                    I'm flexible
-                    with dates
-                  </p>
-
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#1a1a1a]">
-                    <FiTag
-                      size={9}
-                    />
-                    Save 20%
-                  </span>
-                </div>
-
-                <p className="mt-0.5 text-xs text-gray-500">
-                  We will choose the
-                  best available date
-                  and apply a 20%
-                  discount.
-                </p>
-              </div>
-            </label>
-          </div>
-
-          {!isFlexible && (
+        <div className="space-y-2 lg:col-span-2">
+          <div>
             <div
-              className="rounded-2xl bg-white p-4"
+              className="rounded-2xl bg-[#FDFBF8] px-4 pt-3 pb-2"
               style={{
                 boxShadow:
                   "0 2px 12px rgba(0,0,0,0.06)"
               }}
             >
-              <div className="mb-3 flex items-center justify-between">
-                <h4 className="text-sm font-bold text-[#1a1a1a]">
+              <div className="mb-2 grid grid-cols-3 gap-2">
+
+                {/* Driver */}
+
+                <button
+                  type="button"
+                  onClick={() => onChange("helperCount", 0)}
+                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition ${data.helperCount === 0
+                    ? "border-[#C0392B] bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
+                >
+                  <FiTruck className="text-lg text-[#C0392B] shrink-0" />
+
+                  <div className="text-left">
+                    <p className="text-sm font-semibold leading-4">
+                      Driver Only
+                    </p>
+
+                    <p className="text-[10px] text-gray-500">
+                      1 Person
+                    </p>
+                  </div>
+                </button>
+
+                {/* Driver + Helper */}
+
+                <button
+                  type="button"
+                  onClick={() => onChange("helperCount", 1)}
+                  className={`relative flex items-center gap-3 rounded-lg border px-3 py-2 transition ${data.helperCount === 1
+                    ? "border-[#C0392B] bg-red-50"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
+                >
+                  <span className="absolute right-2 top-2 rounded-full bg-green-100 px-1.5 py-0.5 text-[8px] font-bold text-green-700">
+                    Recommended
+                  </span>
+
+                  <FiUsers className="text-lg text-[#C0392B] shrink-0" />
+
+                  <div className="text-left">
+                    <p className="text-sm font-semibold leading-4">
+                      Driver + Helper
+                    </p>
+
+                    <p className="text-[10px] text-gray-500">
+                      2 People
+                    </p>
+                  </div>
+                </button>
+
+                {/* Flexible */}
+
+                <button
+                  type="button"
+                  onClick={() => handleFlexibleChange(!isFlexible)}
+                  className={`flex items-center justify-between rounded-lg border px-3 py-2 transition ${isFlexible
+                    ? "border-green-600 bg-green-50"
+                    : "border-gray-200 hover:border-gray-300"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <FiCalendar className="text-lg text-green-600" />
+
+                    <div className="text-left">
+                      <p className="text-sm font-semibold leading-4">
+                        Flexible Date
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="rounded-full bg-green-600 px-2 py-1 text-[9px] font-bold text-white">
+                    SAVE 20%
+                  </span>
+                </button>
+
+              </div>
+              <div className="mb-2 flex items-center justify-between border-b border-gray-100 pb-1">
+                <h4 className="flex-1 text-center text-base font-bold text-[#1a1a1a]">
                   {currentMonth.toLocaleString(
                     "en-GB",
                     {
@@ -562,7 +614,7 @@ export default function StepDatePrice({
                         )
                       )
                     }
-                    className="rounded-lg p-1.5 hover:bg-gray-100"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B]"
                   >
                     <FiChevronLeft
                       size={15}
@@ -581,7 +633,7 @@ export default function StepDatePrice({
                         )
                       )
                     }
-                    className="rounded-lg p-1.5 hover:bg-gray-100"
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B]"
                   >
                     <FiChevronRight
                       size={15}
@@ -602,7 +654,7 @@ export default function StepDatePrice({
                 ].map(day => (
                   <div
                     key={day}
-                    className="py-1 text-center text-[10px] font-bold text-gray-400"
+                    className="pb-1 text-center text-[11px] font-semibold uppercase text-gray-400"
                   >
                     {day}
                   </div>
@@ -642,19 +694,17 @@ export default function StepDatePrice({
                         disabled={
                           day.disabled
                         }
-                        className={`relative flex min-h-14 flex-col items-center justify-center rounded-lg border-2 py-1.5 transition ${day.disabled
+                        className={`relative flex h-10 flex-col justify-between rounded-md px-1 py-0.5 transition ${day.disabled
                           ? "cursor-not-allowed border-transparent text-gray-300 opacity-40"
                           : isSelected
-                            ? "border-[#C0392B] bg-red-50 shadow-sm"
-                            : "border-transparent hover:border-gray-200 hover:bg-gray-50"
+                            ? "border-2 border-[#C0392B] bg-white shadow-sm"
+                            : "bg-white hover:bg-gray-50"
                           }`}
                       >
                         {isSelected && (
-                          <div className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C0392B]">
+                          <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#C0392B]">
                             <FiCheck
-                              size={
-                                9
-                              }
+                              size={8}
                               strokeWidth={
                                 3
                               }
@@ -663,15 +713,21 @@ export default function StepDatePrice({
                           </div>
                         )}
 
-                        <span className="text-xs font-bold">
+                        <span
+                          className={`self-start text-[10px] font-semibold ${isSelected
+                            ? "text-[#1A1A1A]"
+                            : "text-gray-500"
+                            }`}
+                        >
                           {day.day}
                         </span>
 
                         {!day.disabled && (
                           <span
-                            className={`text-[9px] font-semibold ${day.hasSurcharge
-                              ? "text-amber-600"
-                              : "text-gray-400"
+
+                            className={`self-start text-[11px] font-semibold leading-none ${isSelected
+                              ? "text-[#E87511]"
+                              : "text-[#E87511]"
                               }`}
                           >
                             {day.requiresContactSupport
@@ -686,193 +742,30 @@ export default function StepDatePrice({
                   }
                 )}
               </div>
+              {/* <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5">
+                <p className="text-xs text-gray-600">
+                  Select your preferred moving date.
+                  We'll use this to check availability and
+                  schedule your booking accordingly.
+                </p>
+              </div> */}
 
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100 pt-3">
-                <span className="text-[10px] text-gray-500">
-                  Today: +30%
-                </span>
-                <span className="text-[10px] text-gray-500">
-                  Tomorrow:
-                  +22%
-                </span>
 
-                <span className="text-[10px] text-gray-500">
-                  2nd day:
-                  +14%
-                </span>
-
-                <span className="text-[10px] text-gray-500">
-                  Fri: +7%
-                </span>
-
-                <span className="text-[10px] text-gray-500">
-                  Sat: +4%
-                </span>
-
-                <span className="text-[10px] text-gray-500">
-                  Sun: +5%
-                </span>
-              </div>
-
-              {data.date && (
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase text-gray-400">
-                      Selected date
-                    </p>
-
-                    <p className="text-sm font-bold text-[#1a1a1a]">
-                      {new Date(
-                        `${data.date}T12:00:00`
-                      ).toLocaleDateString(
-                        "en-GB",
-                        {
-                          weekday:
-                            "short",
-                          day:
-                            "numeric",
-                          month:
-                            "short",
-                          year:
-                            "numeric"
-                        }
-                      )}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(
-                        "date",
-                        ""
-                      );
-
-                      onChange(
-                        "timeSlot",
-                        ""
-                      );
-                    }}
-                    className="text-gray-400 hover:text-red-500"
-                  >
-                    <FiX size={15} />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div
-            className="rounded-2xl bg-white p-4"
-            style={{
-              boxShadow:
-                "0 2px 12px rgba(0,0,0,0.06)"
-            }}
-          >
-            <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-[#1a1a1a]">
-              <FiUser size={15} />
-              Choose your moving crew
-            </h4>
-
-            <div className="space-y-2">
-              <label
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3.5 transition ${data.helperCount ===
-                  0
-                  ? "border-[#C0392B] bg-red-50"
-                  : "border-gray-200 hover:border-gray-300"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="movingCrew"
-                  value="driver"
-                  checked={
-                    data.helperCount ===
-                    0
-                  }
-                  onChange={() =>
-                    onChange(
-                      "helperCount",
-                      0
-                    )
-                  }
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#C0392B]"
-                />
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-[#1a1a1a]">
-                    Driver only
-                  </p>
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    Best when you can
-                    assist the driver
-                    with loading and
-                    unloading.
-                  </p>
-                </div>
-              </label>
-
-              <label
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3.5 transition ${data.helperCount ===
-                  1
-                  ? "border-[#C0392B] bg-red-50"
-                  : "border-gray-200 hover:border-gray-300"
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="movingCrew"
-                  value="helper"
-                  checked={
-                    data.helperCount ===
-                    1
-                  }
-                  onChange={() =>
-                    onChange(
-                      "helperCount",
-                      1
-                    )
-                  }
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#C0392B]"
-                />
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-[#1a1a1a]">
-                      Driver with
-                      professional
-                      helper
-                    </p>
-
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                      Recommended
-                    </span>
-                  </div>
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    Sit back while
-                    our two-person
-                    crew handles the
-                    loading and
-                    unloading.
-                  </p>
-                </div>
-              </label>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+
+        <div className="self-start lg:col-span-1">
           <div
-            className="sticky top-20 rounded-2xl bg-white p-4"
+            className="sticky top-16 h-fit rounded-2xl bg-[#FDFBF8] p-3"
             style={{
               boxShadow:
                 "0 2px 12px rgba(0,0,0,0.06)"
             }}
           >
-            <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-sm font-bold text-[#1a1a1a]">
+            {/* <div className="mb-2 flex items-center justify-between">
+              <h4 className="text-sm font-bold text-white">
                 {requiresContactSupport
                   ? "Your quote"
                   : "Your price"}
@@ -888,7 +781,7 @@ export default function StepDatePrice({
                   ? "Support required"
                   : "Calculated"}
               </span>
-            </div>
+            </div> */}
 
             {requiresContactSupport ? (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
@@ -912,7 +805,7 @@ export default function StepDatePrice({
               </div>
             ) : (
               <>
-                <p className="text-3xl font-black text-[#C0392B]">
+                <p className="mb-3 mt-1 text-3xl font-black text-[#C0392B]">
                   £
                   {formatPrice(
                     pricingResult.total
@@ -927,7 +820,7 @@ export default function StepDatePrice({
                 )}
 
                 {pricingResult.multiTrip && (
-                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                  <div className="mt-3 flex items-start gap-2 rounded-md border border-blue-100 bg-blue-50 p-3">
                     <FiTruck
                       size={16}
                       className="mt-0.5 shrink-0 text-blue-700"
@@ -944,9 +837,9 @@ export default function StepDatePrice({
                   </div>
                 )}
 
-                <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
                   {hasMapCoordinates && (
-                    <div className="h-44 overflow-hidden rounded-xl border border-gray-200">
+                    <div className="h-24 overflow-hidden rounded-xl border border-gray-200">
                       <MapComponent
                         pickupLat={Number(data.pickup.lat)}
                         pickupLng={Number(data.pickup.lng)}
@@ -958,37 +851,48 @@ export default function StepDatePrice({
                     </div>
                   )}
 
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                    <div className="mb-2 flex items-start gap-2">
-                      <FiMapPin size={14} className="mt-0.5 shrink-0 text-[#C0392B]" />
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                    <div className="grid grid-cols-2 gap-4">
 
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase text-gray-400">
-                          Pickup
-                        </p>
+                      {/* Pickup */}
 
-                        <p className="truncate text-xs font-semibold text-gray-800">
-                          {data.pickup?.address || "Address not available"}
-                        </p>
-
-                        <p className="mt-0.5 text-[11px] text-gray-500">
-                          {data.pickup?.postcode || "No postcode"}
-                        </p>
-
-                        <p className="mt-0.5 text-[10px] text-gray-400">
-                          {floorLabel(data.pickupFloor?.floorLevel)}
-                          {data.pickupFloor?.floorLevel !== "ground"
-                            ? data.pickupFloor?.hasLift
-                              ? " · Lift available"
-                              : " · No lift"
-                            : ""}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 pt-2">
                       <div className="flex items-start gap-2">
-                        <FiMapPin size={14} className="mt-0.5 shrink-0 text-green-600" />
+                        <FiMapPin
+                          size={14}
+                          className="mt-0.5 shrink-0 text-[#C0392B]"
+                        />
+
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase text-gray-400">
+                            Pickup
+                          </p>
+
+                          <p className="truncate text-xs font-semibold text-gray-800">
+                            {data.pickup?.address || "Address not available"}
+                          </p>
+
+                          <p className="mt-0.5 text-[11px] text-gray-500">
+                            {data.pickup?.postcode || "No postcode"}
+                          </p>
+
+                          <p className="mt-0.5 text-[10px] text-gray-400">
+                            {floorLabel(data.pickupFloor?.floorLevel)}
+                            {data.pickupFloor?.floorLevel !== "ground"
+                              ? data.pickupFloor?.hasLift
+                                ? " · Lift"
+                                : " · No Lift"
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Delivery */}
+
+                      <div className="flex items-start gap-2">
+                        <FiMapPin
+                          size={14}
+                          className="mt-0.5 shrink-0 text-green-600"
+                        />
 
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase text-gray-400">
@@ -1007,16 +911,17 @@ export default function StepDatePrice({
                             {floorLabel(data.deliveryFloor?.floorLevel)}
                             {data.deliveryFloor?.floorLevel !== "ground"
                               ? data.deliveryFloor?.hasLift
-                                ? " · Lift available"
-                                : " · No lift"
+                                ? " · Lift"
+                                : " · No Lift"
                               : ""}
                           </p>
                         </div>
                       </div>
+
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <FiPackage size={14} className="text-[#C0392B]" />
@@ -1026,22 +931,22 @@ export default function StepDatePrice({
                         </p>
                       </div>
 
-                      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C0392B]">
+                      <span className=" top-4 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C0392B]">
                         {totalItems}
                       </span>
                     </div>
 
-                    <div className="max-h-28 space-y-1 overflow-y-auto pr-1">
+                    <div className="flex flex-wrap gap-1">
                       {(data.items || []).map((item, index) => (
                         <div
                           key={item.itemId || `${item.name}-${index}`}
-                          className="flex items-center justify-between gap-2 rounded-md bg-white px-2.5 py-1.5 text-[11px]"
+                          className="rounded-full bg-white px-2 py-1 text-[10px] font-medium"
                         >
-                          <span className="truncate text-gray-600">
+                          <span>
                             {item.name}
                           </span>
 
-                          <span className="shrink-0 font-bold text-gray-800">
+                          <span className="ml-1 font-semibold text-[#C0392B]">
                             ×{item.quantity}
                           </span>
                         </div>
@@ -1052,61 +957,45 @@ export default function StepDatePrice({
               </>
             )}
 
-            <div className="mt-4 space-y-2 border-t border-gray-100 pt-4 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-500">
-                  Distance
-                </span>
+            <div className="mt-2 border-t border-gray-100 pt-2">
 
-                <span className="font-semibold">
-                  {Number(
-                    distance
-                  ).toFixed(1)}{" "}
-                  mi
-                </span>
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+
+                <div className="flex items-center gap-1.5">
+                  <FiNavigation
+                    size={14}
+                    className="text-[#C0392B]"
+                  />
+
+                  <span className="text-[11px] font-semibold">
+                    {Number(distance).toFixed(1)} mi
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <FiBox
+                    size={14}
+                    className="text-[#C0392B]"
+                  />
+
+                  <span className="text-[11px] font-semibold">
+                    {Number(volume).toFixed(2)} m³
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <FiPeople
+                    size={14}
+                    className="text-[#C0392B]"
+                  />
+
+                  <span className="text-[11px] font-semibold">
+                    {data.helperCount > 0 ? "2 People" : "1 Person"}
+                  </span>
+                </div>
+
               </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-500">
-                  Volume
-                </span>
-
-                <span className="font-semibold">
-                  {Number(
-                    volume
-                  ).toFixed(2)}{" "}
-                  m³
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-500">
-                  Crew
-                </span>
-
-                <span className="font-semibold">
-                  {data.helperCount >
-                    0
-                    ? "2 people"
-                    : "1 person"}
-                </span>
-              </div>
-
-              {!requiresContactSupport &&
-                pricingResult.tripsNeeded >
-                1 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">
-                      Van trips
-                    </span>
-
-                    <span className="font-semibold">
-                      {
-                        pricingResult.tripsNeeded
-                      }
-                    </span>
-                  </div>
-                )}
             </div>
           </div>
         </div>
@@ -1183,7 +1072,7 @@ export default function StepDatePrice({
                           slot.value
                         )
                       }
-                      className={`flex w-full items-center gap-3 rounded-xl border-2 p-3.5 text-left transition ${isSelected
+                      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${isSelected
                         ? "border-[#C0392B] bg-red-50"
                         : "border-gray-200 hover:border-gray-400"
                         }`}

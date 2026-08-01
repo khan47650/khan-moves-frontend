@@ -25,8 +25,8 @@ export default function Header() {
     setIsOpen(false);
   };
 
-  const handleGetQuote = () => {
-    navigate("/booking");
+  const handleCall = () => {
+    window.location.href = "tel:07424153126";
     closeMenu();
   };
 
@@ -148,11 +148,11 @@ export default function Header() {
 
               <button
                 type="button"
-                onClick={handleGetQuote}
+                onClick={handleCall}
                 className="relative flex items-center gap-2 overflow-hidden rounded-full bg-yellow-400 px-6 py-2 text-sm font-bold text-[#1a1a1a] shadow-md transition-all duration-300 hover:scale-105 hover:bg-yellow-500 hover:shadow-xl active:scale-95"
               >
                 <FiPhone size={14} />
-                Get Quote
+                07424 153126
               </button>
             </div>
 
@@ -171,16 +171,16 @@ export default function Header() {
               <FiMenu
                 size={22}
                 className={`absolute transition-all duration-300 ${isOpen
-                    ? "scale-50 rotate-90 opacity-0"
-                    : "scale-100 rotate-0 opacity-100"
+                  ? "scale-50 rotate-90 opacity-0"
+                  : "scale-100 rotate-0 opacity-100"
                   }`}
               />
 
               <FiX
                 size={22}
                 className={`absolute transition-all duration-300 ${isOpen
-                    ? "scale-100 rotate-0 opacity-100"
-                    : "scale-50 -rotate-90 opacity-0"
+                  ? "scale-100 rotate-0 opacity-100"
+                  : "scale-50 -rotate-90 opacity-0"
                   }`}
               />
             </button>
@@ -188,8 +188,8 @@ export default function Header() {
             {/* Mobile Dropdown */}
             <div
               className={`absolute right-0 top-[calc(100%+10px)] w-56 origin-top-right overflow-hidden rounded-2xl border border-white/10 bg-[#DC2626] shadow-[0_8px_40px_rgba(0,0,0,0.3)] transition-all duration-300 ease-out md:hidden ${isOpen
-                  ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
-                  : "pointer-events-none -translate-y-2 scale-95 opacity-0"
+                ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
+                : "pointer-events-none -translate-y-2 scale-95 opacity-0"
                 }`}
             >
               <div className="px-1.5 py-2">
@@ -280,16 +280,11 @@ export default function Header() {
               <div className="p-3">
                 <button
                   type="button"
-                  onClick={
-                    handleGetQuote
-                  }
+                  onClick={handleCall}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-400 py-2.5 text-sm font-bold text-[#1a1a1a] transition-all duration-200 hover:bg-yellow-500 hover:shadow-lg active:scale-95"
                 >
-                  <FiPhone
-                    size={14}
-                  />
-
-                  Get Quote
+                  <FiPhone size={14} />
+                  07424 153126
                 </button>
               </div>
             </div>
@@ -303,8 +298,8 @@ export default function Header() {
         aria-label="Close navigation"
         onClick={closeMenu}
         className={`fixed inset-0 z-999 bg-black/25 backdrop-blur-[1px] transition-opacity duration-300 md:hidden ${isOpen
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
+          ? "pointer-events-auto opacity-100"
+          : "pointer-events-none opacity-0"
           }`}
       />
     </>

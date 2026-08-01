@@ -144,7 +144,11 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
         return (
             <div
                 key={item.itemId || item._id}
-                className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-0 hover:bg-gray-50"
+                onClick={() => count === 0 && handleAdd(item)}
+                className={`flex items-center gap-3 border-b border-gray-100 px-4 py-3 last:border-0 transition ${count === 0
+                    ? "cursor-pointer hover:bg-gray-50"
+                    : ""
+                    }`}
             >
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-gray-700">{item.name}</p>
@@ -156,7 +160,10 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
                 {count === 0 ? (
                     <button
                         type="button"
-                        onClick={() => handleAdd(item)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdd(item);
+                        }}
                         className="flex shrink-0 items-center gap-1 text-sm font-medium text-[#C0392B] hover:text-red-700"
                     >
                         <FiPlus size={13} />
@@ -166,7 +173,10 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
                     <div className="flex shrink-0 items-center gap-1.5">
                         <button
                             type="button"
-                            onClick={() => handleRemove(item)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemove(item);
+                            }}
                             className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:border-[#C0392B] hover:bg-[#C0392B] hover:text-white"
                         >
                             <FiMinus size={11} />
@@ -178,7 +188,10 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
 
                         <button
                             type="button"
-                            onClick={() => handleAdd(item)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAdd(item);
+                            }}
                             className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 text-gray-500 hover:border-[#C0392B] hover:bg-[#C0392B] hover:text-white"
                         >
                             <FiPlus size={11} />
@@ -190,7 +203,7 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
     };
 
     return (
-        <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+        <div className="-mx-4 px-4 py-4">
             <div className="max-w-7xl mx-auto mb-3">
                 <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
                     What are you sending?
@@ -209,7 +222,7 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-stretch">
                 <div className="flex-1 min-w-0">
                     <div
-                        className="h-full rounded-2xl border border-gray-200 bg-white p-4 md:p-6"
+                        className="h-full rounded-2xl border border-gray-200 bg-[#FDFBF8] p-4 md:p-6"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.08)" }}
                     >
                         <div className="relative">
@@ -297,8 +310,8 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
                                                             isOpen ? null : category._id
                                                         )}
                                                         className={`flex h-13.25 w-full items-center gap-3 rounded-md border px-3 text-left transition ${isOpen
-                                                                ? "border-[#C0392B] bg-[#C0392B] text-white"
-                                                                : "border-gray-300 bg-white text-gray-800 hover:border-[#C0392B]"
+                                                            ? "border-[#C0392B] bg-[#C0392B] text-white"
+                                                            : "border-gray-300 bg-white text-gray-800 hover:border-[#C0392B]"
                                                             }`}
                                                     >
                                                         <FiPackage
@@ -315,8 +328,8 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
 
                                                         {selectedCount > 0 && (
                                                             <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold ${isOpen
-                                                                    ? "bg-white text-[#C0392B]"
-                                                                    : "bg-red-50 text-[#C0392B]"
+                                                                ? "bg-white text-[#C0392B]"
+                                                                : "bg-red-50 text-[#C0392B]"
                                                                 }`}>
                                                                 {selectedCount}
                                                             </span>
@@ -372,7 +385,7 @@ export default function StepItemSelectionParcels({ items, onChange, error, servi
                 <div className="flex w-full lg:w-80">
                     <div className="sticky top-20 flex w-full">
                         <div
-                            className="flex h-full w-full flex-col rounded-2xl bg-white p-4"
+                            className="flex h-full w-full flex-col rounded-2xl bg-[#FDFBF8] p-4"
                             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                         >
                             <div className="mb-3 flex items-center justify-between gap-2">

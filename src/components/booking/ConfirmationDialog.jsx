@@ -150,7 +150,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
             </div>
 
             {/* Business Delivery */}
-            <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+            {/* <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
               <input
                 type="checkbox"
                 checked={formData.businessDelivery}
@@ -161,7 +161,7 @@ export default function ConfirmationDialog({ isOpen, onClose, onConfirm, loading
                 <FiTruck size={15} className="text-gray-600 shrink-0" />
                 <span className="text-sm font-semibold text-gray-700">Business delivery</span>
               </div>
-            </label>
+            </label> */}
           </div>
 
           {/* Buttons */}

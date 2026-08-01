@@ -123,12 +123,12 @@ export default function StepAdditionalServices({
                             return (
                                 <div
                                     key={item.itemId || `${item.name}-${index}`}
-                                    className={`flex items-center gap-3 p-3 rounded-xl border transition ${quantity > 0
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${quantity > 0
                                         ? "border-[#C0392B] bg-red-50"
                                         : "border-gray-200 bg-white"
                                         }`}
                                 >
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${quantity > 0
+                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${quantity > 0
                                         ? "bg-[#C0392B] text-white"
                                         : "bg-gray-100 text-gray-400"
                                         }`}>
@@ -139,11 +139,11 @@ export default function StepAdditionalServices({
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-[#1a1a1a] truncate">
+                                        <p className="text-[13px] font-semibold text-[#1a1a1a] truncate">
                                             {item.name}
                                         </p>
 
-                                        <p className="text-[10px] text-gray-400 mt-0.5">
+                                        <p className="text-[9px] text-gray-400 mt-0.5">
                                             Available quantity: {maxQuantity}
                                             {item.categoryName
                                                 ? ` · ${item.categoryName}`
@@ -157,7 +157,7 @@ export default function StepAdditionalServices({
                                             type="button"
                                             onClick={() => updateAddOnItem(field, item, -1)}
                                             disabled={quantity === 0}
-                                            className="w-7 h-7 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-[#C0392B] hover:border-[#C0392B] hover:text-white disabled:opacity-30 disabled:pointer-events-none"
+                                            className="w-6 h-6 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-[#C0392B] hover:border-[#C0392B] hover:text-white disabled:opacity-30 disabled:pointer-events-none"
                                         >
                                             <FiMinus size={12} />
                                         </button>
@@ -191,7 +191,7 @@ export default function StepAdditionalServices({
     };
 
     return (
-        <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+        <div className="-mx-4 px-4 py-4">
             <div className="max-w-7xl mx-auto mb-3">
                 <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
                     Additional services
@@ -209,8 +209,8 @@ export default function StepAdditionalServices({
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 space-y-3">
-                    <div
-                        className="bg-white rounded-2xl p-4"
+                    {/* <div
+                        className="bg-[#FDFBF8] rounded-2xl p-4"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                     >
                         <div className="flex items-center gap-2 mb-3">
@@ -238,44 +238,80 @@ export default function StepAdditionalServices({
 
                             <FiShield size={22} className="text-green-500 shrink-0" />
                         </div>
-                    </div>
+                    </div> */}
 
                     <div
-                        className="bg-white rounded-2xl p-4"
+                        className="bg-[#FDFBF8] rounded-2xl p-4"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                     >
-                        <div className="flex items-center gap-2 mb-4">
-                            <FiTool size={18} className="text-[#C0392B]" />
+                        <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 flex items-center justify-between">
+
                             <div>
+
+                                <p className="text-sm font-semibold text-[#1a1a1a]">
+                                    Free Protection
+                                </p>
+
+                                <p className="text-[11px] text-gray-500">
+                                    Blankets & bubble wrap included
+                                </p>
+
+                            </div>
+
+                            <span className="rounded-full bg-green-600 px-2 py-1 text-[10px] font-bold text-white">
+                                INCLUDED
+                            </span>
+
+                        </div>
+
+                        <div className="flex items-start gap-2 mb-4">
+
+                            <FiTool
+                                size={18}
+                                className="mt-0.5 text-[#C0392B] shrink-0"
+                            />
+
+                            <div>
+
                                 <h4 className="font-bold text-sm text-[#1a1a1a]">
                                     Dismantling and assembly
                                 </h4>
+
                                 <p className="text-xs text-gray-500 mt-0.5">
                                     Choose directly from the items already in your booking.
                                 </p>
+
                             </div>
+
                         </div>
 
-                        <div className="pb-5 mb-5 border-b border-gray-100">
-                            {renderItemSelector(
-                                "dismantleItems",
-                                "Dismantling",
-                                20,
-                                "We dismantle selected items before loading"
-                            )}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                            <div>
+                                {renderItemSelector(
+                                    "dismantleItems",
+                                    "Dismantling",
+                                    20,
+                                    "We dismantle selected items before loading"
+                                )}
+                            </div>
+
+                            <div>
+                                {renderItemSelector(
+                                    "assemblyItems",
+                                    "Assembly",
+                                    30,
+                                    "We assemble selected items at delivery"
+                                )}
+                            </div>
+
                         </div>
 
-                        {renderItemSelector(
-                            "assemblyItems",
-                            "Assembly",
-                            30,
-                            "We assemble selected items at delivery"
-                        )}
                     </div>
 
                     {isHomeMove && (
                         <div
-                            className="bg-white rounded-2xl p-4"
+                            className="bg-[#FDFBF8] rounded-2xl p-4"
                             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                         >
                             <div className="flex items-center gap-2 mb-3">
@@ -315,7 +351,7 @@ export default function StepAdditionalServices({
                     )}
 
                     <div
-                        className="bg-white rounded-2xl p-4"
+                        className="bg-[#FDFBF8] rounded-2xl p-4"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                     >
                         <div className="flex items-center justify-between gap-3 mb-3">
@@ -342,8 +378,8 @@ export default function StepAdditionalServices({
                                 "specialInstructions",
                                 e.target.value
                             )}
-                            rows={4}
-                            className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0392B] resize-none"
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C0392B] resize-none"
                         />
 
                         <p className="text-[10px] text-gray-400 mt-1.5">
@@ -354,7 +390,7 @@ export default function StepAdditionalServices({
 
                 <div className="lg:col-span-1">
                     <div
-                        className="sticky top-20 bg-white rounded-2xl p-4"
+                        className="sticky top-20 bg-[#FDFBF8] rounded-2xl p-4"
                         style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
                     >
                         <h4 className="font-bold text-[#1a1a1a] text-sm mb-4">

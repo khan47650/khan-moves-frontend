@@ -135,7 +135,7 @@ export default function StepItemSelection({ items, onChange, error, serviceType 
   );
 
   return (
-    <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+    <div className="-mx-4 px-4 py-4">
       <div className="max-w-7xl mx-auto mb-3">
         <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">
           What are you moving?
@@ -154,7 +154,7 @@ export default function StepItemSelection({ items, onChange, error, serviceType 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:items-stretch">
         <div className="flex-1 min-w-0">
           <div
-            className="bg-white rounded-2xl overflow-hidden h-full"
+            className="bg-[#FDFBF8] rounded-2xl overflow-hidden h-full"
             style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
           >
             {loading ? (
@@ -186,8 +186,8 @@ export default function StepItemSelection({ items, onChange, error, serviceType 
                           type="button"
                           onClick={() => handleCategoryChange(category._id)}
                           className={`relative min-w-36.25 md:min-w-41.25 px-4 py-4 border-r border-gray-200 transition ${isSelected
-                              ? "bg-red-50 text-[#C0392B]"
-                              : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+                            ? "bg-red-50 text-[#C0392B]"
+                            : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-800"
                             }`}
                         >
                           <FiPackage
@@ -330,7 +330,7 @@ export default function StepItemSelection({ items, onChange, error, serviceType 
         <div className="w-full lg:w-80 flex">
           <div className="sticky top-20 w-full flex">
             <div
-              className="bg-white rounded-2xl p-4 md:p-5 flex flex-col w-full lg:min-h-130"
+              className="bg-[#FDFBF8] rounded-2xl p-4 md:p-5 flex flex-col w-full lg:min-h-130"
               style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
             >
               <div className="flex items-center justify-between gap-2 mb-3">

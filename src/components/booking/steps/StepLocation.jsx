@@ -185,7 +185,7 @@ export default function StepLocation({ data, onChange, errors }) {
   const bothReady = data.pickup.lat && data.delivery.lat;
 
   return (
-    <div className="bg-[#F9F8F6] -mx-4 px-4 py-4">
+    <div className="-mx-4 px-4 py-4">
       <div className="max-w-7xl mx-auto mb-3">
         <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a]">Where are you moving from and to?</h3>
         <p className="text-gray-500 text-xs mt-0.5">Enter address, postcode and access details</p>
@@ -195,7 +195,7 @@ export default function StepLocation({ data, onChange, errors }) {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 items-stretch">
 
         {/* LEFT: locations card — pickup + arrow + delivery */}
-        <div className="flex-1 min-w-0 bg-white rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div className="flex-1 min-w-0 bg-[#FDFBF8] rounded-2xl p-4 md:p-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           <div className="flex flex-col sm:flex-row gap-4">
 
             <LocationCard
@@ -205,7 +205,7 @@ export default function StepLocation({ data, onChange, errors }) {
               onResolved={d => onChange('pickup', { ...data.pickup, postcode: d.postcode, town: d.district, region: d.region, lat: d.lat, lng: d.lng })}
               floorValue={data.pickupFloor?.floorLevel || 'ground'}
               onFloorChange={v => onChange('pickupFloor', { ...data.pickupFloor, floorLevel: v })}
-              hasLift={data.pickupFloor?.hasLift ?? true}
+              hasLift={data.pickupFloor?.hasLift ?? false}
               onLiftChange={v => onChange('pickupFloor', { ...data.pickupFloor, hasLift: v })}
               hasParking={data.pickupFloor?.hasParking ?? false}
               onParkingChange={v => onChange('pickupFloor', { ...data.pickupFloor, hasParking: v })}
@@ -232,7 +232,7 @@ export default function StepLocation({ data, onChange, errors }) {
               onResolved={d => onChange('delivery', { ...data.delivery, postcode: d.postcode, town: d.district, region: d.region, lat: d.lat, lng: d.lng })}
               floorValue={data.deliveryFloor?.floorLevel || 'ground'}
               onFloorChange={v => onChange('deliveryFloor', { ...data.deliveryFloor, floorLevel: v })}
-              hasLift={data.deliveryFloor?.hasLift ?? true}
+              hasLift={data.deliveryFloor?.hasLift ?? false}
               onLiftChange={v => onChange('deliveryFloor', { ...data.deliveryFloor, hasLift: v })}
               hasParking={data.deliveryFloor?.hasParking ?? false}
               onParkingChange={v => onChange('deliveryFloor', { ...data.deliveryFloor, hasParking: v })}
@@ -245,7 +245,7 @@ export default function StepLocation({ data, onChange, errors }) {
         {/* RIGHT: map card — separate, same height as locations card */}
         <div className="w-full md:w-72 lg:w-80 shrink-0" style={{ minHeight: '220px' }}>
           {calculating ? (
-            <div className="h-full bg-white rounded-2xl flex flex-col items-center justify-center gap-2" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minHeight: '220px' }}>
+            <div className="h-full bg-[#FDFBF8] rounded-2xl flex flex-col items-center justify-center gap-2" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minHeight: '220px' }}>
               <FiLoader size={20} className="text-gray-400 animate-spin" />
               <span className="text-xs text-gray-400">Calculating route…</span>
             </div>
@@ -262,7 +262,7 @@ export default function StepLocation({ data, onChange, errors }) {
               }
             />
           ) : (
-            <div className="h-full bg-white rounded-2xl flex flex-col items-center justify-center gap-2 p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minHeight: '220px' }}>
+            <div className="h-full bg-[#FDFBF8] rounded-2xl flex flex-col items-center justify-center gap-2 p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', minHeight: '220px' }}>
               <FiNavigation size={24} className="text-gray-300" />
               <p className="text-xs text-gray-400 text-center">Enter both postcodes<br />to see your route</p>
             </div>

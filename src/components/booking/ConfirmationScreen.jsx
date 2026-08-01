@@ -86,26 +86,34 @@ export default function ConfirmationScreen({
                 {/* ── SUCCESS BANNER ── */}
                 <motion.div
                     variants={itemVariants}
-                    className="bg-linear-to-r from-[#1a1a1a] to-[#2d2d2d] rounded-2xl p-6 mb-6 shadow-xl flex items-center justify-between flex-wrap gap-4"
+                    className="bg-linear-to-r from-[#1a1a1a] to-[#2d2d2d] rounded-xl px-3 md:px-4 py-3 mb-3 shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-3"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-green-500/15 rounded-full flex items-center justify-center border-2 border-green-500">
-                            <FiCheckCircle size={28} className="text-green-400" />
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-green-500/15 rounded-full flex items-center justify-center border border-green-500">
+                            <FiCheckCircle size={16} className="text-green-400" />
                         </div>
                         <div>
-                            <h2 className="text-white text-2xl md:text-3xl font-black">Booking Submitted!</h2>
-                            <p className="text-gray-400 text-sm mt-1">We've received your request and will be in touch shortly.</p>
+                            <h2 className="text-white text-lg font-bold leading-none">
+                                Booking Submitted!
+                            </h2>
+
+                            <p className="text-gray-400 text-[11px] leading-tight mt-0.5">
+                                We've received your request and will be in touch shortly.
+                            </p>
                         </div>
                     </div>
                     {bookingRef && (
-                        <div className="bg-black/40 border border-yellow-500/30 rounded-xl px-4 py-3 flex items-center gap-3">
+                        <div className="bg-black/40 border border-yellow-500/30 rounded-lg px-2.5 py-2 flex items-center justify-between w-full md:w-auto">
                             <div>
-                                <p className="text-yellow-500/70 text-[10px] font-bold tracking-[0.15em]">REFERENCE</p>
-                                <p className="text-[#F1C40F] text-2xl font-black tracking-wider">{bookingRef}</p>
+                                <p className="text-yellow-500/70 text-[8px] font-bold tracking-[0.12em]">
+                                    REFERENCE
+                                </p>
+
+                                <p className="text-[#F1C40F] text-base md:text-lg font-black leading-none break-all">{bookingRef}</p>
                             </div>
                             <button
                                 onClick={copyToClipboard}
-                                className="flex items-center gap-1.5 bg-[#F1C40F] hover:bg-yellow-400 text-[#1a1a1a] px-3 py-2 rounded-lg font-bold text-sm transition shadow-md"
+                                className="flex items-center gap-1 bg-[#F1C40F] hover:bg-yellow-400 text-[#1a1a1a] px-2 py-1 rounded-md font-semibold text-[11px] whitespace-nowrap transition"
                             >
                                 <FiCopy size={14} />
                                 {copied ? 'Copied!' : 'Copy'}
@@ -118,13 +126,13 @@ export default function ConfirmationScreen({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
 
                     {/* MOVE DETAILS */}
-                    <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
+                    <motion.div variants={itemVariants} className="bg-[#FDFBF8] rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
                         <h3 className="text-xl font-black text-[#1a1a1a] mb-5">Move Details</h3>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
 
                             {/* Service */}
-                            <div className="flex gap-3 pb-4 border-b border-gray-100">
-                                <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
+                            <div className="flex gap-3 pb-3 border-b border-gray-100">
+                                <div className="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
                                     <FiPackage size={18} className="text-[#C0392B]" />
                                 </div>
                                 <div>
@@ -136,9 +144,9 @@ export default function ConfirmationScreen({
                             </div>
 
                             {/* Date & Time */}
-                            <div className="flex gap-3 pb-4 border-b border-gray-100">
+                            <div className="flex gap-3 pb-3 border-b border-gray-100">
                                 <div className="w-10 h-10 bg-yellow-50 rounded-lg flex items-center justify-center shrink-0">
-                                    <FiClock size={18} className="text-yellow-600" />
+                                    <FiClock size={16} className="text-yellow-600" />
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Pickup Date & Time</p>
@@ -155,8 +163,8 @@ export default function ConfirmationScreen({
 
                             {/* Route */}
                             <div className="flex gap-3">
-                                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
-                                    <FiMapPin size={18} className="text-green-600" />
+                                <div className="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+                                    <FiMapPin size={16} className="text-green-600" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-xs text-gray-500 font-medium mb-2">Route</p>
@@ -168,27 +176,39 @@ export default function ConfirmationScreen({
                                     <p className="font-bold text-sm text-[#1a1a1a]">{data.delivery.address || data.delivery.postcode}</p>
                                     <p className="text-xs text-gray-500">{data.delivery.postcode}</p>
                                 </div>
+
                             </div>
+                            {pickupLat && deliveryLat && (
+                                <div className="mt-3 h-32 rounded-xl overflow-hidden border border-gray-200">
+                                    <MapComponent
+                                        pickupLat={pickupLat}
+                                        pickupLng={pickupLng}
+                                        deliveryLat={deliveryLat}
+                                        deliveryLng={deliveryLng}
+                                        distance={distance}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </motion.div>
 
                     {/* YOUR DETAILS */}
-                    <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
+                    <motion.div variants={itemVariants} className="bg-[#FDFBF8] rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
                         <h3 className="text-xl font-black text-[#1a1a1a] mb-5">Your Details</h3>
 
                         {/* Customer info */}
                         <div className="space-y-3 mb-5 pb-5 border-b border-gray-100">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 w-full">
                                 <FiUser size={16} className="text-gray-400 shrink-0" />
                                 <p className="font-bold text-[#1a1a1a] text-sm">{confirmationData?.name || '—'}</p>
                             </div>
                             {confirmationData?.email && (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 w-full">
                                     <FiMail size={16} className="text-gray-400 shrink-0" />
                                     <p className="text-sm text-gray-700 truncate">{confirmationData.email}</p>
                                 </div>
                             )}
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 w-full">
                                 <FiPhone size={16} className="text-gray-400 shrink-0" />
                                 <p className="text-sm text-gray-700">{confirmationData?.phone || '—'}</p>
                             </div>
@@ -293,20 +313,21 @@ export default function ConfirmationScreen({
                     </motion.div>
 
                     {/* WHAT'S NEXT */}
-                    <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition">
-                        <h3 className="text-xl font-black text-[#1a1a1a] mb-5">What's Next</h3>
+                    <motion.div variants={itemVariants} className="bg-[#FDFBF8] rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition">
+                        <h3 className="text-xl font-black text-[#1a1a1a] mb-5">  What happens now?</h3>
                         <div className="space-y-3 mb-5">
                             {[
-                                'Our team will review and confirm your booking details',
-                                'Your invoice will be sent and can be paid online',
-                                'Call customer care anytime for updates or changes',
-                                'Your driver will call approximately 30 minutes before arrival',
+                                'You will receive a confirmation by Email or WhatsApp.',
+                                'Our team will review your booking and confirm availability shortly.',
+                                'Your invoice will be sent after confirmation by Email or WhatsApp.',
+                                'Please keep your phone switched on. We may contact you if we need additional information.',
+                                'Need to change your booking? Contact us before your moving day.',
                             ].map((step, i) => (
                                 <div key={i} className="flex gap-3 items-start">
-                                    <div className="w-6 h-6 bg-[#C0392B] text-white rounded-full flex items-center justify-center text-xs font-black shrink-0 mt-0.5">
+                                    <div className="w-5 h-5 bg-[#C0392B] text-white rounded-full flex items-center justify-center text-xs font-black shrink-0 mt-0.5">
                                         {i + 1}
                                     </div>
-                                    <p className="text-sm text-gray-700 leading-snug">{step}</p>
+                                    <p className="text-[13px] text-gray-700 leading-snug">{step}</p>
                                 </div>
                             ))}
                         </div>
@@ -318,7 +339,7 @@ export default function ConfirmationScreen({
                                 target="_blank"
                                 rel="noreferrer"
                                 aria-label="Contact on WhatsApp"
-                                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm"
+                                className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-bold transition flex items-center justify-center shadow-sm"
                             >
                                 <FiMessageCircle size={18} />
                             </a>
@@ -326,7 +347,7 @@ export default function ConfirmationScreen({
                             <a
                                 href="mailto:khanmovesuk@gmail.com"
                                 aria-label="Send email"
-                                className="flex-1 bg-[#C0392B] hover:bg-red-700 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm"
+                                className="flex-1 bg-[#C0392B] hover:bg-red-700 text-white py-2 rounded-lg font-bold transition flex items-center justify-center shadow-sm"
                             >
                                 <FiMail size={18} />
                             </a>
@@ -334,7 +355,7 @@ export default function ConfirmationScreen({
                             <a
                                 href="tel:07424153126"
                                 aria-label="Call customer care"
-                                className="flex-1 bg-[#1a1a1a] hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition flex items-center justify-center shadow-sm"
+                                className="flex-1 bg-[#1a1a1a] hover:bg-gray-800 text-white py-2 rounded-lg font-bold transition flex items-center justify-center shadow-sm"
                             >
                                 <FiPhone size={18} />
                             </a>
@@ -352,42 +373,13 @@ export default function ConfirmationScreen({
 
                         <button
                             onClick={() => navigate('/')}
-                            className="w-full bg-[#F1C40F] hover:bg-yellow-400 text-[#1a1a1a] py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-md"
+                            className="w-full bg-[#F1C40F] hover:bg-yellow-400 text-[#1a1a1a] py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-md"
                         >
                             Back to Home <FiArrowRight size={18} />
                         </button>
                     </motion.div>
                 </div>
 
-                {/* ── MAP ── */}
-                {pickupLat && deliveryLat && (
-                    <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
-                            <h3 className="text-xl font-black text-[#1a1a1a]">Route Map</h3>
-                            <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-[#C0392B] rounded-full" />
-                                    <span className="text-gray-700 font-medium">Pickup</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-[#27AE60] rounded-full" />
-                                    <span className="text-gray-700 font-medium">Delivery</span>
-                                </div>
-                                <div className="text-gray-300">|</div>
-                                <p className="font-bold text-[#1a1a1a]">{distance} miles</p>
-                            </div>
-                        </div>
-                        <div className="h-80">
-                            <MapComponent
-                                pickupLat={pickupLat}
-                                pickupLng={pickupLng}
-                                deliveryLat={deliveryLat}
-                                deliveryLng={deliveryLng}
-                                distance={distance}
-                            />
-                        </div>
-                    </motion.div>
-                )}
             </div>
         </motion.div>
     );
