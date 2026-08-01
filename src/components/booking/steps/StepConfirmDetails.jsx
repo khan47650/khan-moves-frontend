@@ -109,6 +109,11 @@ export default function StepConfirmDetails({
                 result.data.bookingRef ||
                 ''
             );
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: "instant" 
+            });
             setShowConfirmation(true);
             setDialogOpen(false);
         }
@@ -449,7 +454,7 @@ export default function StepConfirmDetails({
                             )}
 
                             {/* Terms */}
-                            <div className="pt-3 border-t border-gray-100">
+                            <div className="hidden lg:block pt-3 border-t border-gray-100">
                                 <label className="flex items-start gap-3 cursor-pointer">
                                     <input type="checkbox" checked={termsAccepted}
                                         onChange={e => setTermsAccepted(e.target.checked)}
@@ -504,6 +509,27 @@ export default function StepConfirmDetails({
                                         )}
                                     </div>
                                 </div>
+                            </div>
+                            <div className="lg:hidden pt-2">
+                                <label className="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={termsAccepted}
+                                        onChange={e => setTermsAccepted(e.target.checked)}
+                                        className="w-4 h-4 mt-0.5 shrink-0 accent-green-600"
+                                    />
+
+                                    <span className="text-xs text-gray-600">
+                                        I agree to Khan Moves'
+                                        <a href="/terms" className="font-bold text-[#1a1a1a] hover:underline">
+                                            {" "}Terms & Conditions
+                                        </a>
+                                        {" "}and
+                                        <a href="/privacy" className="font-bold text-[#1a1a1a] hover:underline">
+                                            {" "}Privacy Policy
+                                        </a>.
+                                    </span>
+                                </label>
                             </div>
                             <div className="bg-[#FDFBF8] rounded-xl border-2 border-[#1a1a1a] px-3 py-2.5">
                                 <p className="text-[11px] text-gray-500">

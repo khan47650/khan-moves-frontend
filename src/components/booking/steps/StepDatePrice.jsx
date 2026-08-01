@@ -510,7 +510,7 @@ export default function StepDatePrice({
                   "0 2px 12px rgba(0,0,0,0.06)"
               }}
             >
-              <div className="mb-2 grid grid-cols-3 gap-2">
+              <div className="mb-2 grid grid-cols-2 gap-2 md:grid-cols-3">
 
                 {/* Driver */}
 
@@ -567,7 +567,7 @@ export default function StepDatePrice({
                 <button
                   type="button"
                   onClick={() => handleFlexibleChange(!isFlexible)}
-                  className={`flex items-center justify-between rounded-lg border px-3 py-2 transition ${isFlexible
+                  className={`col-span-2 md:col-span-1 flex items-center justify-between rounded-lg border px-3 py-2 transition ${isFlexible
                     ? "border-green-600 bg-green-50"
                     : "border-gray-200 hover:border-gray-300"
                     }`}
@@ -582,7 +582,7 @@ export default function StepDatePrice({
                     </div>
                   </div>
 
-                  <span className="rounded-full bg-green-600 px-2 py-1 text-[9px] font-bold text-white">
+                  <span className="rounded-full bg-green-600 px-2 py-1 text-[8px] md:text-[9px] font-bold text-white whitespace-nowrap">
                     SAVE 20%
                   </span>
                 </button>

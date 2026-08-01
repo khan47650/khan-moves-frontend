@@ -36,6 +36,13 @@ export default function ConfirmationScreen({
     const assemblyCount = Number(data.assemblyCount) || (data.assemblyItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
     useEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "instant"
+        });
+    }, []);
+    useEffect(() => {
         const fetchServiceName = async () => {
             try {
                 const res = await api.get('/inventory/services');
