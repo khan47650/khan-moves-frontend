@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiAlertTriangle, FiBox, FiLayers, FiPackage, FiX } from "react-icons/fi";
 
 const config = {
@@ -30,6 +30,9 @@ export default function InventoryFormModal({
     const [volume, setVolume] = useState("");
     const [categoryId, setCategoryId] = useState("");
     const [localError, setLocalError] = useState("");
+    const fileInputRef = useRef(null);
+    const [image, setImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState("");
 
     useEffect(() => {
         if (!open) return;
@@ -37,6 +40,13 @@ export default function InventoryFormModal({
         setName(type === "service" ? initialData?.label || "" : initialData?.name || "");
         setVolume(type === "item" ? String(initialData?.volume || "") : "");
         setCategoryId(type === "item" ? (initialData?.categoryId || categories[0]?._id || "") : "");
+        if (type === "service") {
+
+            setImage(null);
+
+            setImagePreview(initialData?.image || "");
+
+        }
     }, [open, type, initialData, categories]);
 
     if (!open) return null;
@@ -44,6 +54,18 @@ export default function InventoryFormModal({
     const current = config[type];
     const Icon = current.Icon;
     const title = mode === "add" ? current.addTitle : current.editTitle;
+
+    const handleImageChange = e => {
+
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+        setImage(file);
+
+        setImagePreview(URL.createObjectURL(file));
+
+    };
 
     const submit = e => {
         e.preventDefault();
@@ -71,7 +93,16 @@ export default function InventoryFormModal({
             return;
         }
 
-        onSubmit(type === "service" ? { label: trimmedName } : { name: trimmedName });
+        onSubmit(
+            type === "service"
+                ? {
+                    label: trimmedName,
+                    image
+                }
+                : {
+                    name: trimmedName
+                }
+        );
     };
 
     return (
@@ -123,6 +154,56 @@ export default function InventoryFormModal({
                         </div>
                     )}
 
+                    {type === "service" && (
+                        <div className="flex flex-col items-center">
+
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                hidden
+                                onChange={handleImageChange}
+                            />
+
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="group"
+                            >
+                                {imagePreview ? (
+
+                                    <img
+                                        src={imagePreview}
+                                        alt="Service"
+                                        className="h-24 w-24 rounded-full object-cover border-4 border-[#C0392B]/20 shadow-md transition group-hover:opacity-80"
+                                    />
+
+                                ) : (
+
+                                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-gray-50 transition group-hover:border-[#C0392B] group-hover:bg-red-50">
+
+                                        <FiPackage
+                                            size={34}
+                                            className="text-gray-400 group-hover:text-[#C0392B]"
+                                        />
+
+                                    </div>
+
+                                )}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="mt-2 text-xs font-semibold text-[#C0392B] hover:underline"
+                            >
+                                {imagePreview
+                                    ? "Change Image"
+                                    : "Upload Image"}
+                            </button>
+
+                        </div>
+                    )}
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
                             {type === "item" ? "Item Name" : current.label}

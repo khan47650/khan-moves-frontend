@@ -10,6 +10,7 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
     const [notes, setNotes] = useState('');
     const [sending, setSending] = useState(false);
     const fileInputRef = useRef(null);
+    const [sendBoth, setSendBoth] = useState(false);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -20,7 +21,10 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
     };
 
     const handleSend = async () => {
-        if (!method) { toast.error('Please select a method'); return; }
+        if (!method && !sendBoth) {
+            toast.error("Please select a sending option");
+            return;
+        }
         if (!selectedFile) { toast.error('Please select a file'); return; }
         setSending(true);
         try {
@@ -33,6 +37,7 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
 
             await api.post(`/bookings/${booking._id}/send-invoice`, {
                 method,
+                sendBoth,
                 notes,
                 attachment: {
                     filename: selectedFile.name,
@@ -40,7 +45,15 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
                 },
             });
 
-            toast.success(method === 'email' ? 'Invoice sent via email!' : 'Invoice sent via WhatsApp!');
+            if (sendBoth) {
+                toast.success("Invoice sent via Email & WhatsApp!");
+            } else {
+                toast.success(
+                    method === "email"
+                        ? "Invoice sent via email!"
+                        : "Invoice sent via WhatsApp!"
+                );
+            }
             if (onSent) onSent(booking._id);
             onClose();
         } catch (err) {
@@ -115,7 +128,10 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
                         <p className="text-xs text-gray-500 mb-3">Choose how to send:</p>
                         <div className="space-y-2 mb-4">
                             <button
-                                onClick={() => setMethod('email')}
+                                onClick={() => {
+                                    setMethod("email");
+                                    setSendBoth(false);
+                                }}
                                 className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 transition ${method === 'email' ? 'border-[#C0392B] bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}
                             >
                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${method === 'email' ? 'bg-[#C0392B] text-white' : 'bg-gray-100 text-gray-600'}`}>
@@ -129,7 +145,10 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
                             </button>
 
                             <button
-                                onClick={() => setMethod('whatsapp')}
+                                onClick={() => {
+                                    setMethod("whatsapp");
+                                    setSendBoth(false);
+                                }}
                                 className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 transition ${method === 'whatsapp' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
                             >
                                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${method === 'whatsapp' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600'}`}>
@@ -141,6 +160,34 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
                                 </div>
                                 {method === 'whatsapp' && <FiCheck size={16} className="text-green-500" />}
                             </button>
+                        </div>
+                        <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={sendBoth}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+
+                                        setSendBoth(checked);
+
+                                        if (checked) {
+                                            setMethod("");
+                                        }
+                                    }}
+                                    className="h-4 w-4 accent-[#C0392B]"
+                                />
+
+                                <div>
+                                    <p className="text-sm font-semibold text-[#1a1a1a]">
+                                        Send to both Email & WhatsApp
+                                    </p>
+
+                                    <p className="text-xs text-gray-500">
+                                        Invoice will be delivered using both methods.
+                                    </p>
+                                </div>
+                            </label>
                         </div>
 
                         {/* Notes */}
@@ -165,7 +212,7 @@ export default function SendInvoiceDialog({ booking, onClose, onSent }) {
                             </button>
                             <button
                                 onClick={handleSend}
-                                disabled={sending || !method}
+                                disabled={sending || (!method && !sendBoth)}
                                 className="flex-1 py-2.5 bg-[#C0392B] hover:bg-red-800 rounded-xl font-semibold text-sm text-white transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {sending

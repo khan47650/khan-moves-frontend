@@ -52,6 +52,7 @@ export default function Inventory() {
     const [modal, setModal] = useState(null);
     const [modalError, setModalError] = useState("");
     const [confirm, setConfirm] = useState(null);
+    const [previewImage, setPreviewImage] = useState(null);
 
     const currentService = services.find(service => service._id === selectedServiceId) || null;
     const categories = currentService?.categories || [];
@@ -134,22 +135,66 @@ export default function Inventory() {
 
         try {
             if (modal.type === "service" && modal.mode === "add") {
-                const res = await api.post("/inventory/services", values);
+
+                const formData = new FormData();
+
+                formData.append("label", values.label);
+
+                if (values.image) {
+                    formData.append("image", values.image);
+                }
+
+                const res = await api.post(
+                    "/inventory/services",
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data"
+                        }
+                    }
+                );
+
                 const service = res.data.data;
 
                 setServices(prev => [...prev, service]);
+
                 setSelectedServiceId(service._id);
+
                 resetView();
+
                 toast.success(`"${service.label}" service added.`);
             }
 
             if (modal.type === "service" && modal.mode === "edit") {
-                const res = await api.put(`/inventory/services/${modal.data._id}`, values);
+
+                const formData = new FormData();
+
+                formData.append("label", values.label);
+
+                if (values.image) {
+                    formData.append("image", values.image);
+                }
+
+                const res = await api.put(
+                    `/inventory/services/${modal.data._id}`,
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data"
+                        }
+                    }
+                );
+
                 const updated = res.data.data;
 
-                setServices(prev => prev.map(service =>
-                    service._id === updated._id ? updated : service
-                ));
+                setServices(prev =>
+                    prev.map(service =>
+                        service._id === updated._id
+                            ? updated
+                            : service
+                    )
+                );
+
                 toast.success("Service updated.");
             }
 
@@ -501,8 +546,8 @@ export default function Inventory() {
                                 <div
                                     key={service._id}
                                     className={`flex items-center gap-2 px-3 py-2.5 ${selectedServiceId === service._id
-                                            ? "bg-[#C0392B] text-white"
-                                            : "text-gray-700 hover:bg-gray-50"
+                                        ? "bg-[#C0392B] text-white"
+                                        : "text-gray-700 hover:bg-gray-50"
                                         }`}
                                 >
                                     <button
@@ -519,8 +564,8 @@ export default function Inventory() {
                                     <button
                                         onClick={() => openModal("service", "edit", service)}
                                         className={`flex h-7 w-7 items-center justify-center rounded-lg ${selectedServiceId === service._id
-                                                ? "text-white/80 hover:bg-white/20"
-                                                : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
+                                            ? "text-white/80 hover:bg-white/20"
+                                            : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
                                             }`}
                                     >
                                         <FiEdit2 size={12} />
@@ -529,8 +574,8 @@ export default function Inventory() {
                                     <button
                                         onClick={() => askDeleteService(service)}
                                         className={`flex h-7 w-7 items-center justify-center rounded-lg ${selectedServiceId === service._id
-                                                ? "text-white/80 hover:bg-white/20"
-                                                : "text-gray-400 hover:bg-red-50 hover:text-[#C0392B]"
+                                            ? "text-white/80 hover:bg-white/20"
+                                            : "text-gray-400 hover:bg-red-50 hover:text-[#C0392B]"
                                             }`}
                                     >
                                         <FiTrash2 size={12} />
@@ -554,18 +599,42 @@ export default function Inventory() {
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 text-sm">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+
+                    <div
+                        className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 shadow-sm"
+                        onMouseEnter={() => setPreviewImage(currentService?.image)}
+                    >
+
+                        {currentService?.image ? (
+                            <img
+                                src={currentService.image}
+                                alt={currentService.label}
+                                className="h-full w-full object-cover"
+                            />
+                        ) : (
+                            <FiPackage
+                                size={20}
+                                className="text-[#C0392B]"
+                            />
+                        )}
+
+                    </div>
+
                     <span className="rounded-lg bg-gray-100 px-3 py-1.5 font-semibold text-gray-600">
                         {categories.length} Categories
                     </span>
+
                     <span className="rounded-lg bg-gray-100 px-3 py-1.5 font-semibold text-gray-600">
                         {currentItems.length} Items
                     </span>
+
                     {pausedItems.length > 0 && (
                         <span className="rounded-lg bg-amber-100 px-3 py-1.5 font-semibold text-amber-600">
                             {pausedItems.length} Paused
                         </span>
                     )}
+
                 </div>
             </div>
 
@@ -596,8 +665,8 @@ export default function Inventory() {
                         <button
                             onClick={() => selectCategory("all")}
                             className={`rounded-xl border px-4 py-2 text-sm font-semibold transition ${selectedCategoryId === "all"
-                                    ? "border-[#C0392B] bg-[#C0392B] text-white"
-                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#C0392B]/40"
+                                ? "border-[#C0392B] bg-[#C0392B] text-white"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-[#C0392B]/40"
                                 }`}
                         >
                             All Items
@@ -611,8 +680,8 @@ export default function Inventory() {
                             <div
                                 key={category._id}
                                 className={`flex items-center overflow-hidden rounded-xl border transition ${selectedCategoryId === category._id
-                                        ? "border-[#C0392B] bg-[#C0392B] text-white"
-                                        : "border-gray-200 bg-white text-gray-600 hover:border-[#C0392B]/40"
+                                    ? "border-[#C0392B] bg-[#C0392B] text-white"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#C0392B]/40"
                                     }`}
                             >
                                 <button
@@ -621,22 +690,22 @@ export default function Inventory() {
                                 >
                                     {category.name}
                                     <span className={`ml-2 rounded-md px-1.5 py-0.5 text-[10px] ${selectedCategoryId === category._id
-                                            ? "bg-white/20"
-                                            : "bg-gray-100"
+                                        ? "bg-white/20"
+                                        : "bg-gray-100"
                                         }`}>
                                         {category.items?.length || 0}
                                     </span>
                                 </button>
 
                                 <div className={`flex border-l ${selectedCategoryId === category._id
-                                        ? "border-white/20"
-                                        : "border-gray-100"
+                                    ? "border-white/20"
+                                    : "border-gray-100"
                                     }`}>
                                     <button
                                         onClick={() => openModal("category", "edit", category)}
                                         className={`flex h-9 w-8 items-center justify-center ${selectedCategoryId === category._id
-                                                ? "hover:bg-white/20"
-                                                : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
+                                            ? "hover:bg-white/20"
+                                            : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
                                             }`}
                                     >
                                         <FiEdit2 size={11} />
@@ -644,8 +713,8 @@ export default function Inventory() {
                                     <button
                                         onClick={() => askDeleteCategory(category)}
                                         className={`flex h-9 w-8 items-center justify-center ${selectedCategoryId === category._id
-                                                ? "hover:bg-white/20"
-                                                : "text-gray-400 hover:bg-red-50 hover:text-[#C0392B]"
+                                            ? "hover:bg-white/20"
+                                            : "text-gray-400 hover:bg-red-50 hover:text-[#C0392B]"
                                             }`}
                                     >
                                         <FiTrash2 size={11} />
@@ -835,10 +904,10 @@ export default function Inventory() {
                                             <li
                                                 key={item._id}
                                                 className={`transition ${isSelected
-                                                        ? "bg-red-50/50"
-                                                        : item.isPaused
-                                                            ? "bg-gray-100/80 opacity-65"
-                                                            : "hover:bg-gray-50/70"
+                                                    ? "bg-red-50/50"
+                                                    : item.isPaused
+                                                        ? "bg-gray-100/80 opacity-65"
+                                                        : "hover:bg-gray-50/70"
                                                     }`}
                                             >
                                                 <div className="hidden grid-cols-[40px_1fr_180px_100px_150px] items-center gap-3 px-6 py-4 md:grid">
@@ -855,8 +924,8 @@ export default function Inventory() {
                                                         </span>
                                                         <div className="min-w-0">
                                                             <p className={`truncate text-sm font-semibold ${item.isPaused
-                                                                    ? "text-gray-400 line-through"
-                                                                    : "text-gray-800"
+                                                                ? "text-gray-400 line-through"
+                                                                : "text-gray-800"
                                                                 }`}>
                                                                 {item.name}
                                                             </p>
@@ -887,8 +956,8 @@ export default function Inventory() {
                                                             disabled={actionLoading}
                                                             title={item.isPaused ? "Resume" : "Pause"}
                                                             className={`flex h-8 w-8 items-center justify-center rounded-lg transition disabled:opacity-50 ${item.isPaused
-                                                                    ? "text-emerald-500 hover:bg-emerald-50"
-                                                                    : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
+                                                                ? "text-emerald-500 hover:bg-emerald-50"
+                                                                : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
                                                                 }`}
                                                         >
                                                             {item.isPaused
@@ -928,8 +997,8 @@ export default function Inventory() {
                                                             <div className="min-w-0">
                                                                 <div className="flex flex-wrap items-center gap-2">
                                                                     <p className={`text-sm font-bold ${item.isPaused
-                                                                            ? "text-gray-400 line-through"
-                                                                            : "text-gray-800"
+                                                                        ? "text-gray-400 line-through"
+                                                                        : "text-gray-800"
                                                                         }`}>
                                                                         {item.name}
                                                                     </p>
@@ -957,8 +1026,8 @@ export default function Inventory() {
                                                                 onClick={() => togglePauseItem(item)}
                                                                 disabled={actionLoading}
                                                                 className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.isPaused
-                                                                        ? "text-emerald-500 hover:bg-emerald-50"
-                                                                        : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
+                                                                    ? "text-emerald-500 hover:bg-emerald-50"
+                                                                    : "text-gray-400 hover:bg-amber-50 hover:text-amber-500"
                                                                     }`}
                                                             >
                                                                 {item.isPaused
@@ -1047,6 +1116,21 @@ export default function Inventory() {
                             </li>
                         ))}
                     </ul>
+                </div>
+            )}
+
+
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-9999 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+                    onClick={() => setPreviewImage(null)}
+                >
+                    <img
+                        src={previewImage}
+                        alt="Preview"
+                        onMouseLeave={() => setPreviewImage(null)}
+                        className="max-h-125 max-w-125 rounded-2xl border-4 border-white bg-white object-contain shadow-2xl"
+                    />
                 </div>
             )}
 

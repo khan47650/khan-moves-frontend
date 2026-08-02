@@ -119,58 +119,117 @@ export default function HomePage() {
       </section>
 
       {/* ── SERVICES CARDS ── */}
-      <section className="py-16 md:py-20 bg-[#F5F1ED]">
+      <section className="py-10 md:py-12 bg-[#F5F1ED]">
         <div className="max-w-6xl mx-auto px-6 md:px-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="mb-12">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="mb-7">
             <p className="text-sm font-semibold text-gray-600 uppercase tracking-widest mb-4">Services</p>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">What We Can Move</h2>
-            <p className="text-gray-700 text-lg max-w-2xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">What We Can Move</h2>
+            <p className="text-base md:text-lg text-gray-700 max-w-xl">
               From full house moves to single items — we handle all types of removals with the same care and professionalism.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
             {loading
               ? Array(6).fill(0).map((_, i) => <ServiceCardSkeleton key={i} />)
               : services.map((service, idx) => {
                 const theme = getTheme(idx);
                 return (
+                  // <motion.div
+                  //   key={service._id}
+                  //   initial={{ opacity: 0, y: 20 }}
+                  //   whileInView={{ opacity: 1, y: 0 }}
+                  //   viewport={{ once: true }}
+                  //   transition={{ duration: 0.5, delay: idx * 0.08 }}
+                  //   onClick={() => goToBooking(service.slug)}
+                  //   role="button"
+                  //   tabIndex={0}
+                  //   onKeyDown={(e) => e.key === 'Enter' && goToBooking(service.slug)}
+                  //   className="group relative rounded-2xl overflow-hidden bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col"
+                  // >
+                  //   {/* Big number watermark */}
+                  //   <span className={`absolute top-4 right-5 text-7xl font-black ${theme.num} select-none pointer-events-none leading-none`}>
+                  //     {String(idx + 1).padStart(2, '0')}
+                  //   </span>
+
+                  //   {/* Color dot */}
+                  //   <div className={`w-11 h-11 rounded-xl ${theme.bg} flex items-center justify-center mb-5 shrink-0`}>
+                  //     <div className="w-3 h-3 rounded-full bg-white/70" />
+                  //   </div>
+
+                  //   <h3 className="font-bold text-xl text-gray-900 mb-1.5 relative z-10">{service.label}</h3>
+                  //   <p className={`text-sm font-semibold ${theme.text} mb-6`}>
+                  //     {service.categories?.length || 0} categories available
+                  //   </p>
+
+                  //   <div className="mt-auto flex items-center gap-2">
+                  //     <span className={`text-sm font-bold ${theme.text} group-hover:gap-3 transition-all flex items-center gap-1.5`}>
+                  //       Get quote <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  //     </span>
+                  //   </div>
+
+                  //   {/* Bottom accent bar */}
+                  //   <div className={`absolute bottom-0 left-0 right-0 h-1 ${theme.bg} scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`} />
+                  // </motion.div>
                   <motion.div
                     key={service._id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 25 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: idx * 0.08 }}
+                    transition={{ duration: 0.45, delay: idx * 0.08 }}
+                    whileHover={{ y: -6 }}
                     onClick={() => goToBooking(service.slug)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && goToBooking(service.slug)}
-                    className="group relative rounded-2xl overflow-hidden bg-white border border-gray-100 hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col"
+                    className="group relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer"
                   >
-                    {/* Big number watermark */}
-                    <span className={`absolute top-4 right-5 text-7xl font-black ${theme.num} select-none pointer-events-none leading-none`}>
-                      {String(idx + 1).padStart(2, '0')}
-                    </span>
 
-                    {/* Color dot */}
-                    <div className={`w-11 h-11 rounded-xl ${theme.bg} flex items-center justify-center mb-5 shrink-0`}>
-                      <div className="w-3 h-3 rounded-full bg-white/70" />
+                    {/* Image */}
+                    <div className="relative h-36 md:h-40 overflow-hidden rounded-t-2xl bg-white">
+
+                      <img
+                        src={service.image || "https://placehold.co/600x500/F5F5F5/C0392B?text=Khan+Moves"}
+                        alt={service.label}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-[#F9E58A]/95 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-400">
+
+                        <h3 className="text-3xl font-extrabold text-gray-900 leading-tight text-center">
+                          Get
+                          <br />
+                          Instant
+                          <br />
+                          Quote
+                        </h3>
+
+                      </div>
+
                     </div>
 
-                    <h3 className="font-bold text-xl text-gray-900 mb-1.5 relative z-10">{service.label}</h3>
-                    <p className={`text-sm font-semibold ${theme.text} mb-6`}>
-                      {service.categories?.length || 0} categories available
-                    </p>
+                    {/* Bottom White Strip */}
+                    <div className="flex items-center justify-between px-4 py-4 bg-white">
 
-                    <div className="mt-auto flex items-center gap-2">
-                      <span className={`text-sm font-bold ${theme.text} group-hover:gap-3 transition-all flex items-center gap-1.5`}>
-                        Get quote <FiArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                      </span>
+                      <div>
+
+                        <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                          {service.label}
+                        </h3>
+
+                      </div>
+
+                      <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-[#C0392B] group-hover:border-[#C0392B] transition">
+
+                        <FiArrowRight
+                          size={16}
+                          className="text-gray-700 group-hover:text-white transition"
+                        />
+
+                      </div>
+
                     </div>
 
-                    {/* Bottom accent bar */}
-                    <div className={`absolute bottom-0 left-0 right-0 h-1 ${theme.bg} scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`} />
                   </motion.div>
+
                 );
               })
             }

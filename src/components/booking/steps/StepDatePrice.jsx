@@ -45,14 +45,14 @@ const TIME_SLOTS = [
     label: "9:00 AM – 5:00 PM",
     badge: "+£15",
     badgeColor:
-      "bg-green-600 text-[#1a1a1a]"
+      "bg-green-500 text-white"
   },
   {
     value: "afternoon",
     label: "9:00 AM – 4:00 PM",
     badge: "+£20",
     badgeColor:
-      "bg-green-600 text-[#1a1a1a]"
+      "bg-green-500 text-white"
   },
   {
     value: "flexible",
@@ -517,12 +517,19 @@ export default function StepDatePrice({
                 <button
                   type="button"
                   onClick={() => onChange("helperCount", 0)}
-                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition ${data.helperCount === 0
-                    ? "border-[#C0392B] bg-red-50"
-                    : "border-gray-200 hover:border-gray-300"
+                  className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition ${"border-gray-200 hover:border-gray-300"
                     }`}
                 >
-                  <FiTruck className="text-lg text-[#C0392B] shrink-0" />
+                  <div
+                    className={`flex h-5 w-5 items-center justify-center rounded border-2 ${data.helperCount === 0
+                      ? "border-black bg-black"
+                      : "border-gray-300"
+                      }`}
+                  >
+                    {data.helperCount === 0 && (
+                      <FiCheck size={12} className="text-white" />
+                    )}
+                  </div>
 
                   <div className="text-left">
                     <p className="text-sm font-semibold leading-4">
@@ -540,16 +547,20 @@ export default function StepDatePrice({
                 <button
                   type="button"
                   onClick={() => onChange("helperCount", 1)}
-                  className={`relative flex items-center gap-3 rounded-lg border px-3 py-2 transition ${data.helperCount === 1
-                    ? "border-[#C0392B] bg-red-50"
-                    : "border-gray-200 hover:border-gray-300"
+                  className={`relative flex items-center gap-3 rounded-lg border px-3 py-2 transition ${"border-gray-200 hover:border-gray-300"
                     }`}
                 >
-                  <span className="absolute right-2 top-2 rounded-full bg-green-100 px-1.5 py-0.5 text-[8px] font-bold text-green-700">
-                    Recommended
-                  </span>
 
-                  <FiUsers className="text-lg text-[#C0392B] shrink-0" />
+                  <div
+                    className={`flex h-5 w-5 items-center justify-center rounded border-2 ${data.helperCount === 1
+                      ? "border-black bg-black"
+                      : "border-gray-300"
+                      }`}
+                  >
+                    {data.helperCount === 1 && (
+                      <FiCheck size={12} className="text-white" />
+                    )}
+                  </div>
 
                   <div className="text-left">
                     <p className="text-sm font-semibold leading-4">
@@ -567,13 +578,23 @@ export default function StepDatePrice({
                 <button
                   type="button"
                   onClick={() => handleFlexibleChange(!isFlexible)}
-                  className={`col-span-2 md:col-span-1 flex items-center justify-between rounded-lg border px-3 py-2 transition ${isFlexible
-                    ? "border-green-600 bg-green-50"
-                    : "border-gray-200 hover:border-gray-300"
+                  className={`col-span-2 md:col-span-1 flex items-center justify-between rounded-lg border px-3 py-2 transition ${"border-gray-200 hover:border-gray-300"
                     }`}
                 >
                   <div className="flex items-center gap-3">
-                    <FiCalendar className="text-lg text-green-600" />
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded border-2 ${isFlexible
+                        ? "border-black bg-black"
+                        : "border-gray-300"
+                        }`}
+                    >
+                      {isFlexible && (
+                        <FiCheck
+                          size={12}
+                          className="text-white"
+                        />
+                      )}
+                    </div>
 
                     <div className="text-left">
                       <p className="text-sm font-semibold leading-4">
@@ -642,7 +663,7 @@ export default function StepDatePrice({
                 </div>
               </div>
 
-              <div className="mb-1 grid grid-cols-7">
+              <div className="grid grid-cols-7 border-x border-t border-gray-200 bg-gray-50">
                 {[
                   "Mon",
                   "Tue",
@@ -654,14 +675,14 @@ export default function StepDatePrice({
                 ].map(day => (
                   <div
                     key={day}
-                    className="pb-1 text-center text-[11px] font-semibold uppercase text-gray-400"
+                    className="border-r border-gray-200 py-2 text-center text-[11px] font-semibold uppercase text-gray-500 last:border-r-0"
                   >
                     {day}
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden">
                 {days.map(
                   (
                     day,
@@ -694,20 +715,18 @@ export default function StepDatePrice({
                         disabled={
                           day.disabled
                         }
-                        className={`relative flex h-10 flex-col justify-between rounded-md px-1 py-0.5 transition ${day.disabled
+                        className={`relative flex h-11 flex-col justify-between border-r border-b border-gray-200 bg-white px-2 py-1 transition ${day.disabled
                           ? "cursor-not-allowed border-transparent text-gray-300 opacity-40"
                           : isSelected
-                            ? "border-2 border-[#C0392B] bg-white shadow-sm"
+                            ? "border-2 border-[#C0392B] bg-white shadow-md"
                             : "bg-white hover:bg-gray-50"
                           }`}
                       >
                         {isSelected && (
-                          <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#C0392B]">
+                          <div className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-[#C0392B] shadow-md ring-2 ring-white">
                             <FiCheck
-                              size={8}
-                              strokeWidth={
-                                3
-                              }
+                              size={11}
+                              strokeWidth={3.5}
                               className="text-white"
                             />
                           </div>
@@ -811,31 +830,6 @@ export default function StepDatePrice({
                     pricingResult.total
                   )}
                 </p>
-
-                {isFlexible && (
-                  <p className="mt-1 text-xs font-bold text-green-600">
-                    20% flexible-date
-                    discount applied
-                  </p>
-                )}
-
-                {pricingResult.multiTrip && (
-                  <div className="mt-3 flex items-start gap-2 rounded-md border border-blue-100 bg-blue-50 p-3">
-                    <FiTruck
-                      size={16}
-                      className="mt-0.5 shrink-0 text-blue-700"
-                    />
-
-                    <p className="text-xs leading-5 text-blue-800">
-                      {
-                        pricingResult.tripsNeeded
-                      }{" "}
-                      van trips are
-                      included in this
-                      price.
-                    </p>
-                  </div>
-                )}
 
                 <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
                   {hasMapCoordinates && (
@@ -1072,14 +1066,12 @@ export default function StepDatePrice({
                           slot.value
                         )
                       }
-                      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${isSelected
-                        ? "border-[#C0392B] bg-red-50"
-                        : "border-gray-200 hover:border-gray-400"
+                      className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${"border-gray-200 hover:border-gray-400"
                         }`}
                     >
                       <div
                         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 ${isSelected
-                          ? "border-[#C0392B] bg-[#C0392B]"
+                          ? "border-black bg-black"
                           : "border-gray-300"
                           }`}
                       >
