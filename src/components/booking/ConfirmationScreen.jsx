@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     FiCheckCircle, FiCopy, FiPackage, FiClock,
-    FiMapPin, FiUser, FiMail, FiPhone, FiMessageCircle, FiArrowRight, FiTruck,
+    FiMapPin, FiUser, FiMail, FiPhone, FiMessageCircle, FiArrowRight
 } from 'react-icons/fi';
 import MapComponent from './MapComponent';
 import { useNavigate } from 'react-router-dom';
@@ -249,14 +249,6 @@ export default function ConfirmationScreen({
                                     : 'Driver only'}
                             </p>
                         </div>
-                        {data.multiTrip && Number(data.tripsNeeded) > 1 && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
-                                <div className="flex items-center gap-2 bg-blue-50 text-blue-800 rounded-lg px-3 py-2.5">
-                                    <FiTruck size={16} />
-                                    <p className="text-xs"><strong>{data.tripsNeeded} van trips</strong> are included in your booking price.</p>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Selected add-ons */}
                         {(dismantleCount > 0 || assemblyCount > 0 || data.packingService) && (

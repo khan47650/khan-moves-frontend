@@ -148,6 +148,48 @@ export default function BookingWizard() {
         timeSlot: bookingData.timeSlot
     });
 
+    // ===== DEBUG =====
+    console.log("========== PRICE DEBUG ==========");
+    console.log("Booking Data:", {
+        distance: bookingData.distance,
+        volume: totalVolume,
+        helperCount: bookingData.helperCount,
+        pickupFloor: bookingData.pickupFloor,
+        deliveryFloor: bookingData.deliveryFloor,
+        dismantleCount: bookingData.dismantleCount,
+        assemblyCount: bookingData.assemblyCount,
+        packingService: bookingData.packingService,
+        dateType: bookingData.dateType,
+        date: bookingData.date,
+        timeSlot: bookingData.timeSlot
+    });
+
+    console.log("Pricing Result:", pricingResult);
+    console.log("========== PRICE DEBUG ==========");
+
+    console.log("Booking Data:", {
+        distance: bookingData.distance,
+        volume: totalVolume,
+        helperCount: bookingData.helperCount,
+        dismantleCount: bookingData.dismantleCount,
+        assemblyCount: bookingData.assemblyCount,
+        packingService: bookingData.packingService,
+        pickupParking: bookingData.pickupFloor?.hasParking,
+        deliveryParking: bookingData.deliveryFloor?.hasParking,
+    });
+
+    console.log("Breakdown:");
+
+    pricingResult.breakdown.forEach(item => {
+        console.log(`${item.label}: £${item.amount}`);
+    });
+
+    console.log("Final Total:", pricingResult.total);
+
+    console.log("===============================");
+    console.log("Total:", pricingResult.total);
+    console.log("===============================");
+
     const totalPrice = pricingResult.total ?? 0;
 
     const handleChange = (key, value) => {
@@ -233,9 +275,6 @@ export default function BookingWizard() {
                 break;
             }
             case 'datePrice':
-                if (pricingResult.requiresContactSupport) {
-                    e.pricing = 'Please contact customer support for a confirmed quote.';
-                }
                 if (bookingData.dateType === 'specific') {
                     if (!bookingData.date) e.date = 'Please select a date';
                     if (!bookingData.timeSlot) e.timeSlot = 'Please select a time slot';
@@ -250,10 +289,6 @@ export default function BookingWizard() {
     };
 
     const handleNext = () => {
-        if (STEPS[currentStep].id === 'datePrice' && pricingResult.requiresContactSupport) {
-            toast.error(pricingResult.note || 'Please contact customer support for a confirmed quote.');
-            return;
-        }
 
         if (validateStep() && currentStep < STEPS.length - 1) {
             setCurrentStep(prev => prev + 1);
@@ -277,14 +312,6 @@ export default function BookingWizard() {
             toast.error(itemsError);
             setCurrentStep(STEPS.findIndex(step => step.id === "items"));
             window.scrollTo(0, 0);
-            return null;
-        }
-
-        if (pricingResult.requiresContactSupport) {
-            toast.error(
-                pricingResult.note ||
-                'Please contact customer support for a confirmed quote.'
-            );
             return null;
         }
 
@@ -502,7 +529,7 @@ export default function BookingWizard() {
                         {currentStep < STEPS.length - 1 && (
                             <button
                                 onClick={handleNext}
-                                disabled={step.id === 'datePrice' && pricingResult.requiresContactSupport}
+                                disabled={loading}
                                 className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-bold text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Next <FiChevronRight size={18} />

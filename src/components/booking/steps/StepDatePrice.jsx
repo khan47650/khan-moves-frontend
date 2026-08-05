@@ -225,9 +225,12 @@ export default function StepDatePrice({
       ]
     );
 
-  const requiresContactSupport =
-    pricingResult
-      .requiresContactSupport;
+  const parkingCharge = pricingResult.breakdown
+    ?.filter(item =>
+      item.label.toLowerCase().includes("parking")
+    )
+    .reduce((total, item) => total + item.amount, 0) || 0;
+
 
   const isDateDisabled = dateStr => {
     const selectedDate = new Date(`${dateStr}T00:00:00`);
@@ -365,10 +368,6 @@ export default function StepDatePrice({
         price:
           dayPricing.total,
 
-        requiresContactSupport:
-          dayPricing
-            .requiresContactSupport,
-
         hasSurcharge
       });
     }
@@ -465,40 +464,6 @@ export default function StepDatePrice({
               errors.timeSlot}
           </div>
         )}
-
-      {requiresContactSupport && (
-        <div className="mx-auto mb-4 max-w-7xl rounded-xl border border-amber-300 bg-amber-50 p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-              <FiAlertTriangle
-                size={20}
-              />
-            </div>
-
-            <div>
-              <h4 className="font-bold text-amber-900">
-                Custom Quote Required
-              </h4>
-
-              <p className="mt-1 text-sm leading-6 text-amber-800">
-                Due to the size and
-                distance of this move,
-                please contact our
-                customer support team
-                for a confirmed quote.
-              </p>
-
-              <a
-                href="tel:+447424153126"
-                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white transition hover:bg-red-800"
-              >
-                <FiPhone size={15} />
-                Call 07424 153126
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-4 lg:grid-cols-3">
         <div className="space-y-2 lg:col-span-2">
@@ -749,11 +714,7 @@ export default function StepDatePrice({
                               : "text-[#E87511]"
                               }`}
                           >
-                            {day.requiresContactSupport
-                              ? "Quote"
-                              : `£${formatPrice(
-                                day.price
-                              )}`}
+                            `£${formatPrice(day.price)}`
                           </span>
                         )}
                       </button>
@@ -761,13 +722,6 @@ export default function StepDatePrice({
                   }
                 )}
               </div>
-              {/* <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5">
-                <p className="text-xs text-gray-600">
-                  Select your preferred moving date.
-                  We'll use this to check availability and
-                  schedule your booking accordingly.
-                </p>
-              </div> */}
 
 
             </div>
@@ -783,173 +737,169 @@ export default function StepDatePrice({
                 "0 2px 12px rgba(0,0,0,0.06)"
             }}
           >
-            {/* <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-sm font-bold text-white">
-                {requiresContactSupport
-                  ? "Your quote"
-                  : "Your price"}
-              </h4>
+            <>
+              <p className="mb-3 mt-1 text-3xl font-black text-[#C0392B]">
+                £ {formatPrice(pricingResult.total)}
+              </p>
+              {/* {pricingResult.breakdown?.length > 0 && (
+                <div className="mb-3 rounded-xl border border-gray-200 bg-white p-3">
+                  <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                    Price Breakdown
+                  </h4>
 
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${requiresContactSupport
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-green-50 text-green-700"
-                  }`}
-              >
-                {requiresContactSupport
-                  ? "Support required"
-                  : "Calculated"}
-              </span>
-            </div> */}
+                  <div className="space-y-1.5">
+                    {pricingResult.breakdown.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-xs"
+                      >
+                        <span className="text-gray-600">
+                          {item.label}
+                        </span>
 
-            {requiresContactSupport ? (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <FiAlertTriangle
-                  size={23}
-                  className="mb-2 text-amber-700"
-                />
-
-                <p className="font-bold text-amber-900">
-                  Custom Quote
-                  Required
-                </p>
-
-                <p className="mt-2 text-xs leading-5 text-amber-800">
-                  This move needs a
-                  custom transport
-                  review because of
-                  its volume and
-                  distance.
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className="mb-3 mt-1 text-3xl font-black text-[#C0392B]">
-                  £
-                  {formatPrice(
-                    pricingResult.total
-                  )}
-                </p>
-
-                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
-                  {hasMapCoordinates && (
-                    <div className="h-24 overflow-hidden rounded-xl border border-gray-200">
-                      <MapComponent
-                        pickupLat={Number(data.pickup.lat)}
-                        pickupLng={Number(data.pickup.lng)}
-                        deliveryLat={Number(data.delivery.lat)}
-                        deliveryLng={Number(data.delivery.lng)}
-                        distance={Number(distance) || 0}
-                        time={data.estimatedDeliveryTime}
-                      />
-                    </div>
-                  )}
-
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
-                    <div className="grid grid-cols-2 gap-4">
-
-                      {/* Pickup */}
-
-                      <div className="flex items-start gap-2">
-                        <FiMapPin
-                          size={14}
-                          className="mt-0.5 shrink-0 text-[#C0392B]"
-                        />
-
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase text-gray-400">
-                            Pickup
-                          </p>
-
-                          <p className="truncate text-xs font-semibold text-gray-800">
-                            {data.pickup?.address || "Address not available"}
-                          </p>
-
-                          <p className="mt-0.5 text-[11px] text-gray-500">
-                            {data.pickup?.postcode || "No postcode"}
-                          </p>
-
-                          <p className="mt-0.5 text-[10px] text-gray-400">
-                            {floorLabel(data.pickupFloor?.floorLevel)}
-                            {data.pickupFloor?.floorLevel !== "ground"
-                              ? data.pickupFloor?.hasLift
-                                ? " · Lift"
-                                : " · No Lift"
-                              : ""}
-                          </p>
-                        </div>
+                        <span
+                          className={`font-semibold ${item.amount < 0
+                              ? "text-green-600"
+                              : "text-[#1a1a1a]"
+                            }`}
+                        >
+                          {item.amount < 0
+                            ? `-£${Math.abs(formatPrice(item.amount))}`
+                            : `£${formatPrice(item.amount)}`}
+                        </span>
                       </div>
-
-                      {/* Delivery */}
-
-                      <div className="flex items-start gap-2">
-                        <FiMapPin
-                          size={14}
-                          className="mt-0.5 shrink-0 text-green-600"
-                        />
-
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase text-gray-400">
-                            Delivery
-                          </p>
-
-                          <p className="truncate text-xs font-semibold text-gray-800">
-                            {data.delivery?.address || "Address not available"}
-                          </p>
-
-                          <p className="mt-0.5 text-[11px] text-gray-500">
-                            {data.delivery?.postcode || "No postcode"}
-                          </p>
-
-                          <p className="mt-0.5 text-[10px] text-gray-400">
-                            {floorLabel(data.deliveryFloor?.floorLevel)}
-                            {data.deliveryFloor?.floorLevel !== "ground"
-                              ? data.deliveryFloor?.hasLift
-                                ? " · Lift"
-                                : " · No Lift"
-                              : ""}
-                          </p>
-                        </div>
-                      </div>
-
-                    </div>
+                    ))}
                   </div>
 
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <FiPackage size={14} className="text-[#C0392B]" />
+                  <div className="my-2 border-t border-dashed border-gray-300" />
 
-                        <p className="text-xs font-bold text-gray-800">
-                          Selected items
-                        </p>
-                      </div>
-
-                      <span className=" top-4 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C0392B]">
-                        {totalItems}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1">
-                      {(data.items || []).map((item, index) => (
-                        <div
-                          key={item.itemId || `${item.name}-${index}`}
-                          className="rounded-full bg-white px-2 py-1 text-[10px] font-medium"
-                        >
-                          <span>
-                            {item.name}
-                          </span>
-
-                          <span className="ml-1 font-semibold text-[#C0392B]">
-                            ×{item.quantity}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="flex items-center justify-between text-sm font-bold">
+                    <span>Total</span>
+                    <span className="text-[#C0392B]">
+                      £{formatPrice(pricingResult.total)}
+                    </span>
                   </div>
                 </div>
-              </>
-            )}
+              )} */}
+
+              <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                {hasMapCoordinates && (
+                  <div className="h-24 overflow-hidden rounded-xl border border-gray-200">
+                    <MapComponent
+                      pickupLat={Number(data.pickup.lat)}
+                      pickupLng={Number(data.pickup.lng)}
+                      deliveryLat={Number(data.delivery.lat)}
+                      deliveryLng={Number(data.delivery.lng)}
+                      distance={Number(distance) || 0}
+                      time={data.estimatedDeliveryTime}
+                    />
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                  <div className="grid grid-cols-2 gap-4">
+
+                    {/* Pickup */}
+
+                    <div className="flex items-start gap-2">
+                      <FiMapPin
+                        size={14}
+                        className="mt-0.5 shrink-0 text-[#C0392B]"
+                      />
+
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase text-gray-400">
+                          Pickup
+                        </p>
+
+                        <p className="truncate text-xs font-semibold text-gray-800">
+                          {data.pickup?.address || "Address not available"}
+                        </p>
+
+                        <p className="mt-0.5 text-[11px] text-gray-500">
+                          {data.pickup?.postcode || "No postcode"}
+                        </p>
+
+                        <p className="mt-0.5 text-[10px] text-gray-400">
+                          {floorLabel(data.pickupFloor?.floorLevel)}
+                          {data.pickupFloor?.floorLevel !== "ground"
+                            ? data.pickupFloor?.hasLift
+                              ? " · Lift"
+                              : " · No Lift"
+                            : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Delivery */}
+
+                    <div className="flex items-start gap-2">
+                      <FiMapPin
+                        size={14}
+                        className="mt-0.5 shrink-0 text-green-600"
+                      />
+
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase text-gray-400">
+                          Delivery
+                        </p>
+
+                        <p className="truncate text-xs font-semibold text-gray-800">
+                          {data.delivery?.address || "Address not available"}
+                        </p>
+
+                        <p className="mt-0.5 text-[11px] text-gray-500">
+                          {data.delivery?.postcode || "No postcode"}
+                        </p>
+
+                        <p className="mt-0.5 text-[10px] text-gray-400">
+                          {floorLabel(data.deliveryFloor?.floorLevel)}
+                          {data.deliveryFloor?.floorLevel !== "ground"
+                            ? data.deliveryFloor?.hasLift
+                              ? " · Lift"
+                              : " · No Lift"
+                            : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-2">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <FiPackage size={14} className="text-[#C0392B]" />
+
+                      <p className="text-xs font-bold text-gray-800">
+                        Selected items
+                      </p>
+                    </div>
+
+                    <span className=" top-4 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#C0392B]">
+                      {totalItems}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {(data.items || []).map((item, index) => (
+                      <div
+                        key={item.itemId || `${item.name}-${index}`}
+                        className="rounded-full bg-white px-2 py-1 text-[10px] font-medium"
+                      >
+                        <span>
+                          {item.name}
+                        </span>
+
+                        <span className="ml-1 font-semibold text-[#C0392B]">
+                          ×{item.quantity}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
 
             <div className="mt-2 border-t border-gray-100 pt-2">
 
@@ -987,6 +937,19 @@ export default function StepDatePrice({
                     {data.helperCount > 0 ? "2 People" : "1 Person"}
                   </span>
                 </div>
+
+                {parkingCharge > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <FiMapPin
+                      size={14}
+                      className="text-[#C0392B]"
+                    />
+
+                    <span className="text-[11px] font-semibold">
+                      Parking £{formatPrice(parkingCharge)}
+                    </span>
+                  </div>
+                )}
 
               </div>
 

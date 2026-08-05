@@ -128,6 +128,9 @@ function LocationEditor({
 
 function ItemEditor({
     items,
+    categories,
+    selectedCategoryId,
+    onCategoryChange,
     availableItems,
     loading,
     selectedItem,
@@ -146,6 +149,26 @@ function ItemEditor({
                 </h4>
             </div>
 
+            <div className="mb-3">
+                <SelectField
+                    label="Category"
+                    value={selectedCategoryId}
+                    onChange={e =>
+                        onCategoryChange(
+                            e.target.value
+                        )
+                    }
+                >
+                    {categories.map(category => (
+                        <option
+                            key={category._id}
+                            value={category._id}
+                        >
+                            {category.name}
+                        </option>
+                    ))}
+                </SelectField>
+            </div>
             <div className="mb-4 flex gap-2">
                 <select
                     value={selectedItem}
@@ -226,6 +249,11 @@ const cloneBooking = booking => ({
 
 export default function RequestEditForm({ booking, onUpdated, onCancel }) {
     const [data, setData] = useState(() => cloneBooking(booking));
+    const [adminPrice, setAdminPrice] = useState(
+        booking.adminPrice ?? booking.totalPrice
+    );
+    const [categories, setCategories] = useState([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [availableItems, setAvailableItems] = useState([]);
     const [selectedItem, setSelectedItem] = useState("");
     const [loadingItems, setLoadingItems] = useState(true);
@@ -234,22 +262,75 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
     const [updating, setUpdating] = useState(false);
 
     useEffect(() => {
+
         const loadItems = async () => {
+
             try {
-                const response = await api.get("/inventory/services");
-                const service = (response.data?.data || []).find(
-                    item => item.slug === booking.serviceType
-                );
-                setAvailableItems((service?.items || []).filter(item => !item.isPaused));
+
+                const response =
+                    await api.get("/inventory/services");
+
+                const service =
+                    (response.data?.data || []).find(
+                        item =>
+                            item.slug === booking.serviceType
+                    );
+
+                const serviceCategories =
+                    service?.categories || [];
+
+                setCategories(serviceCategories);
+
+                if (serviceCategories.length) {
+
+                    const firstCategory =
+                        serviceCategories[0];
+
+                    setSelectedCategoryId(
+                        firstCategory._id
+                    );
+
+                    setAvailableItems(
+                        (firstCategory.items || []).filter(
+                            item => !item.isPaused
+                        )
+                    );
+
+                }
+
             } catch {
-                toast.error("Failed to load service items");
+
+                toast.error(
+                    "Failed to load service items"
+                );
+
             } finally {
+
                 setLoadingItems(false);
+
             }
+
         };
 
         loadItems();
+
     }, [booking.serviceType]);
+
+
+    useEffect(() => {
+
+        const category =
+            categories.find(
+                c => c._id === selectedCategoryId
+            );
+
+        setAvailableItems(
+            (category?.items || []).filter(
+                item => !item.isPaused
+            )
+        );
+
+    }, [selectedCategoryId, categories]);
 
     useEffect(() => {
         const pLat = data.pickup?.lat;
@@ -373,7 +454,12 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
         if (!inventoryItem) return;
 
         setData(current => {
-            const exists = current.items.findIndex(item => item.name === inventoryItem.name);
+            const exists =
+                current.items.findIndex(
+                    item =>
+                        String(item.itemId) ===
+                        String(inventoryItem._id)
+                );
 
             if (exists !== -1) {
                 return {
@@ -391,9 +477,23 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
                 items: [
                     ...current.items,
                     {
+                        itemId: inventoryItem._id,
+
+                        categoryId: selectedCategoryId,
+
+                        categoryName:
+                            categories.find(
+                                c => c._id === selectedCategoryId
+                            )?.name || "",
+
                         name: inventoryItem.name,
-                        volume: Number(inventoryItem.volume || 0),
+
+                        volume: Number(
+                            inventoryItem.volume || 0
+                        ),
+
                         quantity: 1,
+
                         custom: false
                     }
                 ]
@@ -416,17 +516,37 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
         () => calculateTotalPrice({
             distance: Number(data.distance || 0),
             volume: totalVolume,
+
             pickupFloor: data.pickupFloor,
             deliveryFloor: data.deliveryFloor,
+
             helperCount: Number(data.helperCount || 0),
+
             dismantleCount: Number(data.dismantleCount || 0),
             assemblyCount: Number(data.assemblyCount || 0),
+
             packingService: Boolean(data.packingService),
+
             dateType: data.dateType || "specific",
+            date: data.date,
+
             timeSlot: data.timeSlot || ""
         }),
         [data, totalVolume]
     );
+
+    useEffect(() => {
+
+        if (
+            booking.adminPrice === null ||
+            booking.adminPrice === undefined
+        ) {
+
+            setAdminPrice(totalPrice);
+
+        }
+
+    }, [totalPrice, booking.adminPrice]);
 
     const handleUpdate = async () => {
         if (!isValidUKPostcode(data.pickup?.postcode))
@@ -470,6 +590,7 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
                 dismantleCount: data.dismantleCount,
                 assemblyCount: data.assemblyCount,
                 packingService: data.packingService,
+                totalPrice: adminPrice,
                 specialInstructions: data.specialInstructions
             });
 
@@ -559,9 +680,27 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
                                 value={data.timeSlot}
                                 onChange={e => updateField("timeSlot", e.target.value)}
                             >
-                                <option value="">Select</option>
-                                <option value="morning">Morning</option>
-                                <option value="afternoon">Afternoon</option>
+                                <option value="">Select Time Slot</option>
+
+                                <option value="early">
+                                    6:00 AM – 6:00 PM
+                                </option>
+
+                                <option value="morning">
+                                    8:00 AM – 6:00 PM
+                                </option>
+
+                                <option value="nine_to_five">
+                                    9:00 AM – 5:00 PM
+                                </option>
+
+                                <option value="afternoon">
+                                    9:00 AM – 4:00 PM
+                                </option>
+
+                                <option value="flexible">
+                                    I'm flexible with timing
+                                </option>
                             </SelectField>
                         </div>
                     )}
@@ -578,6 +717,11 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
 
             <ItemEditor
                 items={data.items}
+
+                categories={categories}
+                selectedCategoryId={selectedCategoryId}
+                onCategoryChange={setSelectedCategoryId}
+
                 availableItems={availableItems}
                 loading={loadingItems}
                 selectedItem={selectedItem}
@@ -594,20 +738,59 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
                 </h4>
 
                 <div className="grid grid-cols-2 gap-3">
-                    <TextField label="Helpers" type="number" min="0" value={data.helperCount}
-                        onChange={e => updateField("helperCount", Number(e.target.value) || 0)} />
-                    <TextField label="Dismantle" type="number" min="0" value={data.dismantleCount}
-                        onChange={e => updateField("dismantleCount", Number(e.target.value) || 0)} />
-                    <TextField label="Assembly" type="number" min="0" value={data.assemblyCount}
-                        onChange={e => updateField("assemblyCount", Number(e.target.value) || 0)} />
 
-                    <div className="flex items-end pb-3">
-                        <CheckboxField
-                            label="Packing Service"
-                            checked={data.packingService}
-                            onChange={e => updateField("packingService", e.target.checked)}
-                        />
-                    </div>
+                    <SelectField
+                        label="Crew"
+                        value={data.helperCount}
+                        onChange={e =>
+                            updateField(
+                                "helperCount",
+                                Number(e.target.value)
+                            )
+                        }
+                    >
+                        <option value={0}>1 Crew</option>
+                        <option value={1}>2 Crew</option>
+                    </SelectField>
+
+                    <TextField
+                        label="Dismantle"
+                        type="number"
+                        min="0"
+                        value={
+                            data.dismantleCount === 0
+                                ? ""
+                                : data.dismantleCount
+                        }
+                        onChange={e =>
+                            updateField(
+                                "dismantleCount",
+                                e.target.value === ""
+                                    ? 0
+                                    : Number(e.target.value)
+                            )
+                        }
+                    />
+
+                    <TextField
+                        label="Assembly"
+                        type="number"
+                        min="0"
+                        value={
+                            data.assemblyCount === 0
+                                ? ""
+                                : data.assemblyCount
+                        }
+                        onChange={e =>
+                            updateField(
+                                "assemblyCount",
+                                e.target.value === ""
+                                    ? 0
+                                    : Number(e.target.value)
+                            )
+                        }
+                    />
+
                 </div>
             </div>
 
@@ -623,15 +806,82 @@ export default function RequestEditForm({ booking, onUpdated, onCancel }) {
                 />
             </div>
 
-            <div className="rounded-xl bg-[#1a1a1a] p-4">
-                <div className="mb-2 flex justify-between">
-                    <span className="text-sm text-gray-400">Total Volume</span>
-                    <span className="font-bold text-white">{totalVolume.toFixed(2)} m³</span>
-                </div>
+            <div className="rounded-xl bg-[#1a1a1a] p-4 space-y-4">
+
                 <div className="flex justify-between">
-                    <span className="text-sm text-gray-400">Updated Price</span>
-                    <span className="text-2xl font-black text-[#F1C40F]">£{totalPrice}</span>
+                    <span className="text-sm text-gray-400">
+                        Total Volume
+                    </span>
+
+                    <span className="font-bold text-white">
+                        {totalVolume.toFixed(2)} m³
+                    </span>
                 </div>
+
+                <div className="flex justify-between items-center">
+
+                    <span className="text-sm text-gray-400">
+                        System Price
+                    </span>
+
+                    <div className="text-right">
+
+                        {booking.adminPrice != null && (
+                            <div className="text-xs text-gray-500">
+                                System Calculated Price
+                            </div>
+                        )}
+
+                        <div
+                            className={`font-bold ${booking.adminPrice != null
+                                ? "text-gray-500 line-through"
+                                : "text-gray-300"
+                                }`}
+                        >
+                            £{totalPrice}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div>
+                    <label className="mb-2 block text-sm text-gray-300">
+                        Admin Price
+                    </label>
+
+                    <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={adminPrice}
+                        onChange={e =>
+                            setAdminPrice(
+                                e.target.value === ""
+                                    ? ""
+                                    : Number(e.target.value)
+                            )
+                        }
+                        className="w-full rounded-lg border border-gray-600 bg-[#2A2A2A] px-3 py-2 text-lg font-bold text-[#F1C40F]"
+                    />
+                </div>
+
+                <div className="flex justify-between border-t border-gray-700 pt-3">
+
+                    <span className="text-sm text-gray-400">
+                        Final Price
+                    </span>
+
+                    <span className="text-2xl font-black text-[#F1C40F]">
+                        £{
+                            adminPrice === ""
+                                ? totalPrice
+                                : adminPrice
+                        }
+                    </span>
+
+                </div>
+
             </div>
 
             <div className="flex gap-2">

@@ -3,7 +3,6 @@ import {
     FiCheck, FiFileText, FiMinus, FiPackage, FiPlus, FiShield, FiTool
 } from "react-icons/fi";
 
-const getItemKey = item => item.itemId || item.name;
 
 export default function StepAdditionalServices({
     data,
@@ -11,181 +10,42 @@ export default function StepAdditionalServices({
     errors,
     basePrice = 0
 }) {
-    const selectedItems = data.items || [];
-    const dismantleItems = data.dismantleItems || [];
-    const assemblyItems = data.assemblyItems || [];
-
-    const getSelectedQuantity = (list, item) => {
-        const key = getItemKey(item);
-
-        return list.find(selected =>
-            getItemKey(selected) === key
-        )?.quantity || 0;
-    };
-
-    const updateAddOnItem = (field, item, delta) => {
-        const currentList = data[field] || [];
-        const key = getItemKey(item);
-        const existing = currentList.find(selected =>
-            getItemKey(selected) === key
-        );
-
-        const maxQuantity = Math.max(1, Number(item.quantity) || 1);
-        const nextQuantity = Math.min(
-            maxQuantity,
-            Math.max(0, (existing?.quantity || 0) + delta)
-        );
-
-        let nextList;
-
-        if (nextQuantity === 0) {
-            nextList = currentList.filter(selected =>
-                getItemKey(selected) !== key
-            );
-        } else if (existing) {
-            nextList = currentList.map(selected =>
-                getItemKey(selected) === key
-                    ? { ...selected, quantity: nextQuantity }
-                    : selected
-            );
-        } else {
-            nextList = [
-                ...currentList,
-                {
-                    itemId: item.itemId || null,
-                    name: item.name,
-                    categoryName: item.categoryName || "",
-                    quantity: nextQuantity
-                }
-            ];
-        }
-
-        const count = nextList.reduce(
-            (total, selected) => total + (selected.quantity || 0),
-            0
-        );
-
-        onChange(field, nextList);
-
-        if (field === "dismantleItems") {
-            onChange("dismantleCount", count);
-        } else {
-            onChange("assemblyCount", count);
-        }
-    };
-
-    const dismantleTotal = dismantleItems.reduce(
-        (total, item) => total + (item.quantity || 0),
-        0
-    );
-
-    const assemblyTotal = assemblyItems.reduce(
-        (total, item) => total + (item.quantity || 0),
-        0
-    );
+    const dismantleTotal = Number(data.dismantleCount) || 0;
+    const assemblyTotal = Number(data.assemblyCount) || 0;
 
     const isHomeMove = [
         "home",
         "home_removal"
     ].includes(data.serviceType);
 
-    const renderItemSelector = (field, title, price, description) => {
-        const selectedList = field === "dismantleItems"
-            ? dismantleItems
-            : assemblyItems;
-
+    const renderCountInput = (
+        title,
+        field,
+    ) => {
         return (
-            <div>
-                <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                        <p className="font-semibold text-sm text-[#1a1a1a]">
-                            {title}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                            {description} · £{price} per selected item
-                        </p>
-                    </div>
-
-                    <span className="text-xs font-bold bg-red-50 text-[#C0392B] px-2.5 py-1 rounded-full">
-                        {field === "dismantleItems"
-                            ? dismantleTotal
-                            : assemblyTotal
-                        } selected
-                    </span>
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <div className="mb-3">
+                    <h3 className="font-semibold text-[#1a1a1a]">
+                        {title}
+                    </h3>
                 </div>
 
-                {selectedItems.length > 0 ? (
-                    <div className="space-y-2">
-                        {selectedItems.map((item, index) => {
-                            const quantity = getSelectedQuantity(selectedList, item);
-                            const maxQuantity = Math.max(1, Number(item.quantity) || 1);
-
-                            return (
-                                <div
-                                    key={item.itemId || `${item.name}-${index}`}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${quantity > 0
-                                        ? "border-[#C0392B] bg-red-50"
-                                        : "border-gray-200 bg-white"
-                                        }`}
-                                >
-                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${quantity > 0
-                                        ? "bg-[#C0392B] text-white"
-                                        : "bg-gray-100 text-gray-400"
-                                        }`}>
-                                        {quantity > 0
-                                            ? <FiCheck size={14} />
-                                            : <FiPackage size={14} />
-                                        }
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[13px] font-semibold text-[#1a1a1a] truncate">
-                                            {item.name}
-                                        </p>
-
-                                        <p className="text-[9px] text-gray-400 mt-0.5">
-                                            Available quantity: {maxQuantity}
-                                            {item.categoryName
-                                                ? ` · ${item.categoryName}`
-                                                : ""
-                                            }
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                        <button
-                                            type="button"
-                                            onClick={() => updateAddOnItem(field, item, -1)}
-                                            disabled={quantity === 0}
-                                            className="w-6 h-6 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-[#C0392B] hover:border-[#C0392B] hover:text-white disabled:opacity-30 disabled:pointer-events-none"
-                                        >
-                                            <FiMinus size={12} />
-                                        </button>
-
-                                        <span className="w-5 text-center text-sm font-bold text-[#1a1a1a]">
-                                            {quantity}
-                                        </span>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => updateAddOnItem(field, item, 1)}
-                                            disabled={quantity >= maxQuantity}
-                                            className="w-7 h-7 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-[#C0392B] hover:border-[#C0392B] hover:text-white disabled:opacity-30 disabled:pointer-events-none"
-                                        >
-                                            <FiPlus size={12} />
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="p-4 border border-dashed border-gray-300 rounded-xl text-center">
-                        <p className="text-xs text-gray-400">
-                            No booking items are available for selection.
-                        </p>
-                    </div>
-                )}
+                <input
+                    type="number"
+                    min="0"
+                    value={data[field] || ""}
+                    onChange={(e) =>
+                        onChange(
+                            field,
+                            Math.max(
+                                0,
+                                Number(e.target.value) || 0
+                            )
+                        )
+                    }
+                    placeholder="e.g. 3"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#C0392B]"
+                />
             </div>
         );
     };
@@ -197,7 +57,7 @@ export default function StepAdditionalServices({
                     Additional services
                 </h3>
                 <p className="text-gray-500 text-xs mt-0.5">
-                    Select optional help for the exact items already added to your move.
+                    Choose any additional services required for your move.
                 </p>
             </div>
 
@@ -209,36 +69,6 @@ export default function StepAdditionalServices({
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 space-y-3">
-                    {/* <div
-                        className="bg-[#FDFBF8] rounded-2xl p-4"
-                        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}
-                    >
-                        <div className="flex items-center gap-2 mb-3">
-                            <FiShield size={18} className="text-green-600" />
-                            <h4 className="font-bold text-sm text-[#1a1a1a]">
-                                Protection included
-                            </h4>
-                        </div>
-
-                        <div className="p-3.5 border border-green-200 bg-green-50 rounded-xl flex items-start justify-between gap-3">
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h5 className="font-bold text-sm text-[#1a1a1a]">
-                                        Free protection
-                                    </h5>
-                                    <span className="text-[10px] font-bold bg-green-500 text-white px-2 py-0.5 rounded-full">
-                                        Included
-                                    </span>
-                                </div>
-
-                                <p className="text-xs text-gray-600">
-                                    Protective blankets and bubble wrap are included with every move.
-                                </p>
-                            </div>
-
-                            <FiShield size={22} className="text-green-500 shrink-0" />
-                        </div>
-                    </div> */}
 
                     <div
                         className="bg-[#FDFBF8] rounded-2xl p-4"
@@ -278,7 +108,7 @@ export default function StepAdditionalServices({
                                 </h4>
 
                                 <p className="text-xs text-gray-500 mt-0.5">
-                                    Choose directly from the items already in your booking.
+                                    Enter the number of items requiring dismantling or assembly.
                                 </p>
 
                             </div>
@@ -288,20 +118,16 @@ export default function StepAdditionalServices({
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
                             <div>
-                                {renderItemSelector(
-                                    "dismantleItems",
+                                {renderCountInput(
                                     "Dismantling",
-                                    20,
-                                    "We dismantle selected items before loading"
+                                    "dismantleCount",
                                 )}
                             </div>
 
                             <div>
-                                {renderItemSelector(
-                                    "assemblyItems",
+                                {renderCountInput(
                                     "Assembly",
-                                    30,
-                                    "We assemble selected items at delivery"
+                                    "assemblyCount",
                                 )}
                             </div>
 
@@ -435,7 +261,7 @@ export default function StepAdditionalServices({
 
                         <div className="flex justify-between items-end mt-4">
                             <span className="font-semibold text-sm text-[#1a1a1a]">
-                                Updated total
+                                Estimated total
                             </span>
                             <span className="text-2xl font-black text-[#C0392B]">
                                 £{Math.round(Number(basePrice) || 0)}
@@ -443,7 +269,7 @@ export default function StepAdditionalServices({
                         </div>
 
                         <p className="text-xs text-gray-500 mt-3">
-                            The total updates automatically when an add-on item is selected.
+                            The total updates automatically as you enter quantities.
                         </p>
                     </div>
                 </div>

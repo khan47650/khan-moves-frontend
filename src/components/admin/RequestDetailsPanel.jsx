@@ -345,9 +345,47 @@ export default function RequestDetailsPanel({
                                             )}
                                         </div>
 
-                                        <div className="flex items-center justify-between bg-[#1a1a1a] p-4">
-                                            <span className="text-sm text-gray-400">Total Price</span>
-                                            <span className="text-2xl font-black text-[#F1C40F]">£{money(request.totalPrice)}</span>
+                                        <div className="bg-[#1a1a1a] p-4 space-y-3">
+
+                                            <div className="flex justify-between">
+                                                <span className="text-sm text-gray-400">
+                                                    Total Volume
+                                                </span>
+
+                                                <span className="font-bold text-white">
+                                                    {Number(request.totalVolume || 0).toFixed(2)} m³
+                                                </span>
+                                            </div>
+
+                                            {request.adminPrice !== null &&
+                                                request.adminPrice !== undefined && (
+
+                                                    <div className="flex justify-between">
+
+                                                        <span className="text-sm text-gray-400">
+                                                            System Calculated Price
+                                                        </span>
+
+                                                        <span className="font-bold text-gray-500 line-through">
+                                                            £{money(request.originalPrice)}
+                                                        </span>
+
+                                                    </div>
+
+                                                )}
+
+                                            <div className="flex justify-between">
+
+                                                <span className="text-sm text-gray-400">
+                                                    Final Price
+                                                </span>
+
+                                                <span className="text-2xl font-black text-[#F1C40F]">
+                                                    £{money(request.totalPrice)}
+                                                </span>
+
+                                            </div>
+
                                         </div>
                                     </div>
 

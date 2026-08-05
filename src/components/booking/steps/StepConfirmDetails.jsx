@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, FiPhone, FiTruck, FiArrowLeft } from 'react-icons/fi';
+import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, FiPhone, FiArrowLeft } from 'react-icons/fi';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { toast } from 'react-toastify';
@@ -538,15 +538,6 @@ export default function StepConfirmDetails({
                                 <p className="text-[38px] leading-none font-black text-[#1a1a1a] mb-1">
                                     £{Math.round(Number(totalPrice) || 0)}
                                 </p>
-
-                                {pricingResult.multiTrip && (
-                                    <div className="flex items-center gap-1.5 mb-2 p-2 rounded-md bg-blue-50 text-[11px] text-blue-800">
-                                        <FiTruck size={13} className="shrink-0" />
-                                        <span className="leading-4">
-                                            <strong>{pricingResult.tripsNeeded} trips</strong> included
-                                        </span>
-                                    </div>
-                                )}
                                 <button
                                     onClick={handleProceedClick}
                                     disabled={loading || !termsAccepted}
