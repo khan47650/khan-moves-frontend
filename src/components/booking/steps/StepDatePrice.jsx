@@ -708,13 +708,12 @@ export default function StepDatePrice({
 
                         {!day.disabled && (
                           <span
-
                             className={`self-start text-[11px] font-semibold leading-none ${isSelected
-                              ? "text-[#E87511]"
-                              : "text-[#E87511]"
+                                ? "text-[#E87511]"
+                                : "text-[#E87511]"
                               }`}
                           >
-                            `£${formatPrice(day.price)}`
+                            £{formatPrice(day.price)}
                           </span>
                         )}
                       </button>
@@ -784,7 +783,7 @@ export default function StepDatePrice({
 
               <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
                 {hasMapCoordinates && (
-                  <div className="h-24 overflow-hidden rounded-xl border border-gray-200">
+                  <div className="h-30 overflow-hidden rounded-xl border border-gray-200">
                     <MapComponent
                       pickupLat={Number(data.pickup.lat)}
                       pickupLng={Number(data.pickup.lng)}
@@ -946,7 +945,7 @@ export default function StepDatePrice({
                     />
 
                     <span className="text-[11px] font-semibold">
-                      Parking £{formatPrice(parkingCharge)}
+                      Parking
                     </span>
                   </div>
                 )}
