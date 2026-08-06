@@ -516,6 +516,10 @@ export default function StepDatePrice({
                     }`}
                 >
 
+                  <span className="absolute -top-2 right-3 rounded-full bg-green-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm md:text-[10px]">
+                    Recommended
+                  </span>
+
                   <div
                     className={`flex h-5 w-5 items-center justify-center rounded border-2 ${data.helperCount === 1
                       ? "border-black bg-black"
@@ -709,8 +713,8 @@ export default function StepDatePrice({
                         {!day.disabled && (
                           <span
                             className={`self-start text-[11px] font-semibold leading-none ${isSelected
-                                ? "text-[#E87511]"
-                                : "text-[#E87511]"
+                              ? "text-[#E87511]"
+                              : "text-[#E87511]"
                               }`}
                           >
                             £{formatPrice(day.price)}

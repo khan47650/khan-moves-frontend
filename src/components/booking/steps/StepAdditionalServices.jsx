@@ -18,36 +18,85 @@ export default function StepAdditionalServices({
         "home_removal"
     ].includes(data.serviceType);
 
+    const totalSelectedItems = (data.items || []).reduce(
+        (total, item) => total + Number(item.quantity || 0),
+        0
+    );
+
+    const changeCount = (field, amount) => {
+
+        const current = Number(data[field] || 0);
+
+        let next = current + amount;
+
+        if (next < 0) {
+            next = 0;
+        }
+
+        if (next > totalSelectedItems) {
+            next = totalSelectedItems;
+        }
+
+        onChange(field, next);
+
+    };
+
     const renderCountInput = (
         title,
-        field,
+        field
     ) => {
+
+        const value = Number(data[field] || 0);
+
         return (
+
             <div className="rounded-xl border border-gray-200 bg-white p-5">
+
                 <div className="mb-3">
+
                     <h3 className="font-semibold text-[#1a1a1a]">
                         {title}
                     </h3>
+
                 </div>
 
-                <input
-                    type="number"
-                    min="0"
-                    value={data[field] || ""}
-                    onChange={(e) =>
-                        onChange(
-                            field,
-                            Math.max(
-                                0,
-                                Number(e.target.value) || 0
-                            )
-                        )
-                    }
-                    placeholder="e.g. 3"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-[#C0392B]"
-                />
+                <div className="flex items-center justify-center gap-3">
+
+                    <button
+                        type="button"
+                        onClick={() => changeCount(field, -1)}
+                        disabled={value === 0}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        <FiMinus size={16} />
+                    </button>
+
+                    <input
+                        type="text"
+                        readOnly
+                        value={value}
+                        className="h-9 w-14 rounded-md border border-gray-300 bg-gray-50 text-center text-lg font-bold outline-none"
+                    />
+
+                    <button
+                        type="button"
+                        onClick={() => changeCount(field, 1)}
+                        disabled={value >= totalSelectedItems}
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        <FiPlus size={16} />
+                    </button>
+
+                </div>
+
+                <p className="mt-2 text-center text-[11px] text-gray-400">
+                    Max {totalSelectedItems}
+                </p>
+
             </div>
+
         );
+
     };
 
     return (
@@ -83,7 +132,7 @@ export default function StepAdditionalServices({
                                 </p>
 
                                 <p className="text-[11px] text-gray-500">
-                                    Blankets & bubble wrap included
+                                    Protective Blankets & Mattress Bags
                                 </p>
 
                             </div>
