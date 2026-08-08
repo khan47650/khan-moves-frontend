@@ -18,6 +18,84 @@ export default function StepAdditionalServices({
         "home_removal"
     ].includes(data.serviceType);
 
+    const isBoxesService = [
+        "boxes",
+        "boxes_parcels",
+        "boxes_and_parcels"
+    ].includes(data.serviceType);
+
+
+    const BOX_PACKING_PRICES = {
+
+        "Small Box": 2,
+
+        "Medium Box": 3,
+
+        "Large Box": 4
+
+    };
+
+    const getSelectedBoxQuantity = boxName => {
+        const item = (data.items || []).find(
+            item => item.name === boxName
+        );
+
+        return Number(item?.quantity || 0);
+    };
+
+    const packingFields = {
+        "Small Box": "smallBoxPackingCount",
+        "Medium Box": "mediumBoxPackingCount",
+        "Large Box": "largeBoxPackingCount"
+    };
+
+    const getPackingCount = boxName => {
+        const field = packingFields[boxName];
+
+        return Number(data[field] || 0);
+    };
+
+    const changePackingCount = (boxName, amount) => {
+        const field = packingFields[boxName];
+
+        const current = getPackingCount(boxName);
+
+        const max =
+            getSelectedBoxQuantity(boxName);
+
+        let next = current + amount;
+
+        if (next < 0) {
+            next = 0;
+        }
+
+        if (next > max) {
+            next = max;
+        }
+
+        onChange(field, next);
+    };
+
+    const packingTotal =
+        Object.entries(BOX_PACKING_PRICES).reduce(
+            (total, [boxName, price]) => {
+                return (
+                    total +
+                    getPackingCount(boxName) * price
+                );
+            },
+            0
+        );
+
+    const additionalServicesTotal =
+        isBoxesService
+            ? packingTotal
+            : (
+                dismantleTotal * 20 +
+                assemblyTotal * 30 +
+                (data.packingService ? 20 : 0)
+            );
+
     const totalSelectedItems = (data.items || []).reduce(
         (total, item) => total + Number(item.quantity || 0),
         0
@@ -143,44 +221,155 @@ export default function StepAdditionalServices({
 
                         </div>
 
-                        <div className="flex items-start gap-2 mb-4">
+                        {!isBoxesService ? (
 
-                            <FiTool
-                                size={18}
-                                className="mt-0.5 text-[#C0392B] shrink-0"
-                            />
+                            <>
 
-                            <div>
+                                <div className="flex items-start gap-2 mb-4">
 
-                                <h4 className="font-bold text-sm text-[#1a1a1a]">
-                                    Dismantling and assembly
-                                </h4>
+                                    <FiTool
+                                        size={18}
+                                        className="mt-0.5 text-[#C0392B] shrink-0"
+                                    />
 
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                    Enter the number of items requiring dismantling or assembly.
-                                </p>
+                                    <div>
 
-                            </div>
+                                        <h4 className="font-bold text-sm text-[#1a1a1a]">
+                                            Dismantling and assembly
+                                        </h4>
 
-                        </div>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Enter the number of items requiring dismantling or assembly.
+                                        </p>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    </div>
 
-                            <div>
-                                {renderCountInput(
-                                    "Dismantling",
-                                    "dismantleCount",
-                                )}
-                            </div>
+                                </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-                            <div>
-                                {renderCountInput(
-                                    "Assembly",
-                                    "assemblyCount",
-                                )}
-                            </div>
+                                    <div>
+                                        {renderCountInput(
+                                            "Dismantling",
+                                            "dismantleCount",
+                                        )}
+                                    </div>
 
-                        </div>
+                                    <div>
+                                        {renderCountInput(
+                                            "Assembly",
+                                            "assemblyCount",
+                                        )}
+                                    </div>
+
+                                </div>
+
+                            </>
+
+                        ) : (
+
+                            <>
+
+                                <div className="flex items-start gap-2 mb-4">
+
+                                    <FiPackage
+                                        size={18}
+                                        className="mt-0.5 text-[#C0392B] shrink-0"
+                                    />
+
+                                    <div>
+
+                                        <h4 className="font-bold text-sm text-[#1a1a1a]">
+                                            Packing
+                                        </h4>
+
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Packing cost is calculated automatically based on your selected boxes.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                                    {Object.entries(BOX_PACKING_PRICES).map(
+                                        ([boxName, price]) => {
+
+                                            const max =
+                                                getSelectedBoxQuantity(boxName);
+
+                                            const value =
+                                                getPackingCount(boxName);
+
+                                            return (
+                                                <div
+                                                    key={boxName}
+                                                    className="rounded-xl border border-gray-200 bg-white p-5"
+                                                >
+
+                                                    <h3 className="font-semibold text-[#1a1a1a]">
+                                                        {boxName}
+                                                    </h3>
+
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        £{price} per box
+                                                    </p>
+
+                                                    <div className="mt-4 flex items-center justify-center gap-3">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                changePackingCount(
+                                                                    boxName,
+                                                                    -1
+                                                                )
+                                                            }
+                                                            disabled={value === 0}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                                                        >
+                                                            <FiMinus size={16} />
+                                                        </button>
+
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            value={value}
+                                                            className="h-9 w-14 rounded-md border border-gray-300 bg-gray-50 text-center text-lg font-bold outline-none"
+                                                        />
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                changePackingCount(
+                                                                    boxName,
+                                                                    1
+                                                                )
+                                                            }
+                                                            disabled={value >= max}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                                                        >
+                                                            <FiPlus size={16} />
+                                                        </button>
+
+                                                    </div>
+
+                                                    <p className="mt-2 text-center text-[11px] text-gray-400">
+                                                        Max {max}
+                                                    </p>
+
+                                                </div>
+                                            );
+                                        }
+                                    )}
+
+                                </div>
+
+                            </>
+
+                        )}
+
+
 
                     </div>
 
@@ -273,39 +462,103 @@ export default function StepAdditionalServices({
                         </h4>
 
                         <div className="space-y-2 text-xs pb-4 border-b border-gray-100">
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                    Dismantling ×{dismantleTotal}
-                                </span>
-                                <span className="font-semibold">
-                                    £{Math.round(dismantleTotal * 20)}
-                                </span>
-                            </div>
 
-                            <div className="flex justify-between">
-                                <span className="text-gray-600">
-                                    Assembly ×{assemblyTotal}
-                                </span>
-                                <span className="font-semibold">
-                                    £{Math.round(assemblyTotal * 30)}
-                                </span>
-                            </div>
+                            {!isBoxesService ? (
 
-                            {data.packingService && (
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Packing service</span>
-                                    <span className="font-semibold">£20</span>
-                                </div>
+                                <>
+
+                                    <div className="flex justify-between">
+
+                                        <span className="text-gray-600">
+                                            Dismantling ×{dismantleTotal}
+                                        </span>
+
+                                        <span className="font-semibold">
+                                            £{Math.round(dismantleTotal * 20)}
+                                        </span>
+
+                                    </div>
+
+                                    <div className="flex justify-between">
+
+                                        <span className="text-gray-600">
+                                            Assembly ×{assemblyTotal}
+                                        </span>
+
+                                        <span className="font-semibold">
+                                            £{Math.round(assemblyTotal * 30)}
+                                        </span>
+
+                                    </div>
+
+                                    {data.packingService && (
+
+                                        <div className="flex justify-between">
+
+                                            <span className="text-gray-600">
+                                                Packing service
+                                            </span>
+
+                                            <span className="font-semibold">
+                                                £20
+                                            </span>
+
+                                        </div>
+
+                                    )}
+
+                                </>
+
+                            ) : (
+
+                                (data.items || [])
+
+                                    .filter(item => BOX_PACKING_PRICES[item.name])
+
+                                    .map(item => (
+
+                                        <div
+                                            key={item.itemId}
+                                            className="flex justify-between"
+                                        >
+
+                                            <span className="text-gray-600">
+
+                                                {item.name} ×{item.quantity}
+
+                                            </span>
+
+                                            <span className="font-semibold">
+
+                                                £{
+                                                    BOX_PACKING_PRICES[item.name] *
+                                                    Number(item.quantity || 0)
+                                                }
+
+                                            </span>
+
+                                        </div>
+
+                                    ))
+
                             )}
 
                             <div className="flex justify-between">
+
                                 <span className="text-gray-600">
+
                                     Free protection
+
                                 </span>
+
                                 <span className="font-semibold text-green-600">
+
                                     Included
+
                                 </span>
+
                             </div>
+
                         </div>
 
                         <div className="flex justify-between items-end mt-4">
@@ -313,7 +566,7 @@ export default function StepAdditionalServices({
                                 Estimated total
                             </span>
                             <span className="text-2xl font-black text-[#C0392B]">
-                                £{Math.round(Number(basePrice) || 0)}
+                                £{Math.round(Number(basePrice || 0))}
                             </span>
                         </div>
 

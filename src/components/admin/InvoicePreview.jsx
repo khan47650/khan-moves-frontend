@@ -16,6 +16,21 @@ const formatServiceName = (service = "") => {
         .replace(/\b\w/g, (letter) => letter.toUpperCase());
 };
 
+const formatTimeSlot = (value = "") => {
+    const labels = {
+        early: "6:00 AM – 6:00 PM",
+        morning: "8:00 AM – 6:00 PM",
+        nine_to_five: "9:00 AM – 5:00 PM",
+        nineToFive: "9:00 AM – 5:00 PM",
+        "9_to_5": "9:00 AM – 5:00 PM",
+        "9-5": "9:00 AM – 5:00 PM",
+        afternoon: "9:00 AM – 4:00 PM",
+        flexible: "I'm flexible with timing"
+    };
+
+    return labels[value] || value || "To be arranged";
+};
+
 const money = value => Math.round(Number(value) || 0);
 
 const InfoRow = ({ label, value, highlight = false }) => (
@@ -107,7 +122,26 @@ const InvoicePreview = React.forwardRef(
             },
             {
                 label: "Packing",
-                value: booking?.packingService ? "Included" : "N/A",
+                value:
+                    [
+                        Number(booking?.smallBoxPackingCount || 0) > 0
+                            ? `Small Box ×${booking.smallBoxPackingCount}`
+                            : null,
+
+                        Number(booking?.mediumBoxPackingCount || 0) > 0
+                            ? `Medium Box ×${booking.mediumBoxPackingCount}`
+                            : null,
+
+                        Number(booking?.largeBoxPackingCount || 0) > 0
+                            ? `Large Box ×${booking.largeBoxPackingCount}`
+                            : null,
+
+                        booking?.packingService
+                            ? "Packing Included"
+                            : null,
+                    ]
+                        .filter(Boolean)
+                        .join(", ") || "N/A",
             },
             {
                 label: "Helpers",
@@ -143,9 +177,7 @@ const InvoicePreview = React.forwardRef(
             },
             {
                 label: "Time Slot",
-                value: booking?.timeSlot
-                    ? formatServiceName(booking.timeSlot)
-                    : "To be confirmed",
+                value: formatTimeSlot(booking?.timeSlot),
             },
         ];
 

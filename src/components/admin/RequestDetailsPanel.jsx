@@ -56,6 +56,17 @@ export default function RequestDetailsPanel({
     const dismantleCount = Number(request?.dismantleCount) || (request?.dismantleItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const assemblyCount = Number(request?.assemblyCount) || (request?.assemblyItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const pickupParkingCharge = parkingCharge(request?.pickupFloor?.hasParking, request?.totalVolume);
+    const isBoxesService = [
+        "boxes",
+        "boxes_parcels",
+        "boxes_and_parcels"
+    ].includes(request?.serviceType);
+
+    const BOX_PACKING_PRICES = {
+        "Small Box": 2,
+        "Medium Box": 3,
+        "Large Box": 4
+    };
     const deliveryParkingCharge = parkingCharge(request?.deliveryFloor?.hasParking, request?.totalVolume);
 
     return (
@@ -253,54 +264,176 @@ export default function RequestDetailsPanel({
                                             </div>
 
                                             <div className="space-y-3 text-xs">
-                                                {dismantleCount > 0 && (
-                                                    <div>
-                                                        <div className="flex justify-between font-semibold">
-                                                            <span>Dismantling ×{dismantleCount}</span>
-                                                            <span className="text-[#C0392B]">+£{dismantleCount * 20}</span>
-                                                        </div>
-                                                        <p className="mt-1 text-gray-500">
-                                                            {(request.dismantleItems || []).map(item => `${item.name} ×${item.quantity}`).join(", ") || "Items not specified"}
-                                                        </p>
-                                                    </div>
+
+                                                {!isBoxesService ? (
+
+                                                    <>
+
+                                                        {dismantleCount > 0 && (
+
+                                                            <div>
+
+                                                                <div className="flex justify-between font-semibold">
+
+                                                                    <span>
+                                                                        Dismantling ×{dismantleCount}
+                                                                    </span>
+
+                                                                    <span className="text-[#C0392B]">
+                                                                        +£{dismantleCount * 20}
+                                                                    </span>
+
+                                                                </div>
+
+                                                                <p className="mt-1 text-gray-500">
+
+                                                                    {(request.dismantleItems || [])
+                                                                        .map(item =>
+                                                                            `${item.name} ×${item.quantity}`
+                                                                        )
+                                                                        .join(", ") ||
+                                                                        "Items not specified"}
+
+                                                                </p>
+
+                                                            </div>
+
+                                                        )}
+
+                                                        {assemblyCount > 0 && (
+
+                                                            <div className="border-t pt-3">
+
+                                                                <div className="flex justify-between font-semibold">
+
+                                                                    <span>
+                                                                        Assembly ×{assemblyCount}
+                                                                    </span>
+
+                                                                    <span className="text-[#C0392B]">
+                                                                        +£{assemblyCount * 30}
+                                                                    </span>
+
+                                                                </div>
+
+                                                                <p className="mt-1 text-gray-500">
+
+                                                                    {(request.assemblyItems || [])
+                                                                        .map(item =>
+                                                                            `${item.name} ×${item.quantity}`
+                                                                        )
+                                                                        .join(", ") ||
+                                                                        "Items not specified"}
+
+                                                                </p>
+
+                                                            </div>
+
+                                                        )}
+
+                                                        {request.packingService && (
+
+                                                            <div className="flex justify-between border-t pt-3 font-semibold">
+
+                                                                <span>
+                                                                    Professional packing
+                                                                </span>
+
+                                                                <span className="text-[#C0392B]">
+                                                                    +£20
+                                                                </span>
+
+                                                            </div>
+
+                                                        )}
+
+                                                        {!dismantleCount &&
+                                                            !assemblyCount &&
+                                                            !request.packingService && (
+
+                                                                <p className="text-gray-400">
+
+                                                                    No additional services selected.
+
+                                                                </p>
+
+                                                            )}
+
+                                                    </>
+
+                                                ) : (
+
+                                                    <>
+
+                                                        {[
+                                                            {
+                                                                name: "Small Box",
+                                                                field: "smallBoxPackingCount"
+                                                            },
+                                                            {
+                                                                name: "Medium Box",
+                                                                field: "mediumBoxPackingCount"
+                                                            },
+                                                            {
+                                                                name: "Large Box",
+                                                                field: "largeBoxPackingCount"
+                                                            }
+                                                        ]
+                                                            .filter(
+                                                                box =>
+                                                                    Number(request?.[box.field] || 0) > 0
+                                                            )
+                                                            .map(box => {
+
+                                                                const quantity =
+                                                                    Number(
+                                                                        request?.[box.field] || 0
+                                                                    );
+
+                                                                const price =
+                                                                    BOX_PACKING_PRICES[box.name];
+
+                                                                return (
+                                                                    <div
+                                                                        key={box.name}
+                                                                        className="flex justify-between font-semibold"
+                                                                    >
+
+                                                                        <span>
+                                                                            {box.name} ×{quantity}
+                                                                        </span>
+
+                                                                        <span className="text-[#C0392B]">
+                                                                            +£{price * quantity}
+                                                                        </span>
+
+                                                                    </div>
+                                                                );
+                                                            })}
+
+                                                        {![
+                                                            "smallBoxPackingCount",
+                                                            "mediumBoxPackingCount",
+                                                            "largeBoxPackingCount"
+                                                        ].some(
+                                                            field =>
+                                                                Number(request?.[field] || 0) > 0
+                                                        ) && (
+
+                                                                <p className="text-gray-400">
+                                                                    No packing charges.
+                                                                </p>
+
+                                                            )}
+
+                                                    </>
+
                                                 )}
 
-                                                {assemblyCount > 0 && (
-                                                    <div className="border-t pt-3">
-                                                        <div className="flex justify-between font-semibold">
-                                                            <span>Assembly ×{assemblyCount}</span>
-                                                            <span className="text-[#C0392B]">+£{assemblyCount * 30}</span>
-                                                        </div>
-                                                        <p className="mt-1 text-gray-500">
-                                                            {(request.assemblyItems || []).map(item => `${item.name} ×${item.quantity}`).join(", ") || "Items not specified"}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {request.packingService && (
-                                                    <div className="flex justify-between border-t pt-3 font-semibold">
-                                                        <span>Professional packing</span>
-                                                        <span className="text-[#C0392B]">+£20</span>
-                                                    </div>
-                                                )}
-
-                                                {!dismantleCount && !assemblyCount && !request.packingService && (
-                                                    <p className="text-gray-400">No additional services selected.</p>
-                                                )}
                                             </div>
                                         </div>
 
-                                        {request.multiTrip && Number(request.tripsNeeded) > 1 && (
-                                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                                                <div className="flex items-start gap-3">
-                                                    <FiTruck size={18} className="mt-0.5 text-blue-700" />
-                                                    <div>
-                                                        <p className="text-sm font-bold text-blue-900">{request.tripsNeeded} van trips required</p>
-                                                        <p className="mt-1 text-xs text-blue-700">{request.pricingNote || "Multiple van trips are included in the total price."}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+
 
                                         <div className="mt-3 flex justify-between border-t pt-3">
                                             <span className="text-xs text-gray-500">Total Volume</span>
@@ -326,19 +459,6 @@ export default function RequestDetailsPanel({
                                                 </div>
                                             ))}
 
-                                            {pickupParkingCharge > 0 && (
-                                                <div className="flex justify-between text-xs">
-                                                    <span className="text-gray-500">Pickup parking adjustment</span>
-                                                    <span className="font-bold">+£{pickupParkingCharge}</span>
-                                                </div>
-                                            )}
-
-                                            {deliveryParkingCharge > 0 && (
-                                                <div className="flex justify-between text-xs">
-                                                    <span className="text-gray-500">Delivery parking adjustment</span>
-                                                    <span className="font-bold">+£{deliveryParkingCharge}</span>
-                                                </div>
-                                            )}
 
                                             {request.priceBreakdown?.length === 0 && (
                                                 <p className="text-xs text-gray-400">No saved price breakdown.</p>

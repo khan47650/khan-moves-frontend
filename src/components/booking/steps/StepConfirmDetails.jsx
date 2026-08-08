@@ -6,6 +6,13 @@ import { toast } from 'react-toastify';
 import ConfirmationDialog from '../ConfirmationDialog';
 import ConfirmationScreen from '../ConfirmationScreen';
 
+
+const BOX_PACKING_PRICES = {
+    "Small Box": 2,
+    "Medium Box": 3,
+    "Large Box": 4
+};
+
 const TIME_SLOT_LABELS = {
     early: 'Early slot — 6:00 AM – 6:00 PM',
     morning: 'Morning slot — 8:00 AM – 6:00 PM',
@@ -88,6 +95,19 @@ export default function StepConfirmDetails({
     const hasCoords = pickupLat && deliveryLat;
     const dismantleCount = Number(data.dismantleCount) || (data.dismantleItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const assemblyCount = Number(data.assemblyCount) || (data.assemblyItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const smallBoxPackingCount =
+        Number(data.smallBoxPackingCount) || 0;
+
+    const mediumBoxPackingCount =
+        Number(data.mediumBoxPackingCount) || 0;
+
+    const largeBoxPackingCount =
+        Number(data.largeBoxPackingCount) || 0;
+
+    const hasBoxPacking =
+        smallBoxPackingCount > 0 ||
+        mediumBoxPackingCount > 0 ||
+        largeBoxPackingCount > 0;
 
     const handleProceedClick = () => {
         if (!termsAccepted) {
@@ -112,7 +132,7 @@ export default function StepConfirmDetails({
             window.scrollTo({
                 top: 0,
                 left: 0,
-                behavior: "instant" 
+                behavior: "instant"
             });
             setShowConfirmation(true);
             setDialogOpen(false);
@@ -357,90 +377,140 @@ export default function StepConfirmDetails({
                             </div> */}
 
                             {/* Added services */}
-                            {(dismantleCount > 0 || assemblyCount > 0 || data.packingService) && (
-                                <div className="pt-3 border-t border-gray-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <FiTool size={14} className="text-gray-500" />
+                            {(
+                                dismantleCount > 0 ||
+                                assemblyCount > 0 ||
+                                data.packingService ||
+                                hasBoxPacking
+                            ) && (
+                                    <div className="pt-3 border-t border-gray-100">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <FiTool size={14} className="text-gray-500" />
 
-                                        <span className="text-sm font-bold text-[#1a1a1a]">
-                                            Added services
-                                        </span>
+                                            <span className="text-sm font-bold text-[#1a1a1a]">
+                                                Added services
+                                            </span>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => onEdit('services')}
-                                            className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#C0392B] transition"
-                                        >
-                                            <FiEdit2 size={12} />
-                                            Edit
-                                        </button>
-                                    </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => onEdit('services')}
+                                                className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-[#C0392B] transition"
+                                            >
+                                                <FiEdit2 size={12} />
+                                                Edit
+                                            </button>
+                                        </div>
 
-                                    <div className="space-y-2">
-                                        {dismantleCount > 0 && (
-                                            <div className="bg-[#F9F8F6] rounded-xl p-3">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <p className="text-xs font-bold text-[#1a1a1a]">
-                                                        Dismantling
-                                                    </p>
+                                        <div className="space-y-2">
+                                            {dismantleCount > 0 && (
+                                                <div className="bg-[#F9F8F6] rounded-xl p-3">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <p className="text-xs font-bold text-[#1a1a1a]">
+                                                            Dismantling
+                                                        </p>
 
-                                                    <span className="text-xs font-bold text-[#C0392B]">
-                                                        +£{Math.round(dismantleCount * 20)}
+                                                        <span className="text-xs font-bold text-[#C0392B]">
+                                                            +£{Math.round(dismantleCount * 20)}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {(data.dismantleItems || []).map((item, index) => (
+                                                            <span
+                                                                key={item.itemId || `${item.name}-${index}`}
+                                                                className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
+                                                            >
+                                                                {item.name} ×{item.quantity}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {assemblyCount > 0 && (
+                                                <div className="bg-[#F9F8F6] rounded-xl p-3">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <p className="text-xs font-bold text-[#1a1a1a]">
+                                                            Assembly
+                                                        </p>
+
+                                                        <span className="text-xs font-bold text-[#C0392B]">
+                                                            +£{Math.round(assemblyCount * 30)}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {(data.assemblyItems || []).map((item, index) => (
+                                                            <span
+                                                                key={item.itemId || `${item.name}-${index}`}
+                                                                className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
+                                                            >
+                                                                {item.name} ×{item.quantity}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {hasBoxPacking && (
+                                                <div className="bg-[#F9F8F6] rounded-xl p-3">
+
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <p className="text-xs font-bold text-[#1a1a1a]">
+                                                            Packing
+                                                        </p>
+
+                                                        <span className="text-xs font-bold text-[#C0392B]">
+                                                            +£{
+                                                                (
+                                                                    smallBoxPackingCount *
+                                                                    BOX_PACKING_PRICES["Small Box"] +
+                                                                    mediumBoxPackingCount *
+                                                                    BOX_PACKING_PRICES["Medium Box"] +
+                                                                    largeBoxPackingCount *
+                                                                    BOX_PACKING_PRICES["Large Box"]
+                                                                )
+                                                            }
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex flex-wrap gap-1.5">
+
+                                                        {smallBoxPackingCount > 0 && (
+                                                            <span className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600">
+                                                                Small Box ×{smallBoxPackingCount}
+                                                            </span>
+                                                        )}
+
+                                                        {mediumBoxPackingCount > 0 && (
+                                                            <span className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600">
+                                                                Medium Box ×{mediumBoxPackingCount}
+                                                            </span>
+                                                        )}
+
+                                                        {largeBoxPackingCount > 0 && (
+                                                            <span className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600">
+                                                                Large Box ×{largeBoxPackingCount}
+                                                            </span>
+                                                        )}
+
+                                                    </div>
+
+                                                </div>
+                                            )}
+                                            {data.packingService && (
+                                                <div className="flex justify-between bg-[#F9F8F6] px-3 py-2 rounded-lg text-xs">
+                                                    <span className="text-gray-700">
+                                                        Professional packing service
+                                                    </span>
+
+                                                    <span className="font-bold text-[#C0392B]">
+                                                        +£20
                                                     </span>
                                                 </div>
-
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {(data.dismantleItems || []).map((item, index) => (
-                                                        <span
-                                                            key={item.itemId || `${item.name}-${index}`}
-                                                            className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
-                                                        >
-                                                            {item.name} ×{item.quantity}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {assemblyCount > 0 && (
-                                            <div className="bg-[#F9F8F6] rounded-xl p-3">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <p className="text-xs font-bold text-[#1a1a1a]">
-                                                        Assembly
-                                                    </p>
-
-                                                    <span className="text-xs font-bold text-[#C0392B]">
-                                                        +£{Math.round(assemblyCount * 30)}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {(data.assemblyItems || []).map((item, index) => (
-                                                        <span
-                                                            key={item.itemId || `${item.name}-${index}`}
-                                                            className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1 text-gray-600"
-                                                        >
-                                                            {item.name} ×{item.quantity}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {data.packingService && (
-                                            <div className="flex justify-between bg-[#F9F8F6] px-3 py-2 rounded-lg text-xs">
-                                                <span className="text-gray-700">
-                                                    Professional packing service
-                                                </span>
-
-                                                <span className="font-bold text-[#C0392B]">
-                                                    +£20
-                                                </span>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
                             {/* Special instructions */}
                             {data.specialInstructions && (

@@ -46,6 +46,12 @@ const formatTimeSlot = value => {
     return labels[value] || value || "To be arranged";
 };
 
+const BOX_PACKING_PRICES = {
+    "Small Box": 2,
+    "Medium Box": 3,
+    "Large Box": 4
+};
+
 export default function JobDetailsPanel({
     selectedJob,
     activeTab,
@@ -70,7 +76,11 @@ export default function JobDetailsPanel({
     onEdit,
     onUpdated
 }) {
-
+    const isBoxesService = [
+        "boxes",
+        "boxes_parcels",
+        "boxes_and_parcels"
+    ].includes(selectedJob?.serviceType);
     return (
         <AnimatePresence>
             {selectedJob && (
@@ -364,6 +374,7 @@ export default function JobDetailsPanel({
                                 </div>
 
                                 <div className="rounded-xl border border-gray-100 p-3">
+
                                     <p className="text-[10px] uppercase text-gray-400">
                                         Crew
                                     </p>
@@ -371,37 +382,123 @@ export default function JobDetailsPanel({
                                     <p className="mt-1 text-sm font-bold">
                                         {Number(selectedJob.helperCount || 0) + 1} Crew
                                     </p>
+
                                 </div>
 
-                                <div className="rounded-xl border border-gray-100 p-3">
-                                    <p className="text-[10px] uppercase text-gray-400">
-                                        Packing
-                                    </p>
+                                {!isBoxesService ? (
 
-                                    <p className="mt-1 text-sm font-bold">
-                                        {selectedJob.packingService ? "Yes" : "No"}
-                                    </p>
-                                </div>
+                                    <>
 
-                                <div className="rounded-xl border border-gray-100 p-3">
-                                    <p className="text-[10px] uppercase text-gray-400">
-                                        Assembly
-                                    </p>
+                                        <div className="rounded-xl border border-gray-100 p-3">
 
-                                    <p className="mt-1 text-sm font-bold">
-                                        {selectedJob.assemblyCount || 0}
-                                    </p>
-                                </div>
+                                            <p className="text-[10px] uppercase text-gray-400">
+                                                Packing
+                                            </p>
 
-                                <div className="rounded-xl border border-gray-100 p-3">
-                                    <p className="text-[10px] uppercase text-gray-400">
-                                        Dismantle
-                                    </p>
+                                            <p className="mt-1 text-sm font-bold">
+                                                {selectedJob.packingService ? "Yes" : "No"}
+                                            </p>
 
-                                    <p className="mt-1 text-sm font-bold">
-                                        {selectedJob.dismantleCount || 0}
-                                    </p>
-                                </div>
+                                        </div>
+
+                                        <div className="rounded-xl border border-gray-100 p-3">
+
+                                            <p className="text-[10px] uppercase text-gray-400">
+                                                Assembly
+                                            </p>
+
+                                            <p className="mt-1 text-sm font-bold">
+                                                {selectedJob.assemblyCount || 0}
+                                            </p>
+
+                                        </div>
+
+                                        <div className="rounded-xl border border-gray-100 p-3">
+
+                                            <p className="text-[10px] uppercase text-gray-400">
+                                                Dismantle
+                                            </p>
+
+                                            <p className="mt-1 text-sm font-bold">
+                                                {selectedJob.dismantleCount || 0}
+                                            </p>
+
+                                        </div>
+
+                                    </>
+
+                                ) : (
+
+                                    <div className="col-span-2 rounded-xl border border-green-200 bg-green-50 p-3">
+
+                                        <p className="mb-2 text-xs font-bold uppercase text-green-700">
+                                            Packing Charges
+                                        </p>
+
+                                        {[
+                                            {
+                                                name: "Small Box",
+                                                field: "smallBoxPackingCount"
+                                            },
+                                            {
+                                                name: "Medium Box",
+                                                field: "mediumBoxPackingCount"
+                                            },
+                                            {
+                                                name: "Large Box",
+                                                field: "largeBoxPackingCount"
+                                            }
+                                        ]
+                                            .filter(
+                                                box =>
+                                                    Number(selectedJob[box.field] || 0) > 0
+                                            )
+                                            .map(box => {
+
+                                                const quantity =
+                                                    Number(
+                                                        selectedJob[box.field] || 0
+                                                    );
+
+                                                const price =
+                                                    BOX_PACKING_PRICES[box.name];
+
+                                                return (
+                                                    <div
+                                                        key={box.name}
+                                                        className="mb-1 flex items-center justify-between text-sm"
+                                                    >
+
+                                                        <span>
+                                                            {box.name} ×{quantity}
+                                                        </span>
+
+                                                        <span className="font-bold">
+                                                            £{price * quantity}
+                                                        </span>
+
+                                                    </div>
+                                                );
+                                            })}
+
+                                        {![
+                                            "smallBoxPackingCount",
+                                            "mediumBoxPackingCount",
+                                            "largeBoxPackingCount"
+                                        ].some(
+                                            field =>
+                                                Number(selectedJob[field] || 0) > 0
+                                        ) && (
+
+                                                <p className="text-sm text-gray-500">
+                                                    No packing charges.
+                                                </p>
+
+                                            )}
+
+                                    </div>
+
+                                )}
 
                             </div>
 

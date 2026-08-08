@@ -237,7 +237,15 @@ const cloneJob = job => ({
     helperCount: Number(job.helperCount || 0),
     dismantleCount: Number(job.dismantleCount || 0),
     assemblyCount: Number(job.assemblyCount || 0),
-    distance: Number(job.distance || 0)
+    distance: Number(job.distance || 0),
+    smallBoxPackingCount:
+        Number(job.smallBoxPackingCount || 0),
+
+    mediumBoxPackingCount:
+        Number(job.mediumBoxPackingCount || 0),
+
+    largeBoxPackingCount:
+        Number(job.largeBoxPackingCount || 0)
 });
 
 export default function EditJobForm({ job, onUpdated, onCancel }) {
@@ -438,33 +446,121 @@ export default function EditJobForm({ job, onUpdated, onCancel }) {
         }));
 
     const changeItemQuantity = (index, amount) => {
-
         setIsManualPrice(false);
+
+        setData(current => {
+            const item = current.items[index];
+
+            const nextQuantity =
+                Number(item?.quantity || 0) + amount;
+
+            const nextData = {
+                ...current,
+                items: current.items
+                    .map((item, itemIndex) =>
+                        itemIndex === index
+                            ? {
+                                ...item,
+                                quantity:
+                                    Number(item.quantity || 0) + amount
+                            }
+                            : item
+                    )
+                    .filter(item => Number(item.quantity) > 0)
+            };
+
+            if (nextQuantity <= 0) {
+                if (item?.name === "Small Box") {
+                    nextData.smallBoxPackingCount = 0;
+                }
+
+                if (item?.name === "Medium Box") {
+                    nextData.mediumBoxPackingCount = 0;
+                }
+
+                if (item?.name === "Large Box") {
+                    nextData.largeBoxPackingCount = 0;
+                }
+            }
+
+            return nextData;
+        });
+    };
+
+    const getSelectedBoxQuantity = boxName => {
+        const item = (data.items || []).find(
+            item => item.name === boxName
+        );
+
+        return Number(item?.quantity || 0);
+    };
+
+    const packingFields = {
+        "Small Box": "smallBoxPackingCount",
+        "Medium Box": "mediumBoxPackingCount",
+        "Large Box": "largeBoxPackingCount"
+    };
+
+    const getPackingCount = boxName => {
+        const field = packingFields[boxName];
+
+        return Number(data[field] || 0);
+    };
+
+    const changePackingCount = (boxName, amount) => {
+        const field = packingFields[boxName];
+
+        const current =
+            getPackingCount(boxName);
+
+        const max =
+            getSelectedBoxQuantity(boxName);
+
+        let next =
+            current + amount;
+
+        if (next < 0) {
+            next = 0;
+        }
+
+        if (next > max) {
+            next = max;
+        }
 
         setData(current => ({
             ...current,
-            items: current.items
-                .map((item, itemIndex) =>
-                    itemIndex === index
-                        ? {
-                            ...item,
-                            quantity: Number(item.quantity || 0) + amount
-                        }
-                        : item
-                )
-                .filter(item => Number(item.quantity) > 0)
+            [field]: next
         }));
 
+        setIsManualPrice(false);
     };
     const removeItem = index => {
-
         setIsManualPrice(false);
 
-        setData(current => ({
-            ...current,
-            items: current.items.filter((_, itemIndex) => itemIndex !== index)
-        }));
+        setData(current => {
+            const item = current.items[index];
 
+            const nextData = {
+                ...current,
+                items: current.items.filter(
+                    (_, itemIndex) => itemIndex !== index
+                )
+            };
+
+            if (item?.name === "Small Box") {
+                nextData.smallBoxPackingCount = 0;
+            }
+
+            if (item?.name === "Medium Box") {
+                nextData.mediumBoxPackingCount = 0;
+            }
+
+            if (item?.name === "Large Box") {
+                nextData.largeBoxPackingCount = 0;
+            }
+
+            return nextData;
+        });
     };
 
     const addItem = () => {
@@ -533,6 +629,18 @@ export default function EditJobForm({ job, onUpdated, onCancel }) {
         [data.items]
     );
 
+    const isBoxesService = [
+        "boxes",
+        "boxes_parcels",
+        "boxes_and_parcels"
+    ].includes(data.serviceType);
+
+    const BOX_PACKING_PRICES = {
+        "Small Box": 2,
+        "Medium Box": 3,
+        "Large Box": 4
+    };
+
     const totalPrice = useMemo(
         () => calculateTotalPrice({
             distance: Number(data.distance || 0),
@@ -547,7 +655,17 @@ export default function EditJobForm({ job, onUpdated, onCancel }) {
             assemblyCount: Number(data.assemblyCount || 0),
 
             packingService: Boolean(data.packingService),
+            smallBoxPackingCount:
+                Number(data.smallBoxPackingCount || 0),
 
+            mediumBoxPackingCount:
+                Number(data.mediumBoxPackingCount || 0),
+
+            largeBoxPackingCount:
+                Number(data.largeBoxPackingCount || 0),
+            serviceType: data.serviceType,
+
+            items: data.items,
             dateType: data.dateType || "specific",
             date: data.date,
 
@@ -612,6 +730,14 @@ export default function EditJobForm({ job, onUpdated, onCancel }) {
                 dismantleCount: data.dismantleCount,
                 assemblyCount: data.assemblyCount,
                 packingService: data.packingService,
+                smallBoxPackingCount:
+                    Number(data.smallBoxPackingCount || 0),
+
+                mediumBoxPackingCount:
+                    Number(data.mediumBoxPackingCount || 0),
+
+                largeBoxPackingCount:
+                    Number(data.largeBoxPackingCount || 0),
                 totalPrice: isManualPrice ? adminPrice : totalPrice,
                 adminPrice: isManualPrice ? adminPrice : null,
                 specialInstructions: data.specialInstructions
@@ -773,6 +899,7 @@ export default function EditJobForm({ job, onUpdated, onCancel }) {
             />
 
             <div className="rounded-xl border p-4">
+
                 <h4 className="mb-3 text-xs font-bold uppercase text-gray-500">
                     Additional Services
                 </h4>
@@ -793,45 +920,178 @@ export default function EditJobForm({ job, onUpdated, onCancel }) {
                         <option value={1}>2 Crew</option>
                     </SelectField>
 
-                    <TextField
-                        label="Dismantle"
-                        type="number"
-                        min="0"
-                        value={
-                            data.dismantleCount === 0
-                                ? ""
-                                : data.dismantleCount
-                        }
-                        onChange={e =>
-                            updateField(
-                                "dismantleCount",
-                                e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value)
-                            )
-                        }
-                    />
+                    {!isBoxesService ? (
 
-                    <TextField
-                        label="Assembly"
-                        type="number"
-                        min="0"
-                        value={
-                            data.assemblyCount === 0
-                                ? ""
-                                : data.assemblyCount
-                        }
-                        onChange={e =>
-                            updateField(
-                                "assemblyCount",
-                                e.target.value === ""
-                                    ? 0
-                                    : Number(e.target.value)
-                            )
-                        }
-                    />
+                        <>
+
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                    Dismantle
+                                </label>
+
+                                <div className="flex h-10.5 items-center justify-between rounded-lg border border-gray-200 px-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            updateField(
+                                                "dismantleCount",
+                                                Math.max(
+                                                    0,
+                                                    Number(data.dismantleCount || 0) - 1
+                                                )
+                                            )
+                                        }
+                                        disabled={Number(data.dismantleCount || 0) <= 0}
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        <FiMinus size={11} />
+                                    </button>
+
+                                    <span className="flex h-7 w-8 items-center justify-center rounded-md border border-gray-300 bg-gray-50 text-xs font-bold">
+                                        {Number(data.dismantleCount || 0)}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            updateField(
+                                                "dismantleCount",
+                                                Number(data.dismantleCount || 0) + 1
+                                            )
+                                        }
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white hover:border-[#C0392B] hover:text-[#C0392B]"
+                                    >
+                                        <FiPlus size={11} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="mb-1.5 block text-xs font-semibold text-gray-600">
+                                    Assembly
+                                </label>
+
+                                <div className="flex h-10.5 items-center justify-between rounded-lg border border-gray-200 px-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            updateField(
+                                                "assemblyCount",
+                                                Math.max(
+                                                    0,
+                                                    Number(data.assemblyCount || 0) - 1
+                                                )
+                                            )
+                                        }
+                                        disabled={Number(data.assemblyCount || 0) <= 0}
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        <FiMinus size={11} />
+                                    </button>
+
+                                    <span className="flex h-7 w-8 items-center justify-center rounded-md border border-gray-300 bg-gray-50 text-xs font-bold">
+                                        {Number(data.assemblyCount || 0)}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            updateField(
+                                                "assemblyCount",
+                                                Number(data.assemblyCount || 0) + 1
+                                            )
+                                        }
+                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white hover:border-[#C0392B] hover:text-[#C0392B]"
+                                    >
+                                        <FiPlus size={11} />
+                                    </button>
+                                </div>
+                            </div>
+
+                        </>
+
+                    ) : (
+
+                        <div className="col-span-2 rounded-xl border border-green-200 bg-green-50 p-3">
+                            <h5 className="mb-3 text-sm font-bold text-green-700">
+                                Packing
+                            </h5>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                {Object.entries(BOX_PACKING_PRICES).map(
+                                    ([boxName, price]) => {
+
+                                        const max =
+                                            getSelectedBoxQuantity(boxName);
+
+                                        const value =
+                                            getPackingCount(boxName);
+
+                                        if (max <= 0) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <div
+                                                key={boxName}
+                                                className="rounded-lg border border-gray-200 bg-white p-2.5"
+                                            >
+                                                <p className="text-center text-xs font-bold text-gray-800">
+                                                    {boxName}
+                                                </p>
+
+                                                <p className="mt-0.5 text-center text-[10px] text-gray-500">
+                                                    £{price} per box
+                                                </p>
+
+                                                <div className="mt-2 flex items-center justify-center gap-0.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            changePackingCount(
+                                                                boxName,
+                                                                -1
+                                                            )
+                                                        }
+                                                        disabled={value <= 0}
+                                                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                                                    >
+                                                        <FiMinus size={10} />
+                                                    </button>
+
+                                                    <span className="flex h-6 w-7 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-50 text-xs font-bold">
+                                                        {value}
+                                                    </span>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            changePackingCount(
+                                                                boxName,
+                                                                1
+                                                            )
+                                                        }
+                                                        disabled={value >= max}
+                                                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white hover:border-[#C0392B] hover:text-[#C0392B] disabled:cursor-not-allowed disabled:opacity-40"
+                                                    >
+                                                        <FiPlus size={10} />
+                                                    </button>
+                                                </div>
+
+                                                <p className="mt-1 text-center text-[10px] text-gray-400">
+                                                    Max {max}
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+                                )}
+                            </div>
+                        </div>
+
+                    )}
 
                 </div>
+
             </div>
 
             <div className="rounded-xl border p-4">

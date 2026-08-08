@@ -50,6 +50,9 @@ export default function BookingWizard() {
         assemblyCount: 0,
         specialInstructions: '',
         packingService: false,
+        smallBoxPackingCount: 0,
+        mediumBoxPackingCount: 0,
+        largeBoxPackingCount: 0,
         distance: 0,
         estimatedDeliveryTime: "",
     });
@@ -143,6 +146,17 @@ export default function BookingWizard() {
         dismantleCount: Number(bookingData.dismantleCount) || 0,
         assemblyCount: Number(bookingData.assemblyCount) || 0,
         packingService: Boolean(bookingData.packingService),
+        serviceType: bookingData.serviceType,
+
+        items: bookingData.items,
+        smallBoxPackingCount:
+            Number(bookingData.smallBoxPackingCount) || 0,
+
+        mediumBoxPackingCount:
+            Number(bookingData.mediumBoxPackingCount) || 0,
+
+        largeBoxPackingCount:
+            Number(bookingData.largeBoxPackingCount) || 0,
         dateType: bookingData.dateType,
         date: bookingData.date,
         timeSlot: bookingData.timeSlot
@@ -159,6 +173,16 @@ export default function BookingWizard() {
         dismantleCount: bookingData.dismantleCount,
         assemblyCount: bookingData.assemblyCount,
         packingService: bookingData.packingService,
+        smallBoxPackingCount:
+            bookingData.smallBoxPackingCount || 0,
+
+        mediumBoxPackingCount:
+            bookingData.mediumBoxPackingCount || 0,
+
+        largeBoxPackingCount:
+            bookingData.largeBoxPackingCount || 0,
+        serviceType: bookingData.serviceType,
+        items: bookingData.items,
         dateType: bookingData.dateType,
         date: bookingData.date,
         timeSlot: bookingData.timeSlot
@@ -336,6 +360,14 @@ export default function BookingWizard() {
                 dismantleItems: bookingData.dismantleItems || [],
                 assemblyItems: bookingData.assemblyItems || [],
                 packingService: bookingData.packingService,
+                smallBoxPackingCount:
+                    Number(bookingData.smallBoxPackingCount) || 0,
+
+                mediumBoxPackingCount:
+                    Number(bookingData.mediumBoxPackingCount) || 0,
+
+                largeBoxPackingCount:
+                    Number(bookingData.largeBoxPackingCount) || 0,
                 specialInstructions: bookingData.specialInstructions,
                 distance: bookingData.distance,
                 estimatedDeliveryTime: bookingData.estimatedDeliveryTime,

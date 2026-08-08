@@ -8,6 +8,13 @@ import MapComponent from './MapComponent';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 
+
+const BOX_PACKING_PRICES = {
+    "Small Box": 2,
+    "Medium Box": 3,
+    "Large Box": 4
+};
+
 const TIME_SLOT_LABELS = {
     early: 'Early slot — 6:00 AM – 6:00 PM',
     morning: 'Morning slot — 8:00 AM – 6:00 PM',
@@ -34,6 +41,19 @@ export default function ConfirmationScreen({
     const [serviceName, setServiceName] = useState('');
     const dismantleCount = Number(data.dismantleCount) || (data.dismantleItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     const assemblyCount = Number(data.assemblyCount) || (data.assemblyItems || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const smallBoxPackingCount =
+        Number(data.smallBoxPackingCount) || 0;
+
+    const mediumBoxPackingCount =
+        Number(data.mediumBoxPackingCount) || 0;
+
+    const largeBoxPackingCount =
+        Number(data.largeBoxPackingCount) || 0;
+
+    const hasBoxPacking =
+        smallBoxPackingCount > 0 ||
+        mediumBoxPackingCount > 0 ||
+        largeBoxPackingCount > 0;
 
     useEffect(() => {
         window.scrollTo({
@@ -251,56 +271,104 @@ export default function ConfirmationScreen({
                         </div>
 
                         {/* Selected add-ons */}
-                        {(dismantleCount > 0 || assemblyCount > 0 || data.packingService) && (
-                            <div className="mt-4 pt-4 border-t border-gray-100">
-                                <p className="font-bold text-[#1a1a1a] mb-3">
-                                    Additional Services
-                                </p>
+                        {(
+                            dismantleCount > 0 ||
+                            assemblyCount > 0 ||
+                            data.packingService ||
+                            hasBoxPacking
+                        ) && (
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <p className="font-bold text-[#1a1a1a] mb-3">
+                                        Additional Services
+                                    </p>
 
-                                <div className="space-y-2">
-                                    {dismantleCount > 0 && (
-                                        <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                            <div className="flex items-center justify-between text-xs mb-2">
-                                                <span className="font-bold text-gray-700">Dismantling ×{dismantleCount}</span>
-                                                <span className="font-bold text-[#C0392B]">+£{(dismantleCount * 20)}</span>
+                                    <div className="space-y-2">
+                                        {dismantleCount > 0 && (
+                                            <div className="bg-gray-50 rounded-lg px-3 py-2">
+                                                <div className="flex items-center justify-between text-xs mb-2">
+                                                    <span className="font-bold text-gray-700">Dismantling ×{dismantleCount}</span>
+                                                    <span className="font-bold text-[#C0392B]">+£{(dismantleCount * 20)}</span>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {(data.dismantleItems || []).map((item, index) => (
+                                                        <span key={item.itemId || index} className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
+                                                            {item.name} ×{item.quantity}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
+                                        )}
 
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {(data.dismantleItems || []).map((item, index) => (
-                                                    <span key={item.itemId || index} className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
-                                                        {item.name} ×{item.quantity}
+                                        {assemblyCount > 0 && (
+                                            <div className="bg-gray-50 rounded-lg px-3 py-2">
+                                                <div className="flex items-center justify-between text-xs mb-2">
+                                                    <span className="font-bold text-gray-700">Assembly ×{assemblyCount}</span>
+                                                    <span className="font-bold text-[#C0392B]">+£{(assemblyCount * 30)}</span>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {(data.assemblyItems || []).map((item, index) => (
+                                                        <span key={item.itemId || index} className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
+                                                            {item.name} ×{item.quantity}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {hasBoxPacking && (
+                                            <div className="bg-gray-50 rounded-lg px-3 py-2">
+
+                                                <div className="flex items-center justify-between text-xs mb-2">
+                                                    <span className="font-bold text-gray-700">
+                                                        Packing
                                                     </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
 
-                                    {assemblyCount > 0 && (
-                                        <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                            <div className="flex items-center justify-between text-xs mb-2">
-                                                <span className="font-bold text-gray-700">Assembly ×{assemblyCount}</span>
-                                                <span className="font-bold text-[#C0392B]">+£{(assemblyCount * 30)}</span>
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {(data.assemblyItems || []).map((item, index) => (
-                                                    <span key={item.itemId || index} className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
-                                                        {item.name} ×{item.quantity}
+                                                    <span className="font-bold text-[#C0392B]">
+                                                        +£{
+                                                            (
+                                                                smallBoxPackingCount * BOX_PACKING_PRICES["Small Box"] +
+                                                                mediumBoxPackingCount * BOX_PACKING_PRICES["Medium Box"] +
+                                                                largeBoxPackingCount * BOX_PACKING_PRICES["Large Box"]
+                                                            ).toFixed(2)
+                                                        }
                                                     </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                                </div>
 
-                                    {data.packingService && (
-                                        <div className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
-                                            <span className="text-gray-700">Professional packing</span>
-                                            <span className="font-bold text-[#C0392B]">+£20.00</span>
-                                        </div>
-                                    )}
+                                                <div className="flex flex-wrap gap-1.5">
+
+                                                    {smallBoxPackingCount > 0 && (
+                                                        <span className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
+                                                            Small Box ×{smallBoxPackingCount}
+                                                        </span>
+                                                    )}
+
+                                                    {mediumBoxPackingCount > 0 && (
+                                                        <span className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
+                                                            Medium Box ×{mediumBoxPackingCount}
+                                                        </span>
+                                                    )}
+
+                                                    {largeBoxPackingCount > 0 && (
+                                                        <span className="text-[10px] bg-white border border-gray-200 rounded-full px-2 py-1">
+                                                            Large Box ×{largeBoxPackingCount}
+                                                        </span>
+                                                    )}
+
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {data.packingService && (
+                                            <div className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2">
+                                                <span className="text-gray-700">Professional packing</span>
+                                                <span className="font-bold text-[#C0392B]">+£20.00</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
                         {/* Total Price */}
                         <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
