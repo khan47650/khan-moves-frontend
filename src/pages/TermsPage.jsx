@@ -1,13 +1,22 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
+  FiArrowLeft,
   FiArrowRight,
   FiMail,
   FiPhone
 } from "react-icons/fi";
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 export default function TermsPage() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "instant"
+    });
+  }, []);
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -23,60 +32,71 @@ export default function TermsPage() {
 
         <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-white opacity-5 blur-3xl" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
-          <motion.span
-            initial={{
-              opacity: 0,
-              y: 20
-            }}
-            animate={{
-              opacity: 1,
-              y: 0
-            }}
-            transition={{
-              duration: 0.5
-            }}
-            className="mb-4 inline-block text-xs font-bold uppercase tracking-[0.25em] text-yellow-400"
+        <div className="relative z-10 mx-auto max-w-7xl px-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white hover:text-[#DC2626] active:scale-95"
           >
-            Legal Information
-          </motion.span>
+            <FiArrowLeft size={18} />
+            Back
+          </button>
 
-          <motion.h1
-            initial={{
-              opacity: 0,
-              y: 30
-            }}
-            animate={{
-              opacity: 1,
-              y: 0
-            }}
-            transition={{
-              duration: 0.6,
-              delay: 0.1
-            }}
-            className="mb-4 text-4xl font-bold leading-tight md:text-5xl"
-          >
-            Terms & Conditions
-          </motion.h1>
+          <div className="text-center">
+            <motion.span
+              initial={{
+                opacity: 0,
+                y: 20
+              }}
+              animate={{
+                opacity: 1,
+                y: 0
+              }}
+              transition={{
+                duration: 0.5
+              }}
+              className="mb-4 inline-block text-xs font-bold uppercase tracking-[0.25em] text-yellow-400"
+            >
+              Legal Information
+            </motion.span>
 
-          <motion.p
-            initial={{
-              opacity: 0,
-              y: 30
-            }}
-            animate={{
-              opacity: 1,
-              y: 0
-            }}
-            transition={{
-              duration: 0.6,
-              delay: 0.2
-            }}
-            className="mx-auto max-w-2xl text-lg text-red-100"
-          >
-            Please read these terms carefully before using Khan Moves
-            Limited services or submitting a booking.
-          </motion.p>
+            <motion.h1
+              initial={{
+                opacity: 0,
+                y: 30
+              }}
+              animate={{
+                opacity: 1,
+                y: 0
+              }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1
+              }}
+              className="mb-4 text-4xl font-bold leading-tight md:text-5xl"
+            >
+              Terms & Conditions
+            </motion.h1>
+
+            <motion.p
+              initial={{
+                opacity: 0,
+                y: 30
+              }}
+              animate={{
+                opacity: 1,
+                y: 0
+              }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2
+              }}
+              className="mx-auto max-w-2xl text-lg text-red-100"
+            >
+              Please read these terms carefully before using Khan Moves
+              Limited services or submitting a booking.
+            </motion.p>
+          </div>
         </div>
       </section>
 

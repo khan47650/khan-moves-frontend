@@ -3,8 +3,10 @@ import { FiMapPin, FiCalendar, FiEdit2, FiTool, FiCheckCircle, FiAlertCircle, Fi
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import ConfirmationDialog from '../ConfirmationDialog';
 import ConfirmationScreen from '../ConfirmationScreen';
+import TermsDialog from "../../TermsDialog";
 
 
 const BOX_PACKING_PRICES = {
@@ -86,6 +88,7 @@ export default function StepConfirmDetails({
     distance = 0, pricingResult = {}
 }) {
     const [termsAccepted, setTermsAccepted] = useState(false);
+    const [termsDialogOpen, setTermsDialogOpen] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [confirmationData, setConfirmationData] = useState(null);
@@ -531,8 +534,16 @@ export default function StepConfirmDetails({
                                         className="w-4 h-4 mt-0.5 shrink-0 accent-green-600" />
                                     <span className="text-xs text-gray-600">
                                         I agree to Khan Moves'{' '}
-                                        <a href="/terms" className="text-[#1a1a1a] font-bold hover:underline">Terms & Conditions</a>{' '}
-                                        and <a href="/privacy" className="text-[#1a1a1a] font-bold hover:underline">Privacy Policy</a>.
+                                        <button
+                                            type="button"
+                                            onClick={() => setTermsDialogOpen(true)}
+                                            className="text-[#1a1a1a] font-bold hover:underline"
+                                        >
+                                            Terms & Conditions
+                                        </button>{' '}
+                                        and <span className="text-[#1a1a1a] font-bold">
+                                            Privacy Policy
+                                        </span>.
                                     </span>
                                 </label>
                             </div>
@@ -591,13 +602,17 @@ export default function StepConfirmDetails({
 
                                     <span className="text-xs text-gray-600">
                                         I agree to Khan Moves'
-                                        <a href="/terms" className="font-bold text-[#1a1a1a] hover:underline">
+                                        <button
+                                            type="button"
+                                            onClick={() => setTermsDialogOpen(true)}
+                                            className="font-bold text-[#1a1a1a] hover:underline"
+                                        >
                                             {" "}Terms & Conditions
-                                        </a>
+                                        </button>
                                         {" "}and
-                                        <a href="/privacy" className="font-bold text-[#1a1a1a] hover:underline">
+                                        <span className="font-bold text-[#1a1a1a]">
                                             {" "}Privacy Policy
-                                        </a>.
+                                        </span>.
                                     </span>
                                 </label>
                             </div>
@@ -637,6 +652,10 @@ export default function StepConfirmDetails({
                 onClose={() => !loading && setDialogOpen(false)}
                 onConfirm={handleDialogConfirm}
                 loading={loading}
+            />
+            <TermsDialog
+                isOpen={termsDialogOpen}
+                onClose={() => setTermsDialogOpen(false)}
             />
         </div>
     );
