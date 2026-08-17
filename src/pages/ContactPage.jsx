@@ -12,8 +12,8 @@ import { openContactWhatsApp } from "../utils/contactWhatsApp";
 
 const COMPANY = {
   name: "Khan Moves Limited",
-  phone: "07424 153126",
-  phoneLink: "07424153126",
+  phone: "07869 416748",
+  phoneLink: "07869416748",
   email: "khanmovesuk@gmail.com",
   address: [
     "265 Golden Hillock Road",

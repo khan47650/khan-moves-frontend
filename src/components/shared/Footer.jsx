@@ -27,7 +27,7 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <FiPhone size={16} className="text-[#F1C40F]" />
-              07424153126
+              07869416748
             </div>
           </div>
 
@@ -93,8 +93,8 @@ export default function Footer() {
                 <FiPhone size={16} className="text-[#F1C40F] mt-0.5 shrink-0" />
                 <div>
                   <div>
-                    <a href="tel:07424153126" className="hover:text-[#F1C40F] transition block">
-                      07424153126
+                    <a href="tel:07869416748" className="hover:text-[#F1C40F] transition block">
+                      07869416748
                     </a>
                   </div>
                 </div>
@@ -128,11 +128,6 @@ export default function Footer() {
           </div>
         </div>
       </div>
-
-      {/* Bottom Bar
-      <div className="bg-[#0f0f0f] px-6 py-4 text-center text-gray-600 text-sm">
-        Made with ❤️ for Khan Moves | Removals Simplified
-      </div> */}
     </footer>
   );
 }

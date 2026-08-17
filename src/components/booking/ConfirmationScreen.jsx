@@ -402,7 +402,7 @@ export default function ConfirmationScreen({
                         {/* Contact buttons */}
                         <div className="flex gap-2 mb-3">
                             <a
-                                href="https://wa.me/447424153126"
+                                href="https://wa.me/447869416748"
                                 target="_blank"
                                 rel="noreferrer"
                                 aria-label="Contact on WhatsApp"
@@ -420,7 +420,7 @@ export default function ConfirmationScreen({
                             </a>
 
                             <a
-                                href="tel:07424153126"
+                                href="tel:07869416748"
                                 aria-label="Call customer care"
                                 className="flex-1 bg-[#1a1a1a] hover:bg-gray-800 text-white py-2 rounded-lg font-bold transition flex items-center justify-center shadow-sm"
                             >
@@ -431,10 +431,10 @@ export default function ConfirmationScreen({
                         <p className="text-xs text-center text-gray-500 mb-3">
                             Need help? Call{' '}
                             <a
-                                href="tel:07424153126"
+                                href="tel:07869416748"
                                 className="font-bold text-[#C0392B] hover:underline"
                             >
-                                07424153126
+                                07869416748
                             </a>
                         </p>
 

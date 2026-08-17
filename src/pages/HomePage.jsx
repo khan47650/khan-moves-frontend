@@ -108,9 +108,9 @@ export default function HomePage() {
                   className="bg-[#DC2626] hover:bg-red-700 text-white font-semibold px-8 py-3 rounded-lg transition flex items-center justify-center gap-2">
                   Get Free Quote <FiArrowRight size={18} />
                 </button>
-                <a href="tel:07424153126"
+                <a href="tel:07869416748"
                   className="bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-3 rounded-lg transition border border-white/20 flex items-center justify-center gap-2">
-                  <FiPhone size={18} /> 07424153126
+                  <FiPhone size={18} /> 07869416748
                 </a>
               </div>
             </motion.div>
@@ -406,9 +406,9 @@ export default function HomePage() {
                 className="bg-white text-[#DC2626] hover:bg-gray-100 font-semibold px-10 py-3 rounded-lg transition flex items-center justify-center gap-2">
                 Get Free Quote <FiArrowRight size={18} />
               </button>
-              <a href="tel:07424153126"
+              <a href="tel:07869416748"
                 className="bg-red-700 hover:bg-red-800 text-white font-semibold px-10 py-3 rounded-lg transition border border-red-500 flex items-center justify-center gap-2">
-                <FiPhone size={18} /> Call 07424153126
+                <FiPhone size={18} /> Call 07869416748
               </a>
             </div>
           </motion.div>

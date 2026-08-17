@@ -152,7 +152,7 @@ export default function Header() {
                 className="relative flex items-center gap-2 overflow-hidden rounded-full bg-yellow-400 px-6 py-2 text-sm font-bold text-[#1a1a1a] shadow-md transition-all duration-300 hover:scale-105 hover:bg-yellow-500 hover:shadow-xl active:scale-95"
               >
                 <FiPhone size={14} />
-                07424 153126
+                07869 416748
               </button>
             </div>
 
@@ -284,7 +284,7 @@ export default function Header() {
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-400 py-2.5 text-sm font-bold text-[#1a1a1a] transition-all duration-200 hover:bg-yellow-500 hover:shadow-lg active:scale-95"
                 >
                   <FiPhone size={14} />
-                  07424 153126
+                  07869 416748
                 </button>
               </div>
             </div>
