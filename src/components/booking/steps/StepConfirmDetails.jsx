@@ -637,7 +637,7 @@ export default function StepConfirmDetails({
                                     className="w-full mt-1.5 py-2 rounded-lg border-2 border-[#C0392B] text-[#C0392B] hover:bg-red-50 transition font-bold text-sm flex items-center justify-center gap-2"
                                 >
                                     <FiPhone size={16} />
-                                    Call 07424 153126
+                                    Call 07869416748
                                 </a>
 
                                 {!termsAccepted && <p className="text-[8px] leading-none text-gray-400 text-center mt-0.5">Accept terms to continue</p>}
