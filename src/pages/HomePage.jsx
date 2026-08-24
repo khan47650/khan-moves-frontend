@@ -268,7 +268,7 @@ export default function HomePage() {
                   duration: 0.5,
                   delay: 0.35,
                 }}
-                className="mt-6 flex items-center gap-2 md:mt-10"
+                className="mt-6 hidden items-center gap-2 md:flex md:mt-10"
               >
                 <span className="flex h-7.75 w-7.75 items-center justify-center rounded-md bg-[#FFEA00]">
                   <img
