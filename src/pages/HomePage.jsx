@@ -279,10 +279,7 @@ export default function HomePage() {
                         <img
                           src={service.image}
                           alt={service.label}
-                          className={`object-contain transition-transform duration-300 group-hover:scale-105 ${idx < 2
-                            ? "h-[230.36px] w-[291.99px] max-w-none"
-                            : "h-[161.69px] w-[163.39px] max-w-none"
-                            }`}
+                          className="max-h-full max-w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
                         <span className="text-xs font-semibold text-gray-700">
@@ -403,10 +400,7 @@ export default function HomePage() {
                       <img
                         src={service.image}
                         alt={service.label}
-                        className={`object-contain transition-transform duration-300 group-hover:scale-105 ${idx < 2
-                          ? "h-33.75 w-43 max-w-none"
-                          : "h-23.75 w-24 max-w-none"
-                          }`}
+                        className="max-h-full max-w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <span className="text-[9px] font-semibold text-gray-700">
@@ -441,9 +435,8 @@ export default function HomePage() {
             transition={{
               duration: 0.45,
               delay: 0.35,
-              ease: "easeOut",
             }}
-            className="mt-11.25 flex items-center justify-center gap-1.75"
+            className="mt-20 flex items-center justify-center gap-1.75"
           >
             <span className="flex h-8.25 w-8.25 shrink-0 items-center justify-center rounded-[5px]">
               <img
