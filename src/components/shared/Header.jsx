@@ -141,25 +141,25 @@ export default function Header() {
       {/* =====================================================
           NAVBAR
       ====================================================== */}
-      <nav className="sticky top-0 z-1000 w-full bg-[#E20613] text-white">
+      <nav className="sticky top-0 z-1000 w-full overflow-x-clip bg-[#E20613] text-white">
 
-        <div className="flex h-17 w-full items-center justify-center px-4">
+        <div className="mx-auto flex h-20 w-[92%] max-w-360 items-center justify-center max-md:h-14.75 max-md:w-full max-md:px-4">
 
           {/* =================================================
               DESKTOP NAVIGATION
           ================================================= */}
-          <div className="hidden items-center md:flex">
+          <div className="hidden items-center md:flex gap-2">
 
             {/* LOGO */}
             <Link
               to="/"
               onClick={closeMenu}
-              className="mr-8 flex shrink-0 items-center"
+              className="mr-10 flex shrink-0 items-center"
             >
               <img
                 src="/Khan_moves_new_logo.png"
                 alt="Khan Moves"
-                className="h-9 w-auto object-contain"
+                className="h-8.75 w-auto object-contain"
               />
             </Link>
 
@@ -176,7 +176,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setServicesOpen((value) => !value)}
-                className="flex items-center gap-1 px-3 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+                className="flex items-center gap-1 px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
               >
                 Services
 
@@ -253,7 +253,7 @@ export default function Header() {
             <button
               type="button"
               onClick={handleBlogsClick}
-              className="px-3 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+              className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
             >
               Blogs
             </button>
@@ -263,7 +263,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => { }}
-              className="px-3 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+              className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
             >
               Reviews
             </button>
@@ -274,7 +274,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={handleSignIn}
-                className="px-3 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+                className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
               >
                 Sign In
               </button>
@@ -312,7 +312,7 @@ export default function Header() {
               type="button"
               onClick={handleWhatsApp}
               aria-label="WhatsApp"
-              className="relative top-0.5 ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(255,234,0,0.8)]"
+              className="relative top-0.5 ml-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(255,234,0,0.8)]"
             >
               <img
                 src="/whats_app_icon.svg"
@@ -327,17 +327,17 @@ export default function Header() {
               type="button"
               onClick={handleCall}
               aria-label="Call 07869416748"
-              className="ml-2 flex h-8 shrink-0 items-center overflow-hidden rounded-[7px] bg-white text-black transition-all duration-200 hover:scale-105 hover:shadow-[0_0_8px_rgba(255,234,0,0.6)]"
+              className="ml-4 flex h-7 shrink-0 items-center overflow-hidden rounded-md bg-white text-black transition-all duration-200 hover:scale-105 hover:shadow-[0_0_8px_rgba(255,234,0,0.6)]"
             >
-              <span className="px-2 text-[11px] font-bold leading-none">
+              <span className="px-2 text-[10px] font-bold leading-none">
                 07869416748
               </span>
 
-              <span className="flex h-8 w-8 items-center justify-center bg-[#FFEA00]">
+              <span className="flex h-7 w-7 items-center justify-center bg-[#FFEA00]">
                 <img
                   src="/contact_person.svg"
                   alt="Contact"
-                  className="h-5.75 w-5.75 object-contain"
+                  className="h-5 w-5 object-contain"
                 />
               </span>
             </button>
@@ -359,7 +359,7 @@ export default function Header() {
               <img
                 src="/Khan_moves_new_logo.png"
                 alt="Khan Moves"
-                className="h-7.5 w-auto object-contain"
+                className="h-6 w-auto object-contain"
               />
             </Link>
 
@@ -372,7 +372,7 @@ export default function Header() {
               className="relative flex h-10 w-10 items-center justify-center"
             >
               <FiMenu
-                size={28}
+                size={24}
                 strokeWidth={2.8}
                 className={`absolute transition-all duration-200 ${isOpen
                   ? "rotate-90 scale-50 opacity-0"
@@ -581,13 +581,13 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={handleCall}
-                  className="mt-4 flex h-9.5 w-full items-center justify-center overflow-hidden rounded-[7px] bg-white text-black"
+                  className="mt-4 flex h-9.5 w-fit items-center justify-start overflow-hidden rounded-[7px] bg-white text-black"
                 >
                   <span className="px-3 text-[13px] font-bold">
                     07869416748
                   </span>
 
-                  <span className="flex h-9.5 w-9.5 items-center justify-center bg-[#FFEA00]">
+                  <span className="flex h-9.5 w-9.5 shrink-0 items-center justify-center bg-[#FFEA00]">
                     <img
                       src="/contact_person.svg"
                       alt="Contact"

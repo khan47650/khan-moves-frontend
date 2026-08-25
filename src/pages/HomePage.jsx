@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  FiArrowRight, FiPhone, FiMapPin, FiClock, FiCheckCircle,
-} from 'react-icons/fi';
-import { FaStar } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/api';
 
-
-const getTheme = (idx) => SERVICE_THEMES[idx % SERVICE_THEMES.length];
-
-
-
-// ── Main Component ────────────────────────────────────────────────────────────
 export default function HomePage() {
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
@@ -211,75 +201,44 @@ export default function HomePage() {
   return (
     <div className="w-full overflow-x-hidden bg-[#F5F1ED]">
 
-      {/* ── HERO ── */}
-      <section className="relative z-10 h-120 overflow-visible bg-[#E20613] text-white md:h-120">
-        <div className="mx-auto flex h-full w-full max-w-195 items-start justify-center px-3 md:px-0">
+      {/* ── DESKTOP HERO ── */}
+      <section className="relative z-10 hidden h-svh overflow-visible bg-[#E20613] text-white md:block">
+        <div className="mx-auto h-full w-full max-w-226">
+          <div className="relative h-full w-full">
 
-          <div className="relative flex h-full w-full">
-
-            {/* LEFT CONTENT */}
+            {/* HERO TEXT */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
+              initial={{ opacity: 0, x: -25 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{
-                duration: 0.7,
-                ease: "easeOut",
-              }}
-              className="absolute left-3 top-13.75 z-20 md:left-0 md:top-13.75"
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="absolute left-0 top-18 z-20"
             >
-              <h1 className="text-[25px] font-bold leading-[1.08] md:text-[38px]">
-                <span className="md:hidden">Get a Free Quote</span>
-
-                <span className="hidden md:inline">
-                  Get a Free
-                  <br />
-                  Quote
-                </span>
+              <h1 className="text-[50px] font-bold leading-[1.05]">
+                Get a Free
+                <br />
+                Quote
               </h1>
 
-              <p className="mt-3 text-[12px] font-medium leading-tight md:mt-5 md:text-[16px]">
-                <span className="md:hidden">
-                  Every move on the ground, with no
-                  <br />
-                  hidden charges and no unnecessary
-                  <br />
-                  middlemen.
-                  <br />
-                  <br />
-                  Find a budget price for your move
-                  <br />
-                  below
-                </span>
-
-                <span className="hidden md:inline">
-                  Find Budget Price
-                  <br />
-                  for your move
-                  <br />
-                  here
-                </span>
+              <p className="mt-5 text-[32px] font-medium leading-[1.05]">
+                Find Budget Price
+                <br />
+                for your move
+                <br />
+                here
               </p>
 
               {/* NEED HELP */}
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.35,
-                }}
-                className="mt-6 hidden items-center gap-2 md:flex md:mt-10"
-              >
-                <span className="flex h-7.75 w-7.75 items-center justify-center rounded-md bg-[#FFEA00]">
+              <div className="mt-10 flex items-center gap-2">
+                <span className="flex h-7.75 w-7.75 items-center justify-center rounded-md">
                   <img
                     src="/whats_app_icon.svg"
                     alt="WhatsApp"
-                    className="h-5 w-5 object-contain"
+                    className="h-8 w-8 object-contain mt-1"
                   />
                 </span>
 
-                <span className="text-left text-[10px] leading-[1.1]">
-                  <span className="block text-[9px] text-white">
+                <span className="text-[16px] leading-[1.1]">
+                  <span className="block text-[16px]">
                     Need Help
                   </span>
 
@@ -287,46 +246,33 @@ export default function HomePage() {
                     Getting a Quote?
                   </span>
                 </span>
-              </motion.div>
+              </div>
             </motion.div>
 
 
             {/* SERVICE CARDS */}
-            <div className="absolute left-[43%] top-8.75 z-10 w-117.5 md:left-75 md:top-8.75 md:w-117.5 max-md:left-1/2 max-md:-translate-x-1/2 max-md:top-51.25 max-md:w-[calc(100%-24px)]">
-              <div className="grid grid-cols-6 gap-2.5 max-md:gap-1.5">
+            <div className="absolute left-82.5 top-14.5 z-10 w-150">
+              <div className="grid grid-cols-6 gap-4">
 
                 {services.slice(0, 5).map((service, idx) => (
                   <motion.button
                     key={service._id}
                     type="button"
                     onClick={() => goToBooking(service.slug)}
-                    initial={{
-                      opacity: 0,
-                      y: 25,
-                      scale: 0.97,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{
                       duration: 0.45,
                       delay: 0.15 + idx * 0.08,
-                      ease: "easeOut",
                     }}
-                    whileHover={{
-                      scale: 1.02,
-                    }}
+                    whileHover={{ scale: 1.02 }}
                     className={`group overflow-hidden rounded-[9px] bg-[#FFEA00] text-left ${idx < 2 ? "col-span-3" : "col-span-2"
-                      } max-md:rounded-md`}
+                      }`}
                   >
 
-                    {/* YELLOW IMAGE AREA */}
+                    {/* CARD IMAGE */}
                     <div
-                      className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2
-                        ? "h-36.25 max-md:h-18"
-                        : "h-26.25 max-md:h-14.5"
+                      className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2 ? "h-36.25" : "h-26.5"
                         }`}
                     >
                       {service.image ? (
@@ -334,36 +280,30 @@ export default function HomePage() {
                           src={service.image}
                           alt={service.label}
                           className={`object-contain transition-transform duration-300 group-hover:scale-105 ${idx < 2
-                            ? "h-28 w-[88%] max-md:h-14.5 max-md:w-[82%]"
-                            : "h-20.5 w-[82%] max-md:h-12 max-md:w-[78%]"
+                            ? "h-[230.36px] w-[291.99px] max-w-none"
+                            : "h-[161.69px] w-[163.39px] max-w-none"
                             }`}
                         />
                       ) : (
-                        <div className="text-xs font-semibold text-gray-700">
+                        <span className="text-xs font-semibold text-gray-700">
                           {service.label}
-                        </div>
+                        </span>
                       )}
                     </div>
 
-                    {/* WHITE LABEL */}
+                    {/* CARD LABEL */}
                     <div
-                      className={`flex items-center justify-between bg-white px-3 ${idx < 2
-                        ? "h-7.25 max-md:h-4.25"
-                        : "h-6.75 max-md:h-4.25"
-                        } max-md:px-1.5`}
+                      className={`flex items-center justify-between bg-white px-2.5 ${idx < 2 ? "h-7.25" : "h-6.75"
+                        }`}
                     >
-                      {/* SERVICE NAME */}
-                      <span className="flex min-w-0 items-center gap-2 max-md:gap-1">
-                        <span className="truncate text-[12px] font-bold text-[#555555] max-md:text-[8px]">
-                          {service.label}
-                        </span>
+                      <span className="min-w-0 truncate text-[12px] font-bold text-[#555555]">
+                        {service.label}
                       </span>
 
-                      {/* RIGHT ARROW */}
                       <img
                         src="/arrow_right_icon.svg"
                         alt=""
-                        className="h-5 w-5 shrink-0 object-contain max-md:h-3 max-md:w-3"
+                        className="h-4.75 w-4.75 shrink-0 object-contain"
                       />
                     </div>
 
@@ -376,29 +316,18 @@ export default function HomePage() {
 
             {/* DISCOUNT BUBBLE */}
             <motion.div
-              initial={{
-                opacity: 0,
-                y: 20,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.6,
-                delay: 0.6,
-                ease: "easeOut",
-              }}
-              className="absolute top-97.5 left-[55%] z-20 max-md:top-auto max-md:bottom-8.75 max-md:left-16.25"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.55 }}
+              className="absolute left-125 top-107.5 z-20"
             >
-              <div className="relative w-30.5 rounded-[7px] bg-white px-3 py-3 text-[9px] leading-tight text-gray-600 shadow-sm max-md:w-20.5 max-md:px-2 max-md:py-2 max-md:text-[6px]">
+              <div className="relative w-35.75 rounded-[7px] bg-white px-3 py-3 text-[16px] leading-tight text-gray-600 shadow-sm">
                 Get guaranteed
                 <br />
                 discount on
                 <br />
                 flexible date.
 
-                {/* Speech bubble tail */}
                 <span className="absolute -bottom-3 right-0 h-0 w-0 border-l-20 border-t-14 border-l-transparent border-t-white" />
               </div>
             </motion.div>
@@ -408,30 +337,172 @@ export default function HomePage() {
             <motion.img
               src="/corcodile_image.png"
               alt=""
-              initial={{
-                opacity: 0,
-                x: 40,
-              }}
-              animate={{
-                opacity: 1,
-                x: 0,
-              }}
-              transition={{
-                duration: 0.8,
-                delay: 0.45,
-                ease: "easeOut",
-              }}
-              className="pointer-events-none absolute top-87.5 -right-18.75 z-5 w-75 select-none object-contain max-md:top-93.75 max-md:right-0 max-md:w-43.75"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.45 }}
+              className="pointer-events-none absolute -bottom-15 -right-18.75 z-20 w-75 select-none object-contain"
             />
 
           </div>
         </div>
-      </section >
+      </section>
+      {/* ── MOBILE HERO ── */}
+      <section className="relative z-10 h-[calc(100svh-70px)] overflow-visible bg-[#E20613] text-white md:hidden">
+        <div className="relative h-full w-full px-4.5">
+
+          {/* HERO TEXT */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="pt-5.5"
+          >
+            <h1 className="text-[36px] font-bold leading-[1.05]">
+              Get a Free Quote
+            </h1>
+
+            <p className="mt-3.25 text-[18px] font-medium leading-[1.18]">
+              Every move on the ground, with no
+              <br />
+              hidden charges and no unnecessary
+              <br />
+              middlemen.
+              <br />
+              <br />
+              Find a budget price for your move
+              <br />
+              below
+            </p>
+          </motion.div>
+
+          {/* SERVICE CARDS */}
+          <div className="mx-auto mt-12.5 w-full max-w-92.5">
+            <div className="grid grid-cols-6 gap-3">
+              {services.slice(0, 5).map((service, idx) => (
+                <motion.button
+                  key={service._id}
+                  type="button"
+                  onClick={() => goToBooking(service.slug)}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: idx * 0.06,
+                    ease: "easeOut",
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`group overflow-hidden rounded-[9px] bg-[#FFEA00] text-left ${idx < 2 ? "col-span-3" : "col-span-2"
+                    }`}
+                >
+                  {/* CARD IMAGE */}
+                  <div
+                    className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2 ? "h-36.25" : "h-27"
+                      }`}
+                  >
+                    {service.image ? (
+                      <img
+                        src={service.image}
+                        alt={service.label}
+                        className={`object-contain transition-transform duration-300 group-hover:scale-105 ${idx < 2
+                          ? "h-33.75 w-43 max-w-none"
+                          : "h-23.75 w-24 max-w-none"
+                          }`}
+                      />
+                    ) : (
+                      <span className="text-[9px] font-semibold text-gray-700">
+                        {service.label}
+                      </span>
+                    )}
+                  </div>
+                  {/* CARD LABEL */}
+                  <div
+                    className={`flex items-center justify-between bg-white px-1.75 ${idx < 2 ? "h-6.75" : "h-6.25"
+                      }`}
+                  >
+                    <span className="min-w-0 truncate text-[16px] font-bold leading-none text-[#555555]">
+                      {service.label}
+                    </span>
+
+                    <img
+                      src="/arrow_right_icon.svg"
+                      alt=""
+                      className="h-3.5 w-3.5 shrink-0 object-contain"
+                    />
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* NEED HELP */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.45,
+              delay: 0.35,
+              ease: "easeOut",
+            }}
+            className="mt-11.25 flex items-center justify-center gap-1.75"
+          >
+            <span className="flex h-8.25 w-8.25 shrink-0 items-center justify-center rounded-[5px]">
+              <img
+                src="/whats_app_icon.svg"
+                alt="WhatsApp"
+                className="h-8.25 w-8.25 object-contain"
+              />
+            </span>
+
+            <span className="whitespace-nowrap text-[16px] leading-[1.1]">
+              Need Help{" "}
+              <span className="font-semibold underline">
+                Getting a Quote?
+              </span>
+            </span>
+          </motion.div>
+
+          {/* DISCOUNT BUBBLE */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.45,
+              delay: 0.45,
+            }}
+            className="absolute bottom-8.75 right-42.5 z-30"
+          >
+            <div className="relative w-30 rounded-[7px] bg-white px-2.5 py-2.25 text-[12px] font-semibold leading-[1.2] text-gray-700 shadow-sm">
+              Get guaranteed
+              <br />
+              discount on
+              <br />
+              flexible date.
+
+              <span className="absolute -bottom-2 right-0 h-0 w-0 border-l-15 border-t-10 border-l-transparent border-t-white" />
+            </div>
+          </motion.div>
+
+
+          {/* CROCODILE */}
+          <motion.img
+            src="/corcodile_image.png"
+            alt=""
+            initial={{ opacity: 0, x: 15 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{
+              duration: 0.7,
+              delay: 0.4,
+            }}
+            className="pointer-events-none absolute -bottom-15 -right-5 z-20 w-47.5 select-none object-contain"
+          />
+
+        </div>
+      </section>
 
       {/* ── CUSTOMER MESSAGE SECTION ── */}
-      <section className="relative z-0 min-h-122.5 overflow-hidden bg-[#FFEA00] max-md:min-h-107.5">
+      <section className="relative z-0 h-[calc(100svh-35px)] overflow-hidden bg-[#FFEA00] md:min-h-122.5">
 
-        <div className="mx-auto w-full max-w-195 px-3 pt-13.75 md:px-0 md:pt-19.5">
+        <div className="mx-auto w-full max-w-226 px-4.5 pt-10 md:px-0 md:pt-19.5">
 
           <motion.div
             initial={{
@@ -469,7 +540,7 @@ export default function HomePage() {
               transition={{
                 duration: 0.6,
               }}
-              className="text-[24px] font-bold leading-[1.15] text-[#555555] md:text-[34px]"
+              className="text-[28px] font-bold leading-[1.15] text-[#555555] md:text-[34px]"
             >
               What our customers are saying
             </motion.h2>
@@ -492,12 +563,12 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.15,
               }}
-              className="mt-5 max-w-147.5 text-[13px] leading-[1.35] text-[#555555] md:text-[16px]"
+              className="mt-5 max-w-147.5 text-[15px] leading-[1.35] text-[#555555] md:text-[16px]"
             >
               We keep every move personal, careful.
               <br />
               Because we own the company, we take responsibility for
-              <br />
+              <br className="hidden md:block" />
               the service from start to end.
             </motion.p>
 
@@ -519,54 +590,295 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.3,
               }}
-              className="mt-5 max-w-150 text-[13px] leading-[1.35] text-[#555555] md:text-[16px]"
+              className="mt-5 max-w-150 text-[15px] leading-[1.35] text-[#555555] md:text-[16px]"
             >
               Careful handling and genuine cooperation on moving day,
-              <br />
+              <br className="hidden md:block" />
               with no hidden charges or last-minute penalties.
             </motion.p>
 
           </motion.div>
 
         </div>
-      </section >
+      </section>
 
       {/* ── WHY KHAN MOVES / HOW IT WORKS ── */}
       <section className="relative overflow-hidden bg-white text-[#555555]">
+        <div className="block md:hidden">
+          <div className="min-h-svh px-5 pt-9.5 pb-6.25">
 
-        <div className="mx-auto w-full max-w-195 px-3 py-13.75 md:px-0 md:py-21.25">
+            {/* HEADING */}
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-[32px] font-bold leading-[1.05] text-[#555555]"
+            >
+              Reason why
+              <br />
+              families love us
+            </motion.h2>
 
-          {/* =====================================================
-              REASON WHY FAMILIES LOVE US
-          ====================================================== */}
-          <div className="grid grid-cols-1 items-center gap-10 md:grid-cols-[1fr_320px] md:gap-8">
+            {/* DESCRIPTION */}
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mt-5 text-[15px] leading-tight text-[#555555]"
+            >
+              We don't want to push you into the most expensive option.
+              <br />
+              Plus there are no hidden charges and no unnecessary
+              <br />
+              middlemen.
+              <br />
+              Moving shouldn't feel like a booking nightmare. Right?
+            </motion.p>
+
+            {/* CEO IMAGE */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="mt-3.5 flex justify-center"
+            >
+              <img
+                src="/ceo_image.png"
+                alt="Khan Moves"
+                className="w-45 object-contain"
+              />
+            </motion.div>
+
+            {/* FEATURE 1 */}
+            <motion.div
+              initial={{ opacity: 0, x: -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-5 flex items-start gap-2.5"
+            >
+              <img
+                src="/bill_icon.svg"
+                alt=""
+                className="mt-0.5 h-5 w-5 shrink-0 object-contain"
+              />
+
+              <p className="text-[15px] leading-[1.3] text-[#555555]">
+                Our prices are competitive and built around
+                <br />
+                the move you actually need. No inflated costs, and
+                <br />
+                no job changes. Just a fair price for the job.
+              </p>
+            </motion.div>
+
+            {/* FEATURE 2 */}
+            <motion.div
+              initial={{ opacity: 0, x: -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-5 flex items-start gap-2.5"
+            >
+              <img
+                src="/calender_icon.svg"
+                alt=""
+                className="mt-0.5 h-5 w-5 shrink-0 object-contain"
+              />
+
+              <p className="text-[15px] leading-[1.3] text-[#555555]">
+                Get more flexibility. We allow you to choose a
+                <br />
+                wider moving window and we can offer better
+                <br />
+                rates, helping you save more without
+                <br />
+                compromising the service.
+              </p>
+            </motion.div>
+
+            {/* FEATURE 3 */}
+            <motion.div
+              initial={{ opacity: 0, x: -15 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-5 flex items-start gap-2.5"
+            >
+              <img
+                src="/team_icon.svg"
+                alt=""
+                className="mt-0.5 h-5 w-5 shrink-0 object-contain"
+              />
+
+              <p className="text-[15px] leading-[1.3] text-[#555555]">
+                We believe quality and trust matter. We
+                <br />
+                communicate clearly and handle your move
+                <br />
+                with care, whether you're moving across a
+                <br />
+                city or across the country.
+              </p>
+            </motion.div>
+
+          </div>
+
+          <div className="min-h-svh px-5 pt-7.5 pb-7.5">
+
+            {/* TRUCK */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="flex flex-col items-center"
+            >
+
+              <img
+                src="/truck_image.png"
+                alt="Khan Moves truck"
+                className="w-47.5 object-contain"
+              />
+
+              <button
+                type="button"
+                onClick={() => navigate("/booking")}
+                className="-mt-0.5 rounded-full bg-[#FFEA00] px-6.25 py-2 text-[18px] font-bold text-[#555555]"
+              >
+                Get Quote
+              </button>
+
+              <span className="mt-0.75 text-[15px] text-[#555555]">
+                only in 2 min
+              </span>
+
+            </motion.div>
+
+
+            {/* HEADING */}
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mt-6 text-[32px] font-bold leading-[1.05] text-[#555555]"
+            >
+              How Khan Moves
+              <br />
+              Work?
+            </motion.h2>
+
+
+            {/* DESCRIPTION */}
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mt-4.5 text-[15px] leading-tight text-[#555555]"
+            >
+              Process is actually very simple. Get free
+              <br />
+              quote with details and prepare yourself
+              <br />
+              for a move by our expert team. Here's how
+              <br />
+              we work:
+            </motion.p>
+
+
+            {/* STEP 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-5.5"
+            >
+              <h3 className="text-[15px] font-semibold text-[#555555]">
+                1. Get a Free Quote
+              </h3>
+
+              <p className="mt-1.25 text-[15px] leading-[1.3] text-[#555555]">
+                Select pickup and delivery location.
+                <br />
+                Select items you want moving. You'll get
+                <br />
+                your price instantly. Pick your date and
+                <br />
+                get booked in!
+              </p>
+            </motion.div>
+
+
+            {/* STEP 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-5"
+            >
+              <h3 className="text-[15px] font-semibold text-[#555555]">
+                2. Meet our expert Team
+              </h3>
+
+              <p className="mt-1.25 text-[15px] leading-[1.3] text-[#555555]">
+                Our expert team will review your
+                <br />
+                booking and will send confirmation email
+                <br />
+                or whatsapp.
+              </p>
+            </motion.div>
+
+
+            {/* STEP 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-5"
+            >
+              <h3 className="text-[15px] font-semibold text-[#555555]">
+                3. Stay updated
+              </h3>
+
+              <p className="mt-1.25 text-[15px] leading-[1.3] text-[#555555]">
+                You'll be updated every step of the way,
+                <br />
+                with WhatsApp notifications.
+              </p>
+            </motion.div>
+
+          </div>
+
+        </div>
+
+        <div className="hidden md:block">
+          <div className="relative mx-auto h-svh w-full max-w-226">
 
             {/* LEFT CONTENT */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="absolute left-0 top-13.75 z-10"
             >
-              <motion.h2
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="max-w-65 text-[25px] font-bold leading-[1.08] text-[#555555] md:text-[30px]"
-              >
+
+              <h2 className="text-[30px] font-bold leading-[1.05] text-[#555555]">
                 Reason why
                 <br />
                 families love us
-              </motion.h2>
+              </h2>
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="mt-4 max-w-97.5 text-[11px] leading-[1.45] text-[#555555] md:text-[13px]"
-              >
+              <p className="mt-5 text-[13px] leading-[1.35] text-[#555555]">
                 We don't want to push you into the most expensive option.
                 <br />
                 Plus there are no hidden charges and no unnecessary
@@ -574,260 +886,198 @@ export default function HomePage() {
                 middlemen.
                 <br />
                 Moving shouldn't feel like a booking nightmare. Right?
-              </motion.p>
+              </p>
+
 
               {/* FEATURE 1 */}
-              <motion.div
-                initial={{ opacity: 0, x: -25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="mt-7 flex items-start gap-4"
-              >
+              <div className="mt-12 flex items-start gap-3">
                 <img
                   src="/bill_icon.svg"
                   alt=""
-                  className="mt-1 h-7 w-7 shrink-0 object-contain md:h-8 md:w-8"
+                  className="h-7 w-7 object-contain"
                 />
 
-                <p className="max-w-87.5 text-[10px] leading-[1.4] text-[#555555] md:text-[12px]">
+                <p className="text-[12px] leading-[1.3] text-[#555555]">
                   Our prices are competitive and built around
-                  <br className="hidden md:block" />
+                  <br />
                   the move you actually need. No inflated costs,
-                  <br className="hidden md:block" />
+                  <br />
                   and no job changes. Just a fair price for the job.
                 </p>
-              </motion.div>
+              </div>
+
 
               {/* FEATURE 2 */}
-              <motion.div
-                initial={{ opacity: 0, x: -25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="mt-6 flex items-start gap-4"
-              >
+              <div className="mt-6.75 flex items-start gap-3">
                 <img
                   src="/calender_icon.svg"
                   alt=""
-                  className="mt-1 h-7 w-7 shrink-0 object-contain md:h-8 md:w-8"
+                  className="h-7 w-7 object-contain"
                 />
 
-                <p className="max-w-87.5 text-[10px] leading-[1.4] text-[#555555] md:text-[12px]">
-                  Get more flexibility. We allow you to choose a
-                  <br className="hidden md:block" />
+                <p className="text-[12px] leading-[1.3] text-[#555555]">
+                  Get more flexibility? We allow you to choose a
+                  <br />
                   wider moving window and we can offer better
-                  <br className="hidden md:block" />
-                  rates, helping you save on cost without
-                  <br className="hidden md:block" />
-                  compromising on the service.
+                  <br />
+                  rates, helping you save more without
+                  <br />
+                  compromising the service.
                 </p>
-              </motion.div>
+              </div>
+
 
               {/* FEATURE 3 */}
-              <motion.div
-                initial={{ opacity: 0, x: -25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="mt-6 flex items-start gap-4"
-              >
+              <div className="mt-6.75 flex items-start gap-3">
                 <img
                   src="/team_icon.svg"
                   alt=""
-                  className="mt-1 h-7 w-7 shrink-0 object-contain md:h-8 md:w-8"
+                  className="h-7 w-7 object-contain"
                 />
 
-                <p className="max-w-87.5 text-[10px] leading-[1.4] text-[#555555] md:text-[12px]">
+                <p className="text-[12px] leading-[1.3] text-[#555555]">
                   We believe quality and trust matter. We
-                  <br className="hidden md:block" />
+                  <br />
                   communicate clearly and handle your move
-                  <br className="hidden md:block" />
+                  <br />
                   with care, whether you're moving across a city
-                  <br className="hidden md:block" />
+                  <br />
                   or across the country.
                 </p>
-              </motion.div>
+              </div>
+
             </motion.div>
 
-
-            {/* CEO IMAGE */}
+            {/* DESKTOP CEO  */}
             <motion.div
-              initial={{ opacity: 0, x: 45, scale: 0.95 }}
-              whileInView={{ opacity: 1, x: 0, scale: 1 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.8,
-                ease: "easeOut",
-              }}
-              className="flex items-center justify-center md:justify-end"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="absolute right-20 top-12 z-10"
             >
               <img
                 src="/ceo_image.png"
                 alt="Khan Moves"
-                className="w-58.75 object-contain md:w-71.25"
+                className="w-71.25 object-contain"
               />
             </motion.div>
 
           </div>
 
-
-          {/* =====================================================
-              HOW KHAN MOVES WORK
-          ====================================================== */}
-          <div className="mt-18.75 grid grid-cols-1 items-center gap-10 md:mt-26.25 md:grid-cols-[1fr_320px] md:gap-8">
+          <div className="relative mx-auto h-svh w-full max-w-226">
 
             {/* LEFT CONTENT */}
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="absolute left-0 top-16.25 z-10"
             >
-              <motion.h2
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="text-[25px] font-bold leading-[1.08] text-[#555555] md:text-[30px]"
-              >
+
+              <h2 className="text-[30px] font-bold leading-[1.05] text-[#555555]">
                 How Khan Moves
                 <br />
                 Work?
-              </motion.h2>
+              </h2>
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="mt-5 max-w-95 text-[10px] leading-[1.45] text-[#555555] md:text-[13px]"
-              >
+              <p className="mt-6 text-[13px] leading-[1.35] text-[#555555]">
                 Process is actually very simple.
                 <br />
-                Get free quote with details
+                Get free quote within minutes
                 <br />
-                and get your quote from a move
+                and prepare yourself for a move
                 <br />
                 by our expert team. Here's how
                 <br />
                 we work:
-              </motion.p>
+              </p>
 
 
               {/* STEP 1 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="mt-5"
-              >
-                <h3 className="text-[11px] font-semibold text-[#555555] md:text-[13px]">
+              <div className="mt-6">
+                <h3 className="text-[13px] font-semibold text-[#555555]">
                   1. Get a Free Quote
                 </h3>
 
-                <p className="mt-1 max-w-92.5 text-[10px] leading-[1.4] text-[#555555] md:text-[12px]">
+                <p className="mt-1.25 text-[12px] leading-[1.3] text-[#555555]">
                   Select pickup and delivery location.
                   <br />
-                  Select items and moving time. You'll get
+                  Select items you want moving. You'll get
                   <br />
-                  your estimated price. Pick your date and
+                  your price instantly. Pick your date and
                   <br />
-                  get booked!
+                  get booked in!
                 </p>
-              </motion.div>
+              </div>
 
 
               {/* STEP 2 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="mt-5"
-              >
-                <h3 className="text-[11px] font-semibold text-[#555555] md:text-[13px]">
+              <div className="mt-6">
+                <h3 className="text-[13px] font-semibold text-[#555555]">
                   2. Meet our expert Team
                 </h3>
 
-                <p className="mt-1 max-w-92.5 text-[10px] leading-[1.4] text-[#555555] md:text-[12px]">
+                <p className="mt-1.25 text-[12px] leading-[1.3] text-[#555555]">
                   Our expert team will review your
                   <br />
                   booking and will send confirmation email
                   <br />
-                  or WhatsApp.
+                  or whatsapp.
                 </p>
-              </motion.div>
+              </div>
 
 
               {/* STEP 3 */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="mt-5"
-              >
-                <h3 className="text-[11px] font-semibold text-[#555555] md:text-[13px]">
+              <div className="mt-6">
+                <h3 className="text-[13px] font-semibold text-[#555555]">
                   3. Stay updated
                 </h3>
 
-                <p className="mt-1 max-w-92.5 text-[10px] leading-[1.4] text-[#555555] md:text-[12px]">
-                  You'll be updated every step of the way
+                <p className="mt-1.25 text-[12px] leading-[1.3] text-[#555555]">
+                  You'll be updated every step of the way,
                   <br />
                   with WhatsApp notifications.
                 </p>
-              </motion.div>
+              </div>
 
             </motion.div>
 
 
-            {/* RIGHT / TRUCK + BUTTON */}
+            {/* DESKTOP TRUCK */}
             <motion.div
-              initial={{ opacity: 0, x: 45, y: 20 }}
-              whileInView={{ opacity: 1, x: 0, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.8,
-                ease: "easeOut",
-              }}
-              className="flex flex-col items-center justify-center md:items-center"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="absolute right-17.5 top-18.75 z-10 flex flex-col items-center"
             >
-              {/* IMPORTANT:
-                  Replace this filename with the exact truck image
-                  filename from your /public folder if different.
-              */}
-              <motion.img
+
+              <img
                 src="/truck_image.png"
                 alt="Khan Moves truck"
-                className="w-58.75 object-contain md:w-71.25"
-                animate={{ y: [0, -4, 0] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
+                className="w-71.25 object-contain"
               />
 
-              <motion.button
+              <button
                 type="button"
-                onClick={() => navigate('/booking')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-                className="-mt-1 rounded-full bg-[#FFEA00] px-6 py-2 text-[14px] font-bold text-[#555555] shadow-sm md:text-[16px]"
+                onClick={() => navigate("/booking")}
+                className="mt-1.25 rounded-full bg-[#FFEA00] px-6.25 py-2 text-[16px] font-bold text-[#555555]"
               >
                 Get Quote
-              </motion.button>
+              </button>
 
-              <span className="mt-1 text-[9px] text-[#555555] md:text-[11px]">
+              <span className="mt-1 text-[11px] text-[#555555]">
                 only in 2 min
               </span>
+
             </motion.div>
 
           </div>
 
         </div>
+
       </section>
 
       {/* ── FAQ SECTION ── */}
