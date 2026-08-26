@@ -103,7 +103,7 @@ export default function Footer() {
                 <FiMail size={16} className="text-[#F1C40F] mt-0.5 shrink-0" />
                 <div>
                   <a href="mailto:khanmovesuk@gmail.com" className="hover:text-[#F1C40F] transition block">
-                    khanmovesuk@gmail.com
+                    info@khanmoves.com
                   </a>
                 </div>
               </div>
