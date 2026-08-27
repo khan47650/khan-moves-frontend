@@ -207,7 +207,7 @@ export default function HomePage() {
         <div className="mx-auto flex min-h-[calc(100svh-64px)] w-full max-w-350 px-5 sm:px-8 md:px-10 lg:px-12 xl:px-16">
 
           {/* ── MOBILE HERO ── */}
-          <div className="relative min-h-[calc(100svh-44px)] w-full overflow-hidden px-5 py-5 sm:px-6 md:hidden">
+          <div className="relative min-h-[calc(100svh-44px)] w-full overflow-visible px-5 py-5 sm:px-6 md:hidden">
 
             <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative z-10">
               <h1 className="text-[36px] font-bold leading-none">Get a Free Quote</h1>
@@ -252,42 +252,21 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative z-10 mx-auto mt-7 flex w-full items-center justify-center gap-2">
-              <img src="/whats_app_icon.svg" alt="WhatsApp" className="h-7 w-7 shrink-0 object-contain" />
-              <span className="whitespace-nowrap text-[18px] leading-none">
+            <div className="relative z-10 mx-auto mt-7 flex w-full items-center justify-center gap-2 pb-[clamp(110px,28vw,145px)]">
+              <img src="/whats_app_icon.svg" alt="WhatsApp" className="h-6 w-6 shrink-0 object-contain sm:h-7 sm:w-7" />
+              <span className="whitespace-nowrap text-[14px] leading-none sm:text-[16px]">
                 <span className="font-normal underline">Need Help Getting a Quote?</span>
               </span>
             </div>
 
             {/* ── MOBILE OFFER + CROCODILE ── */}
-            <div className="pointer-events-none absolute -bottom-0.5 left-0 z-20 h-36.25 w-full sm:h-38.75">
+            <div className="pointer-events-none absolute -bottom-8.75 left-0 z-20 h-36.25 w-full overflow-visible sm:-bottom-7.5 sm:h-38.75">
 
               {/* OFFER BUBBLE */}
-              <div
-                className="
-      absolute
-      bottom-14.5
-      left-[clamp(24px,18vw,85px)]
-      z-20
-      w-27
-      rounded-xl
-      bg-white
-      px-3
-      py-2.5
-      text-[9px]
-      leading-[1.15]
-      text-gray-600
-      shadow-sm
-      sm:bottom-15.5
-      sm:left-[clamp(35px,20vw,100px)]
-      sm:w-30
-      sm:text-[10px]
-    "
-              >
+              <div className="absolute bottom-17.5 left-[clamp(24px,18vw,85px)] z-20 w-27 rounded-xl bg-white px-3 py-2.5 text-[9px] leading-[1.15] text-gray-600 shadow-sm sm:bottom-18.75 sm:left-[clamp(35px,20vw,100px)] sm:w-30 sm:text-[10px]">
                 <span className="line-through">£200</span>&nbsp; £160<br />
                 Save £40 with a<br />
                 flexible date.
-
                 <span className="absolute -bottom-2.5 right-0 h-0 w-0 border-l-14 border-t-10 border-l-transparent border-t-white" />
               </div>
 
@@ -295,14 +274,7 @@ export default function HomePage() {
               <img
                 src="/corcodile_image.png"
                 alt=""
-                className="
-      absolute
-      -bottom-0.5
-      right-[clamp(-18px,-4vw,-8px)]
-      z-10
-      w-[clamp(170px,48vw,215px)]
-      object-contain
-    "
+                className="absolute -bottom-0.5 right-[clamp(-18px,-4vw,-8px)] z-10 w-[clamp(170px,48vw,215px)] object-contain sm:-bottom-1 sm:w-[clamp(180px,48vw,220px)]"
               />
 
             </div>
