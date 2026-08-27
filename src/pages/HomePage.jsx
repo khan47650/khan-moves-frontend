@@ -260,14 +260,14 @@ export default function HomePage() {
             </div>
 
             <div className="pointer-events-none absolute bottom-0 right-0 z-20 h-57.5 w-72.5 sm:h-62.5 sm:w-[320px]">
-              <div className="absolute bottom-22 -left-8.75 z-20 w-33 rounded-[15px] bg-white px-4 py-3 text-[12px] leading-[1.2] text-gray-600 shadow-sm sm:bottom-23.75 sm:-left-10 sm:w-35">
+              <div className="absolute bottom-22 -left-7.5 z-20 w-33 rounded-[15px] bg-white px-4 py-3 text-[12px] leading-[1.2] text-gray-600 shadow-sm sm:bottom-23.75 sm:-left-10 sm:w-35">
                 <span className="line-through">£200</span>&nbsp; £160<br />
                 Save £40 with a<br />
                 flexible date.
                 <span className="absolute -bottom-2.5 right-0 h-0 w-0 border-l-16 border-t-11 border-l-transparent border-t-white" />
               </div>
 
-              <img src="/corcodile_image.png" alt="" className="absolute -bottom-2 -right-4.5 z-10 w-47.5 object-contain sm:-bottom-2.5 sm:-right-5 sm:w-53.75" />
+              <img src="/corcodile_image.png" alt="" className="absolute -bottom-0.5 -right-4.5 z-10 w-47.5 object-contain sm:-bottom-0.75 sm:-right-5 sm:w-53.75" />
             </div>
 
           </div>
@@ -490,7 +490,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-5 text-[22px] leading-tight text-[#555555]"
+              className="mt-5 text-[15px] leading-tight text-[#555555]"
             >
               We don't want to push you into the most expensive option.
               <br />
@@ -530,7 +530,7 @@ export default function HomePage() {
                 className="mt-0.5 h-5 w-5 shrink-0 object-contain"
               />
 
-              <p className="text-[20px] leading-[1.3] text-[#555555]">
+              <p className="text-[15px] leading-[1.3] text-[#555555]">
                 Our prices are competitive and built around
                 <br />
                 the move you actually need. No inflated costs, and
