@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/api';
+import TrustpilotReviewCollector from '../components/TrustpilotReviewCollector';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -201,293 +202,165 @@ export default function HomePage() {
   return (
     <div className="w-full overflow-x-hidden bg-[#F5F1ED]">
 
-      {/* ── DESKTOP HERO ── */}
-      <section className="relative z-10 hidden h-svh overflow-visible bg-[#E20613] text-white md:block">
-        <div className="mx-auto h-full w-full max-w-226">
-          <div className="relative h-full w-full">
+      {/* ── RESPONSIVE HERO ── */}
+      <section className="relative z-10 min-h-[calc(100svh-64px)] bg-[#E20613] text-white">
+        <div className="mx-auto flex min-h-[calc(100svh-64px)] w-full max-w-350 px-5 sm:px-8 md:px-10 lg:px-12 xl:px-16">
 
-            {/* HERO TEXT */}
-            <motion.div
-              initial={{ opacity: 0, x: -25 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="absolute left-0 top-18 z-20"
-            >
-              <h1 className="text-[50px] font-bold leading-[1.05]">
-                Get a Free
-                <br />
-                Quote
-              </h1>
+          {/* ── MOBILE HERO ── */}
+          <div className="relative min-h-[calc(100svh-44px)] w-full overflow-hidden px-5 py-5 sm:px-6 md:hidden">
 
-              <p className="mt-5 text-[32px] font-medium leading-[1.05]">
-                Find Budget Price
-                <br />
-                for your move
-                <br />
-                here
+            <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative z-10">
+              <h1 className="text-[36px] font-bold leading-none">Get a Free Quote</h1>
+
+              <p className="mt-4 max-w-85 text-[18px] font-medium leading-[1.08]">
+                Every move on the ground, with no hidden charges and no unnecessary middlemen.
               </p>
 
-              {/* NEED HELP */}
-              <div className="mt-10 flex items-center gap-2">
-                <span className="flex h-7.75 w-7.75 items-center justify-center rounded-md">
-                  <img
-                    src="/whats_app_icon.svg"
-                    alt="WhatsApp"
-                    className="h-8 w-8 object-contain mt-1"
-                  />
-                </span>
-
-                <span className="text-[16px] leading-[1.1]">
-                  <span className="block text-[16px]">
-                    Need Help
-                  </span>
-
-                  <span className="font-semibold underline">
-                    Getting a Quote?
-                  </span>
-                </span>
-              </div>
+              <p className="mt-3 max-w-85 text-[18px] font-medium leading-[1.08]">
+                Find a budget price for your move below
+              </p>
             </motion.div>
 
-
-            {/* SERVICE CARDS */}
-            <div className="absolute left-82.5 top-14.5 z-10 w-150">
-              <div className="grid grid-cols-6 gap-4">
+            <div className="relative z-10 mx-auto mt-7 w-full max-w-90">
+              <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
 
                 {services.slice(0, 5).map((service, idx) => (
                   <motion.button
                     key={service._id}
                     type="button"
                     onClick={() => goToBooking(service.slug)}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.45,
-                      delay: 0.15 + idx * 0.08,
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`group overflow-hidden rounded-[9px] bg-[#FFEA00] text-left ${idx < 2 ? "col-span-3" : "col-span-2"
-                      }`}
+                    transition={{ duration: 0.4, delay: idx * 0.07 }}
+                    className={`group overflow-hidden rounded-[7px] bg-[#FFEA00] text-left ${idx < 2 ? "col-span-3" : "col-span-2"}`}
                   >
-
-                    {/* CARD IMAGE */}
-                    <div
-                      className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2 ? "h-36.25" : "h-26.5"
-                        }`}
-                    >
+                    <div className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2 ? "aspect-[1.48/1]" : "aspect-1.25/1"}`}>
                       {service.image ? (
-                        <img
-                          src={service.image}
-                          alt={service.label}
-                          className="max-h-full max-w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
-                        />
+                        <img src={service.image} alt={service.label} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105" />
                       ) : (
-                        <span className="text-xs font-semibold text-gray-700">
-                          {service.label}
-                        </span>
+                        <span className="px-1 text-center text-[9px] font-semibold text-gray-700">{service.label}</span>
                       )}
                     </div>
 
-                    {/* CARD LABEL */}
-                    <div
-                      className={`flex items-center justify-between bg-white px-2.5 ${idx < 2 ? "h-7.25" : "h-6.75"
-                        }`}
-                    >
-                      <span className="min-w-0 truncate text-[12px] font-bold text-[#555555]">
-                        {service.label}
-                      </span>
-
-                      <img
-                        src="/arrow_right_icon.svg"
-                        alt=""
-                        className="h-4.75 w-4.75 shrink-0 object-contain"
-                      />
+                    <div className="flex h-6 items-center justify-between bg-white px-1.5">
+                      <span className="min-w-0 truncate text-[8px] font-bold leading-none text-[#555] sm:text-[9px]">{service.label}</span>
+                      <img src="/arrow_right_icon.svg" alt="" className="h-3 w-3 shrink-0 object-contain" />
                     </div>
-
                   </motion.button>
                 ))}
 
               </div>
             </div>
 
+            <div className="relative z-10 mx-auto mt-7 flex w-full items-center justify-center gap-2">
+              <img src="/whats_app_icon.svg" alt="WhatsApp" className="h-7 w-7 shrink-0 object-contain" />
+              <span className="whitespace-nowrap text-[18px] leading-none">
+                <span className="font-normal underline">Need Help Getting a Quote?</span>
+              </span>
+            </div>
 
-            {/* DISCOUNT BUBBLE */}
+            <div className="pointer-events-none absolute bottom-0 right-0 z-20 h-57.5 w-72.5 sm:h-62.5 sm:w-[320px]">
+              <div className="absolute bottom-22 -left-8.75 z-20 w-33 rounded-[15px] bg-white px-4 py-3 text-[12px] leading-[1.2] text-gray-600 shadow-sm sm:bottom-23.75 sm:-left-10 sm:w-35">
+                <span className="line-through">£200</span>&nbsp; £160<br />
+                Save £40 with a<br />
+                flexible date.
+                <span className="absolute -bottom-2.5 right-0 h-0 w-0 border-l-16 border-t-11 border-l-transparent border-t-white" />
+              </div>
+
+              <img src="/corcodile_image.png" alt="" className="absolute -bottom-2 -right-4.5 z-10 w-47.5 object-contain sm:-bottom-2.5 sm:-right-5 sm:w-53.75" />
+            </div>
+
+          </div>
+
+
+          {/* ── TABLET / DESKTOP HERO ── */}
+          <div className="relative hidden min-h-[91svh] w-full overflow-visible md:flex">
+
+            <div className="mx-auto flex min-h-[91svh] w-full max-w-225 items-start gap-8 px-0">
+
+              <div className="relative z-30 w-[32%] shrink-0 pt-[10vh]">
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
+                  <h1 className="text-[50px] font-bold leading-[0.98]">Get a Free<br />Quote</h1>
+
+                  <p className="mt-6 text-[32px] font-medium leading-[1.08]">
+                    Find Budget Price<br />for your move<br />here
+                  </p>
+
+                  <div className="mt-10 flex items-center gap-2">
+                    <img src="/whats_app_icon.svg" alt="WhatsApp" className="h-8 w-8 object-contain" />
+                    <span className="text-sm leading-[1.05]">
+                      <span className="block">Need Help</span>
+                      <span className="font-semibold underline">Getting a Quote?</span>
+                    </span>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="relative min-w-0 flex-1 pt-[8vh]">
+
+                <div className="relative z-10 w-full">
+                  <div className="grid grid-cols-6 gap-3">
+
+                    {services.slice(0, 5).map((service, idx) => (
+                      <motion.button
+                        key={service._id}
+                        type="button"
+                        onClick={() => goToBooking(service.slug)}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.45, delay: idx * 0.08 }}
+                        className={`group overflow-hidden rounded-md bg-[#FFEA00] text-left ${idx < 2 ? "col-span-3" : "col-span-2"}`}
+                      >
+                        <div className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2 ? "aspect-[2.35/1]" : "aspect-[1.65/1]"}`}>
+                          {service.image ? (
+                            <img src={service.image} alt={service.label} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                          ) : (
+                            <span className="px-2 text-center text-xs font-semibold text-gray-700">{service.label}</span>
+                          )}
+                        </div>
+
+                        <div className="flex h-8 items-center justify-between bg-white px-2.5">
+                          <span className="min-w-0 truncate text-[10px] font-bold text-[#555] lg:text-[11px]">{service.label}</span>
+                          <img src="/arrow_right_icon.svg" alt="" className="h-4 w-4 shrink-0 object-contain" />
+                        </div>
+                      </motion.button>
+                    ))}
+
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+            {/* ── DESKTOP OFFER + CROCODILE ── */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.55 }}
-              className="absolute left-125 top-107.5 z-20"
+              transition={{ duration: 0.5, delay: 0.45 }}
+              className="pointer-events-none absolute bottom-0 left-1/2 z-40 w-full max-w-225 -translate-x-1/2"
             >
-              <div className="relative w-35.75 rounded-[7px] bg-white px-3 py-3 text-[16px] leading-tight text-gray-600 shadow-sm">
-                Get guaranteed
-                <br />
-                discount on
-                <br />
-                flexible date.
+              <div className="relative h-52.5 w-full">
 
-                <span className="absolute -bottom-3 right-0 h-0 w-0 border-l-20 border-t-14 border-l-transparent border-t-white" />
+                <div className="absolute bottom-23 right-75 z-30 w-31.25 rounded-md bg-white px-3 py-3 text-xs leading-[1.15] text-gray-600 shadow-sm">
+                  <span className="line-through">£200</span>&nbsp; £160<br />
+                  Save £40 with a<br />
+                  flexible date.
+                  <span className="absolute -bottom-3 right-0 h-0 w-0 border-l-17 border-t-12 border-l-transparent border-t-white" />
+                </div>
+
+                <motion.img
+                  src="/corcodile_image.png"
+                  alt=""
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.7, delay: 0.35 }}
+                  className="pointer-events-none absolute -bottom-28.75 -right-8.75 z-20 w-[clamp(230px,25vw,330px)] object-contain"
+                />
+
               </div>
             </motion.div>
 
-
-            {/* CROCODILE */}
-            <motion.img
-              src="/corcodile_image.png"
-              alt=""
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.45 }}
-              className="pointer-events-none absolute -bottom-15 -right-18.75 z-20 w-75 select-none object-contain"
-            />
-
           </div>
-        </div>
-      </section>
-      {/* ── MOBILE HERO ── */}
-      <section className="relative z-10 h-[calc(100svh-70px)] overflow-visible bg-[#E20613] text-white md:hidden">
-        <div className="relative h-full w-full px-4.5">
-
-          {/* HERO TEXT */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="pt-5.5"
-          >
-            <h1 className="text-[36px] font-bold leading-[1.05]">
-              Get a Free Quote
-            </h1>
-
-            <p className="mt-3.25 text-[18px] font-medium leading-[1.18]">
-              Every move on the ground, with no
-              <br />
-              hidden charges and no unnecessary
-              <br />
-              middlemen.
-              <br />
-              <br />
-              Find a budget price for your move
-              <br />
-              below
-            </p>
-          </motion.div>
-
-          {/* SERVICE CARDS */}
-          <div className="mx-auto mt-12.5 w-full max-w-92.5">
-            <div className="grid grid-cols-6 gap-3">
-              {services.slice(0, 5).map((service, idx) => (
-                <motion.button
-                  key={service._id}
-                  type="button"
-                  onClick={() => goToBooking(service.slug)}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.4,
-                    delay: idx * 0.06,
-                    ease: "easeOut",
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`group overflow-hidden rounded-[9px] bg-[#FFEA00] text-left ${idx < 2 ? "col-span-3" : "col-span-2"
-                    }`}
-                >
-                  {/* CARD IMAGE */}
-                  <div
-                    className={`flex w-full items-center justify-center overflow-hidden bg-[#FFEA00] ${idx < 2 ? "h-36.25" : "h-27"
-                      }`}
-                  >
-                    {service.image ? (
-                      <img
-                        src={service.image}
-                        alt={service.label}
-                        className="max-h-full max-w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <span className="text-[9px] font-semibold text-gray-700">
-                        {service.label}
-                      </span>
-                    )}
-                  </div>
-                  {/* CARD LABEL */}
-                  <div
-                    className={`flex items-center justify-between bg-white px-1.75 ${idx < 2 ? "h-6.75" : "h-6.25"
-                      }`}
-                  >
-                    <span className="min-w-0 truncate text-[16px] font-bold leading-none text-[#555555]">
-                      {service.label}
-                    </span>
-
-                    <img
-                      src="/arrow_right_icon.svg"
-                      alt=""
-                      className="h-3.5 w-3.5 shrink-0 object-contain"
-                    />
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* NEED HELP */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.45,
-              delay: 0.35,
-            }}
-            className="mt-20 flex items-center justify-center gap-1.75"
-          >
-            <span className="flex h-8.25 w-8.25 shrink-0 items-center justify-center rounded-[5px]">
-              <img
-                src="/whats_app_icon.svg"
-                alt="WhatsApp"
-                className="h-8.25 w-8.25 object-contain"
-              />
-            </span>
-
-            <span className="whitespace-nowrap text-[16px] leading-[1.1]">
-              Need Help{" "}
-              <span className="font-semibold underline">
-                Getting a Quote?
-              </span>
-            </span>
-          </motion.div>
-
-          {/* DISCOUNT BUBBLE */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: 0.45,
-              delay: 0.45,
-            }}
-            className="absolute bottom-8.75 right-42.5 z-30"
-          >
-            <div className="relative w-30 rounded-[7px] bg-white px-2.5 py-2.25 text-[12px] font-semibold leading-[1.2] text-gray-700 shadow-sm">
-              Get guaranteed
-              <br />
-              discount on
-              <br />
-              flexible date.
-
-              <span className="absolute -bottom-2 right-0 h-0 w-0 border-l-15 border-t-10 border-l-transparent border-t-white" />
-            </div>
-          </motion.div>
-
-
-          {/* CROCODILE */}
-          <motion.img
-            src="/corcodile_image.png"
-            alt=""
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{
-              duration: 0.7,
-              delay: 0.4,
-            }}
-            className="pointer-events-none absolute -bottom-15 -right-5 z-20 w-47.5 select-none object-contain"
-          />
 
         </div>
       </section>
@@ -495,7 +368,7 @@ export default function HomePage() {
       {/* ── CUSTOMER MESSAGE SECTION ── */}
       <section className="relative z-0 h-[calc(100svh-35px)] overflow-hidden bg-[#FFEA00] md:min-h-122.5">
 
-        <div className="mx-auto w-full max-w-226 px-4.5 pt-10 md:px-0 md:pt-19.5">
+        <div className="mx-auto w-full max-w-226 px-5 pt-10 md:px-6 lg:px-8 xl:px-0 md:pt-19.5">
 
           <motion.div
             initial={{
@@ -533,7 +406,7 @@ export default function HomePage() {
               transition={{
                 duration: 0.6,
               }}
-              className="text-[28px] font-bold leading-[1.15] text-[#555555] md:text-[34px]"
+              className="text-[32px] font-bold leading-[1.15] text-[#555555] md:text-[34px]"
             >
               What our customers are saying
             </motion.h2>
@@ -556,13 +429,9 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.15,
               }}
-              className="mt-5 max-w-147.5 text-[15px] leading-[1.35] text-[#555555] md:text-[16px]"
+              className="mt-5 max-w-147.5 text-[20px] leading-[1.35] text-[#555555] md:text-[16px]"
             >
-              We keep every move personal, careful.
-              <br />
-              Because we own the company, we take responsibility for
-              <br className="hidden md:block" />
-              the service from start to end.
+              We pride ourselves on our guys who take their shoes off at your front door, keep you in the loop every step of the way, and figure out how to get a heavy sofa through an impossibly narrow hallway without scratching the wall or the sofa.
             </motion.p>
 
 
@@ -583,12 +452,14 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.3,
               }}
-              className="mt-5 max-w-150 text-[15px] leading-[1.35] text-[#555555] md:text-[16px]"
+              className="mt-5 max-w-150 text-[20px] leading-[1.35] text-[#555555] md:text-[16px]"
             >
-              Careful handling and genuine cooperation on moving day,
-              <br className="hidden md:block" />
-              with no hidden charges or last-minute penalties.
+              Below are real reviews left by our customers right after their moves wrap up.
             </motion.p>
+
+            <div className="mt-8 w-full">
+              <TrustpilotReviewCollector />
+            </div>
 
           </motion.div>
 
@@ -619,7 +490,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-5 text-[15px] leading-tight text-[#555555]"
+              className="mt-5 text-[22px] leading-tight text-[#555555]"
             >
               We don't want to push you into the most expensive option.
               <br />
@@ -659,7 +530,7 @@ export default function HomePage() {
                 className="mt-0.5 h-5 w-5 shrink-0 object-contain"
               />
 
-              <p className="text-[15px] leading-[1.3] text-[#555555]">
+              <p className="text-[20px] leading-[1.3] text-[#555555]">
                 Our prices are competitive and built around
                 <br />
                 the move you actually need. No inflated costs, and
@@ -854,7 +725,7 @@ export default function HomePage() {
         </div>
 
         <div className="hidden md:block">
-          <div className="relative mx-auto h-svh w-full max-w-226">
+          <div className="relative mx-auto h-svh w-full max-w-226 px-6 lg:px-8 xl:px-0">
 
             {/* LEFT CONTENT */}
             <motion.div
@@ -862,7 +733,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="absolute left-0 top-13.75 z-10"
+              className="absolute left-6 lg:left-8 xl:left-0 top-13.75 z-10"
             >
 
               <h2 className="text-[30px] font-bold leading-[1.05] text-[#555555]">
@@ -947,7 +818,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="absolute right-20 top-12 z-10"
+              className="absolute right-8 lg:right-12 xl:right-20 top-12 z-10"
             >
               <img
                 src="/ceo_image.png"
@@ -958,7 +829,7 @@ export default function HomePage() {
 
           </div>
 
-          <div className="relative mx-auto h-svh w-full max-w-226">
+          <div className="relative mx-auto h-svh w-full max-w-226 px-6 lg:px-8 xl:px-0">
 
             {/* LEFT CONTENT */}
             <motion.div
@@ -966,7 +837,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="absolute left-0 top-16.25 z-10"
+              className="absolute left-6 lg:left-8 xl:left-0 top-16.25 z-10"
             >
 
               <h2 className="text-[30px] font-bold leading-[1.05] text-[#555555]">
@@ -1044,7 +915,7 @@ export default function HomePage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="absolute right-17.5 top-18.75 z-10 flex flex-col items-center"
+              className="absolute right-8 lg:right-12 xl:right-17.5 top-18.75 z-10 flex flex-col items-center"
             >
 
               <img

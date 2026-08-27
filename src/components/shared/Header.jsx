@@ -143,18 +143,18 @@ export default function Header() {
       ====================================================== */}
       <nav className="sticky top-0 z-1000 w-full overflow-x-clip bg-[#E20613] text-white">
 
-        <div className="mx-auto flex h-20 w-[92%] max-w-360 items-center justify-center max-md:h-14.75 max-md:w-full max-md:px-4">
+        <div className="mx-auto flex h-20 w-[92%] max-w-360 items-center justify-center max-md:h-14.75 max-md:w-full max-md:px-4 md:max-lg:w-[94%] md:max-lg:px-2">
 
           {/* =================================================
               DESKTOP NAVIGATION
           ================================================= */}
-          <div className="hidden items-center md:flex gap-2">
+          <div className="hidden items-center gap-2 md:flex md:max-lg:gap-0.5">
 
             {/* LOGO */}
             <Link
               to="/"
               onClick={closeMenu}
-              className="mr-10 flex shrink-0 items-center"
+              className="mr-10 flex shrink-0 items-center md:max-lg:mr-5"
             >
               <img
                 src="/Khan_moves_new_logo.png"
@@ -176,7 +176,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setServicesOpen((value) => !value)}
-                className="flex items-center gap-1 px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+                className="flex items-center gap-1 px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75 md:max-lg:px-3"
               >
                 Services
 
@@ -253,7 +253,7 @@ export default function Header() {
             <button
               type="button"
               onClick={handleBlogsClick}
-              className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+              className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75 md:max-lg:px-3"
             >
               Blogs
             </button>
@@ -263,7 +263,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => { }}
-              className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+              className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75 md:max-lg:px-3"
             >
               Reviews
             </button>
@@ -274,7 +274,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={handleSignIn}
-                className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75"
+                className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75 md:max-lg:px-3"
               >
                 Sign In
               </button>
@@ -312,7 +312,7 @@ export default function Header() {
               type="button"
               onClick={handleWhatsApp}
               aria-label="WhatsApp"
-              className="relative top-0.5 ml-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(255,234,0,0.8)]"
+              className="relative top-0.5 ml-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-all duration-300 hover:scale-110 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(255,234,0,0.8)] md:max-lg:ml-2"
             >
               <img
                 src="/whats_app_icon.svg"
@@ -327,7 +327,7 @@ export default function Header() {
               type="button"
               onClick={handleCall}
               aria-label="Call 07869416748"
-              className="ml-4 flex h-7 shrink-0 items-center overflow-hidden rounded-md bg-white text-black transition-all duration-200 hover:scale-105 hover:shadow-[0_0_8px_rgba(255,234,0,0.6)]"
+              className="ml-4 flex h-7 shrink-0 items-center overflow-hidden rounded-md bg-white text-black transition-all duration-200 hover:scale-105 hover:shadow-[0_0_8px_rgba(255,234,0,0.6)] md:max-lg:ml-2"
             >
               <span className="px-2 text-[10px] font-bold leading-none">
                 07869416748
