@@ -259,15 +259,15 @@ export default function HomePage() {
               </span>
             </div>
 
-            <div className="pointer-events-none absolute bottom-0 right-0 z-20 h-57.5 w-72.5 sm:h-62.5 sm:w-[320px]">
-              <div className="absolute bottom-22 -left-7.5 z-20 w-33 rounded-[15px] bg-white px-4 py-3 text-[12px] leading-[1.2] text-gray-600 shadow-sm sm:bottom-23.75 sm:-left-10 sm:w-35">
+            <div className="pointer-events-none absolute bottom-0 left-0 z-20 h-37.5 w-full">
+              <div className="absolute bottom-20 left-[30%] z-20 w-27 rounded-xl bg-white px-3 py-2.5 text-[9px] leading-[1.15] text-gray-600 shadow-sm sm:bottom-10.5 sm:left-[28%] sm:w-30 sm:text-[10px]">
                 <span className="line-through">£200</span>&nbsp; £160<br />
                 Save £40 with a<br />
                 flexible date.
-                <span className="absolute -bottom-2.5 right-0 h-0 w-0 border-l-16 border-t-11 border-l-transparent border-t-white" />
+                <span className="absolute -bottom-2.5 right-0 h-0 w-0 border-l-14 border-t-10 border-l-transparent border-t-white" />
               </div>
 
-              <img src="/corcodile_image.png" alt="" className="absolute -bottom-0.5 -right-4.5 z-10 w-47.5 object-contain sm:-bottom-0.75 sm:-right-5 sm:w-53.75" />
+              <img src="/corcodile_image.png" alt="" className="absolute -bottom-0.5 -right-4.5 z-10 w-42.5 object-contain sm:-bottom-0.75 sm:-right-5 sm:w-53.75" />
             </div>
 
           </div>
@@ -406,7 +406,7 @@ export default function HomePage() {
               transition={{
                 duration: 0.6,
               }}
-              className="text-[32px] font-bold leading-[1.15] text-[#555555] md:text-[34px]"
+              className="text-[32px] font-bold leading-[1.15] text-[#555555] md:text-[32px]"
             >
               What our customers are saying
             </motion.h2>
@@ -429,7 +429,7 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.15,
               }}
-              className="mt-5 max-w-147.5 text-[20px] leading-[1.35] text-[#555555] md:text-[16px]"
+              className="mt-5 max-w-147.5 text-[15px] leading-[1.35] text-[#555555] md:text-[15px]"
             >
               We pride ourselves on our guys who take their shoes off at your front door, keep you in the loop every step of the way, and figure out how to get a heavy sofa through an impossibly narrow hallway without scratching the wall or the sofa.
             </motion.p>
@@ -452,7 +452,7 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.3,
               }}
-              className="mt-5 max-w-150 text-[20px] leading-[1.35] text-[#555555] md:text-[16px]"
+              className="mt-5 max-w-150 text-[15px] leading-[1.35] text-[#555555] md:text-[15px]"
             >
               Below are real reviews left by our customers right after their moves wrap up.
             </motion.p>
