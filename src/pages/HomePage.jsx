@@ -259,15 +259,52 @@ export default function HomePage() {
               </span>
             </div>
 
-            <div className="pointer-events-none absolute bottom-0 left-0 z-20 h-37.5 w-full">
-              <div className="absolute bottom-20 left-[30%] z-20 w-27 rounded-xl bg-white px-3 py-2.5 text-[9px] leading-[1.15] text-gray-600 shadow-sm sm:bottom-10.5 sm:left-[28%] sm:w-30 sm:text-[10px]">
+            {/* ── MOBILE OFFER + CROCODILE ── */}
+            <div className="pointer-events-none absolute -bottom-0.5 left-0 z-20 h-36.25 w-full sm:h-38.75">
+
+              {/* OFFER BUBBLE */}
+              <div
+                className="
+      absolute
+      bottom-14.5
+      left-[clamp(24px,18vw,85px)]
+      z-20
+      w-27
+      rounded-xl
+      bg-white
+      px-3
+      py-2.5
+      text-[9px]
+      leading-[1.15]
+      text-gray-600
+      shadow-sm
+      sm:bottom-15.5
+      sm:left-[clamp(35px,20vw,100px)]
+      sm:w-30
+      sm:text-[10px]
+    "
+              >
                 <span className="line-through">£200</span>&nbsp; £160<br />
                 Save £40 with a<br />
                 flexible date.
+
                 <span className="absolute -bottom-2.5 right-0 h-0 w-0 border-l-14 border-t-10 border-l-transparent border-t-white" />
               </div>
 
-              <img src="/corcodile_image.png" alt="" className="absolute -bottom-0.5 -right-4.5 z-10 w-42.5 object-contain sm:-bottom-0.75 sm:-right-5 sm:w-53.75" />
+              {/* CROCODILE */}
+              <img
+                src="/corcodile_image.png"
+                alt=""
+                className="
+      absolute
+      -bottom-0.5
+      right-[clamp(-18px,-4vw,-8px)]
+      z-10
+      w-[clamp(170px,48vw,215px)]
+      object-contain
+    "
+              />
+
             </div>
 
           </div>
