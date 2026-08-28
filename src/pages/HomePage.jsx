@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/api';
 import TrustpilotReviewCollector from '../components/TrustpilotReviewCollector';
+import FamewallReviews from '../components/FamewallReviews';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -86,13 +87,33 @@ export default function HomePage() {
         const blogSection = document.getElementById("blog-section");
 
         if (blogSection) {
-          blogSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+          const isMobile = window.innerWidth < 768;
+
+          if (isMobile) {
+            const navbarHeight = 59;
+
+            const top =
+              blogSection.getBoundingClientRect().top +
+              window.scrollY -
+              navbarHeight;
+
+            window.scrollTo({
+              top,
+              behavior: "smooth",
+            });
+          } else {
+            blogSection.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
         }
 
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
       }, 300);
 
       return () => clearTimeout(timer);
@@ -375,10 +396,11 @@ export default function HomePage() {
       </section>
 
       {/* ── CUSTOMER MESSAGE SECTION ── */}
-      <section className="relative z-0 h-[calc(100svh-35px)] overflow-hidden bg-[#FFEA00] md:min-h-122.5">
+      <section className="relative z-0 min-h-[calc(100svh-35px)] overflow-hidden bg-[#FFEA00]">
 
-        <div className="mx-auto w-full max-w-226 px-5 pt-10 md:px-6 lg:px-8 xl:px-0 md:pt-19.5">
+        <div className="mx-auto w-full max-w-226 px-5 pt-10 md:px-6 md:pt-19.5 lg:px-8 xl:px-0">
 
+          {/* ── INTRO CONTENT ── */}
           <motion.div
             initial={{
               opacity: 0,
@@ -415,7 +437,7 @@ export default function HomePage() {
               transition={{
                 duration: 0.6,
               }}
-              className="text-[32px] font-bold leading-[1.15] text-[#555555] md:text-[32px]"
+              className="text-[32px] font-bold leading-[1.15] text-[#555555]"
             >
               What our customers are saying
             </motion.h2>
@@ -438,7 +460,7 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.15,
               }}
-              className="mt-5 max-w-147.5 text-[15px] leading-[1.35] text-[#555555] md:text-[15px]"
+              className="mt-5 max-w-147.5 text-[15px] leading-[1.35] text-[#555555]"
             >
               We pride ourselves on our guys who take their shoes off at your front door, keep you in the loop every step of the way, and figure out how to get a heavy sofa through an impossibly narrow hallway without scratching the wall or the sofa.
             </motion.p>
@@ -461,15 +483,42 @@ export default function HomePage() {
                 duration: 0.6,
                 delay: 0.3,
               }}
-              className="mt-5 max-w-150 text-[15px] leading-[1.35] text-[#555555] md:text-[15px]"
+              className="mt-5 max-w-150 text-[15px] leading-[1.35] text-[#555555]"
             >
               Below are real reviews left by our customers right after their moves wrap up.
             </motion.p>
 
+            {/* TRUSTPILOT REVIEW BUTTON */}
             <div className="mt-8 w-full">
               <TrustpilotReviewCollector />
             </div>
 
+          </motion.div>
+
+
+          {/* ── FAMEWALL REVIEWS ── */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 30,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+              amount: 0.1,
+            }}
+            transition={{
+              duration: 0.7,
+              ease: "easeOut",
+            }}
+            className="mt-8 flex w-full justify-center overflow-hidden"
+          >
+            <div className="w-170 origin-top scale-[0.7]">
+              <FamewallReviews />
+            </div>
           </motion.div>
 
         </div>

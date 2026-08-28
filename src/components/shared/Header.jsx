@@ -66,19 +66,35 @@ export default function Header() {
   const handleBlogsClick = () => {
     closeMenu();
 
+    const scrollToBlog = () => {
+      const blogSection = document.getElementById("blog-section");
+
+      if (!blogSection) return;
+
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+        const navbarHeight = 59; // mobile navbar height
+        const top =
+          blogSection.getBoundingClientRect().top +
+          window.scrollY -
+          navbarHeight;
+
+        window.scrollTo({
+          top,
+          behavior: "smooth",
+        });
+      } else {
+        blogSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    };
+
     // If already on home page
     if (window.location.pathname === "/") {
-      setTimeout(() => {
-        const blogSection = document.getElementById("blog-section");
-
-        if (blogSection) {
-          blogSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-      }, 50);
-
+      setTimeout(scrollToBlog, 100);
       return;
     }
 
