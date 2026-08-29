@@ -500,7 +500,7 @@ export default function HomePage() {
             }}
             className="mt-8 -mb-24 flex w-full justify-center overflow-hidden"
           >
-            <div className="w-170 origin-top scale-[0.7]">
+            <div className="w-170 origin-top scale-[0.77]">
               <FamewallReviews />
             </div>
           </motion.div>
@@ -524,10 +524,14 @@ export default function HomePage() {
               duration: 0.6,
               ease: "easeOut",
             }}
-            className="mt-2 flex justify-center"
+            className="-mt-2 flex justify-center"
           >
-
             <div className="group flex flex-col items-center">
+
+              {/* TRUSTPILOT BUTTON */}
+              <div className="relative flex scale-[0.85] items-center justify-center">
+                <TrustpilotReviewCollector />
+              </div>
 
               {/* CTA LABEL */}
               <motion.p
@@ -546,23 +550,10 @@ export default function HomePage() {
                 }}
                 className="mb-2 text-[13px] font-semibold tracking-wide text-[#555555]"
               >
-                Had a great experience?
+                Click here to share your feedback
               </motion.p>
 
-
-              {/* TRUSTPILOT BUTTON */}
-              <div className="relative flex items-center justify-center scale-[0.8]">
-                <TrustpilotReviewCollector />
-              </div>
-
-
-              {/* SUPPORTING TEXT */}
-              <p className="mt-1 text-[11px] text-[#666666]">
-                Share your experience on Trustpilot
-              </p>
-
             </div>
-
           </motion.div>
 
         </div>
@@ -1293,7 +1284,7 @@ export default function HomePage() {
                   transition={{
                     duration: 0.25,
                   }}
-                  className="w-[calc(100%-35px)] min-w-[calc(100%-35px)] snap-start overflow-hidden rounded-[7px] bg-white md:w-[calc((100%-24px)/3)] md:min-w-[calc((100%-24px)/3)]"
+                  className="w-[calc(100%-35px)] min-w-[calc(100%-35px)] snap-start cursor-pointer overflow-hidden rounded-[7px] bg-white md:w-[calc((100%-24px)/3)] md:min-w-[calc((100%-24px)/3)]"
                 >
 
                   {/* IMAGE */}
