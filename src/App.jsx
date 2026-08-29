@@ -19,6 +19,7 @@ import TermsPage from "./pages/TermsPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import BlogDetails from "./pages/BlogDetails";
 
 function AnimatedRoutes({
   bookingData,
@@ -79,6 +80,9 @@ function AnimatedRoutes({
         path="/signup"
         element={<SignUp />}
       />
+      <Route
+        path="/blog/:id"
+        element={<BlogDetails />} />
 
       {/* Protected Admin Routes */}
       <Route element={<ProtectedAdminRoute />}>

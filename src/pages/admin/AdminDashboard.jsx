@@ -11,6 +11,7 @@ import Vehicles from "./sections/Vehicles";
 import Earnings from "./sections/Earnings";
 import Expenses from "./sections/Expenses";
 import Inventory from "./sections/Inventory";
+import Blogs from "./sections/Blogs";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -54,6 +55,8 @@ export default function AdminDashboard() {
 
             case "inventory":
                 return <Inventory />;
+            case "blogs":
+                return <Blogs />;
 
             default:
                 return <Requests />;

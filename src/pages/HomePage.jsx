@@ -16,37 +16,7 @@ export default function HomePage() {
   const blogSliderRef = React.useRef(null);
   const [blogSliderValue, setBlogSliderValue] = useState(0);
 
-  const blogPosts = [
-    {
-      image: "/blog_truck.png",
-      title: "Choose the right size van for your move.",
-    },
-    {
-      image: "/paper_image.png",
-      title: "Some important things to check before moving.",
-    },
-    {
-      image: "/paper_image.png",
-      title: "Some important things to check before moving.",
-    },
-    {
-      image: "/paper_image.png",
-      title: "Some important things to check before moving.",
-    },
-
-    {
-      image: "/paper_image.png",
-      title: "Some important things to check before moving.",
-    },
-    {
-      image: "/paper_image.png",
-      title: "Some important things to check before moving.",
-    },
-    {
-      image: "/paper_image.png",
-      title: "Some important things to check before moving.",
-    },
-  ];
+  const [blogPosts, setBlogPosts] = useState([]);
 
   const handleBlogSlider = (e) => {
     const value = Number(e.target.value);
@@ -79,6 +49,22 @@ export default function HomePage() {
       }
     };
     fetchServices();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await api.get("/blogs/all");
+
+        if (response.data.success) {
+          setBlogPosts(response.data.blogs);
+        }
+      } catch (error) {
+        console.error("Failed to fetch blogs:", error);
+      }
+    };
+    fetchBlogs();
   }, []);
 
   useEffect(() => {
@@ -462,7 +448,10 @@ export default function HomePage() {
               }}
               className="mt-5 max-w-147.5 text-[15px] leading-[1.35] text-[#555555]"
             >
-              We pride ourselves on our guys who take their shoes off at your front door, keep you in the loop every step of the way, and figure out how to get a heavy sofa through an impossibly narrow hallway without scratching the wall or the sofa.
+              We pride ourselves on our guys who take their shoes off at your front door,
+              keep you in the loop every step of the way, and figure out how to get a
+              heavy sofa through an impossibly narrow hallway without scratching the
+              wall or the sofa.
             </motion.p>
 
 
@@ -488,11 +477,6 @@ export default function HomePage() {
               Below are real reviews left by our customers right after their moves wrap up.
             </motion.p>
 
-            {/* TRUSTPILOT REVIEW BUTTON */}
-            <div className="mt-8 w-full">
-              <TrustpilotReviewCollector />
-            </div>
-
           </motion.div>
 
 
@@ -514,14 +498,75 @@ export default function HomePage() {
               duration: 0.7,
               ease: "easeOut",
             }}
-            className="mt-8 flex w-full justify-center overflow-hidden"
+            className="mt-8 -mb-24 flex w-full justify-center overflow-hidden"
           >
             <div className="w-170 origin-top scale-[0.7]">
               <FamewallReviews />
             </div>
           </motion.div>
 
+
+          {/* ── TRUSTPILOT REVIEW CTA ── */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+              amount: 0.3,
+            }}
+            transition={{
+              duration: 0.6,
+              ease: "easeOut",
+            }}
+            className="mt-2 flex justify-center"
+          >
+
+            <div className="group flex flex-col items-center">
+
+              {/* CTA LABEL */}
+              <motion.p
+                initial={{
+                  opacity: 0,
+                }}
+                whileInView={{
+                  opacity: 1,
+                }}
+                viewport={{
+                  once: true,
+                }}
+                transition={{
+                  delay: 0.15,
+                  duration: 0.4,
+                }}
+                className="mb-2 text-[13px] font-semibold tracking-wide text-[#555555]"
+              >
+                Had a great experience?
+              </motion.p>
+
+
+              {/* TRUSTPILOT BUTTON */}
+              <div className="relative flex items-center justify-center scale-[0.8]">
+                <TrustpilotReviewCollector />
+              </div>
+
+
+              {/* SUPPORTING TEXT */}
+              <p className="mt-1 text-[11px] text-[#666666]">
+                Share your experience on Trustpilot
+              </p>
+
+            </div>
+
+          </motion.div>
+
         </div>
+
       </section>
 
       {/* ── WHY KHAN MOVES / HOW IT WORKS ── */}
@@ -1238,9 +1283,10 @@ export default function HomePage() {
               }}
             >
 
-              {blogPosts.map((post, index) => (
+              {blogPosts.map((post) => (
                 <motion.article
-                  key={index}
+                  key={post._id}
+                  onClick={() => navigate(`/blog/${post._id}`)}
                   whileHover={{
                     y: -4,
                   }}
@@ -1253,7 +1299,7 @@ export default function HomePage() {
                   {/* IMAGE */}
                   <div className="flex h-31.25 items-center justify-center overflow-hidden bg-[#FFEA00] md:h-36.25">
                     <img
-                      src={post.image}
+                      src={post.image?.url || post.image}
                       alt={post.title}
                       className="h-full w-full object-contain p-2"
                     />

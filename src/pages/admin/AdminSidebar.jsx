@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     FiInbox, FiLayers, FiFileText, FiTool,
-    FiUsers, FiTrendingUp, FiCreditCard, FiArchive, FiTruck,FiBox
+    FiUsers, FiTrendingUp, FiCreditCard, FiArchive, FiTruck, FiBox, FiBookOpen
 } from 'react-icons/fi';
 
 export default function AdminSidebar({ activeSection, setActiveSection, isSidebarOpen, setIsSidebarOpen }) {
@@ -14,7 +14,8 @@ export default function AdminSidebar({ activeSection, setActiveSection, isSideba
         { id: 'vehicles', label: 'Vehicles', icon: FiTruck },
         { id: 'earnings', label: 'Earnings', icon: FiTrendingUp },
         { id: 'expenses', label: 'Expenses', icon: FiCreditCard },
-          { id: 'inventory', label: 'Inventory', icon: FiBox },
+        { id: 'inventory', label: 'Inventory', icon: FiBox },
+        { id: 'blogs', label: 'Blogs', icon: FiBookOpen },
         { id: 'tools', label: 'Tools', icon: FiTool },
     ];
 
