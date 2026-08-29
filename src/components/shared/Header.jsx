@@ -107,6 +107,52 @@ export default function Header() {
   };
 
   // ============================================
+  // REVIEWS CLICK
+  // ============================================
+  const handleReviewsClick = () => {
+    closeMenu();
+
+    const scrollToReviews = () => {
+      const reviewsSection = document.getElementById("reviews-section");
+
+      if (!reviewsSection) return;
+
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+        const navbarHeight = 59;
+
+        const top =
+          reviewsSection.getBoundingClientRect().top +
+          window.scrollY -
+          navbarHeight;
+
+        window.scrollTo({
+          top,
+          behavior: "smooth",
+        });
+      } else {
+        reviewsSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    };
+
+    // If already on home page
+    if (window.location.pathname === "/") {
+      setTimeout(scrollToReviews, 100);
+      return;
+    }
+
+    // If coming from another page
+    navigate("/", {
+      state: {
+        scrollTo: "reviews-section",
+      },
+    });
+  };
+  // ============================================
   // WHATSAPP
   // ============================================
   const handleWhatsApp = () => {
@@ -169,7 +215,14 @@ export default function Header() {
             {/* LOGO */}
             <Link
               to="/"
-              onClick={closeMenu}
+              onClick={() => {
+                closeMenu();
+
+                window.scrollTo({
+                  top: 0,
+                  behavior: "instant",
+                });
+              }}
               className="mr-10 flex shrink-0 items-center md:max-lg:mr-5"
             >
               <img
@@ -275,10 +328,9 @@ export default function Header() {
             </button>
 
 
-            {/* REVIEWS */}
             <button
               type="button"
-              onClick={() => { }}
+              onClick={handleReviewsClick}
               className="px-5 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-75 md:max-lg:px-3"
             >
               Reviews
@@ -369,7 +421,14 @@ export default function Header() {
             {/* LOGO */}
             <Link
               to="/"
-              onClick={closeMenu}
+              onClick={() => {
+                closeMenu();
+
+                window.scrollTo({
+                  top: 0,
+                  behavior: "instant",
+                });
+              }}
               className="flex shrink-0 items-center"
             >
               <img
@@ -530,7 +589,7 @@ export default function Header() {
                 {/* REVIEWS */}
                 <button
                   type="button"
-                  onClick={() => { }}
+                  onClick={handleReviewsClick}
                   className="block w-full border-b border-white/20 py-3 text-left text-[15px] font-semibold text-white"
                 >
                   Reviews

@@ -11,6 +11,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
+  const [reviewsKey, setReviewsKey] = useState(0);
   const location = useLocation();
 
   const blogSliderRef = React.useRef(null);
@@ -33,6 +34,10 @@ export default function HomePage() {
       });
     }
   };
+
+  useEffect(() => {
+    setReviewsKey((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -68,42 +73,49 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (location.state?.scrollTo === "blog-section") {
-      const timer = setTimeout(() => {
-        const blogSection = document.getElementById("blog-section");
+    const targetSection = location.state?.scrollTo;
 
-        if (blogSection) {
-          const isMobile = window.innerWidth < 768;
-
-          if (isMobile) {
-            const navbarHeight = 59;
-
-            const top =
-              blogSection.getBoundingClientRect().top +
-              window.scrollY -
-              navbarHeight;
-
-            window.scrollTo({
-              top,
-              behavior: "smooth",
-            });
-          } else {
-            blogSection.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        }
-
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-      }, 300);
-
-      return () => clearTimeout(timer);
+    if (
+      targetSection !== "blog-section" &&
+      targetSection !== "reviews-section"
+    ) {
+      return;
     }
+
+    const timer = setTimeout(() => {
+      const section = document.getElementById(targetSection);
+
+      if (!section) return;
+
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+        const navbarHeight = 59;
+
+        const top =
+          section.getBoundingClientRect().top +
+          window.scrollY -
+          navbarHeight;
+
+        window.scrollTo({
+          top,
+          behavior: "smooth",
+        });
+      } else {
+        section.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+      );
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [location.state]);
 
   const goToBooking = (slug) => {
@@ -382,7 +394,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CUSTOMER MESSAGE SECTION ── */}
-      <section className="relative z-0 min-h-[calc(100svh-35px)] overflow-hidden bg-[#FFEA00]">
+      <section id="reviews-section" className="relative z-0 min-h-[calc(100svh-35px)] overflow-hidden bg-[#FFEA00]">
 
         <div className="mx-auto w-full max-w-226 px-5 pt-10 md:px-6 md:pt-19.5 lg:px-8 xl:px-0">
 
@@ -501,7 +513,7 @@ export default function HomePage() {
             className="mt-8 -mb-24 flex w-full justify-center overflow-hidden"
           >
             <div className="w-170 origin-top scale-[0.77]">
-              <FamewallReviews />
+              <FamewallReviews key={reviewsKey} />
             </div>
           </motion.div>
 
