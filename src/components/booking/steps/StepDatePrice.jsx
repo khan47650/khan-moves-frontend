@@ -137,7 +137,11 @@ export default function StepDatePrice({
     currentMonth,
     setCurrentMonth
   ] = useState(
-    new Date()
+    new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    )
   );
 
   const [
@@ -154,8 +158,32 @@ export default function StepDatePrice({
     data.dateType ===
     "flexible";
 
-  const ukNow =
-    getUKDateParts();
+  const ukNow = getUKDateParts();
+
+  const todayUK = new Date(`${ukNow.date}T00:00:00`);
+
+  const currentMonthStart = new Date(
+    todayUK.getFullYear(),
+    todayUK.getMonth(),
+    1
+  );
+
+  const lastAllowedDate = new Date(todayUK);
+  lastAllowedDate.setMonth(
+    lastAllowedDate.getMonth() + 3
+  );
+
+  const lastAllowedMonth = new Date(
+    lastAllowedDate.getFullYear(),
+    lastAllowedDate.getMonth(),
+    1
+  );
+
+  const canGoPrevious =
+    currentMonth.getTime() > currentMonthStart.getTime();
+
+  const canGoNext =
+    currentMonth.getTime() < lastAllowedMonth.getTime();
 
   const totalItems = (data.items || []).reduce(
     (total, item) => total + Number(item.quantity || 0),
@@ -234,20 +262,19 @@ export default function StepDatePrice({
 
   const isDateDisabled = dateStr => {
     const selectedDate = new Date(`${dateStr}T00:00:00`);
-
     const today = new Date(`${ukNow.date}T00:00:00`);
 
-    // Past dates
+    // Previous dates remain visible but disabled
     if (selectedDate < today) {
       return true;
     }
 
-    // Same day after 2 PM UK time
+    // Current UK date becomes unavailable after 2:00 PM UK time
     if (dateStr === ukNow.date && ukNow.hour >= 14) {
       return true;
     }
 
-    // Booking allowed only for next 3 months
+    // Booking allowed up to 3 months from today
     const lastAllowedDate = new Date(today);
     lastAllowedDate.setMonth(lastAllowedDate.getMonth() + 3);
 
@@ -259,117 +286,132 @@ export default function StepDatePrice({
   };
 
   const buildDays = () => {
-    const firstDay =
-      new Date(
-        currentMonth
-          .getFullYear(),
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
 
-        currentMonth
-          .getMonth(),
+    const firstDay = new Date(year, month, 1).getDay();
+    const offset = firstDay === 0 ? 6 : firstDay - 1;
 
-        1
-      ).getDay();
-
-    const offset =
-      firstDay === 0
-        ? 6
-        : firstDay - 1;
-
-    const totalDays =
-      new Date(
-        currentMonth
-          .getFullYear(),
-
-        currentMonth
-          .getMonth() + 1,
-
-        0
-      ).getDate();
+    const totalDays = new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
 
     const days = [];
 
-    const visibleStart = Math.max(
-      1,
-      new Date(ukNow.date).getDate() - 3
-    );
-
-    // sirf utni empty cells jitni zaroori hain
-    const startWeekDay = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      visibleStart
-    ).getDay();
-
-    const visibleOffset =
-      startWeekDay === 0 ? 6 : startWeekDay - 1;
-
-    for (let i = 0; i < visibleOffset; i++) {
+    // Previous month empty cells
+    for (let i = 0; i < offset; i++) {
       days.push(null);
     }
 
-    for (
-      let day = visibleStart;
-      day <= totalDays;
-      day++
-    ) {
-      const currentDate =
-        new Date(
-          currentMonth
-            .getFullYear(),
+    // Current month dates
+    for (let day = 1; day <= totalDays; day++) {
+      const currentDate = new Date(
+        year,
+        month,
+        day
+      );
 
-          currentMonth
-            .getMonth(),
+      const dateStr = toDateString(currentDate);
+      const disabled = isDateDisabled(dateStr);
 
-          day
-        );
-
-      const dateStr =
-        toDateString(
-          currentDate
-        );
-
-      const disabled =
-        isDateDisabled(
-          dateStr
-        );
-
-      const dayPricing =
-        calculatePricing(
-          buildPriceData({
-            dateType:
-              "specific",
-
-            date:
-              dateStr,
-
-            timeSlot:
-              data.date ===
-                dateStr
-                ? data.timeSlot
-                : ""
-          })
-        );
+      const dayPricing = calculatePricing(
+        buildPriceData({
+          dateType: "specific",
+          date: dateStr,
+          timeSlot:
+            data.date === dateStr
+              ? data.timeSlot
+              : ""
+        })
+      );
 
       const hasSurcharge =
-        dayPricing.breakdown.some(
+        dayPricing.breakdown?.some(
           item =>
             item.label
               .toLowerCase()
-              .includes(
-                "surcharge"
-              )
+              .includes("surcharge")
         );
 
       days.push({
         day,
         dateStr,
         disabled,
-
-        price:
-          dayPricing.total,
-
-        hasSurcharge
+        price: dayPricing.total,
+        hasSurcharge,
+        isCurrentMonth: true,
+        monthLabel: null
       });
+    }
+
+    // Next month dates
+    const remainingCells = 7 - (days.length % 7);
+
+    if (remainingCells < 7) {
+      const nextMonth = new Date(year, month + 1, 1);
+
+      const nextMonthName = nextMonth.toLocaleString(
+        "en-GB",
+        {
+          month: "short"
+        }
+      );
+
+      for (let day = 1; day <= remainingCells; day++) {
+
+        // IMPORTANT: nextMonthDate must be inside the loop
+        const nextMonthDate = new Date(
+          year,
+          month + 1,
+          day
+        );
+
+        const nextMonthDateStr =
+          toDateString(nextMonthDate);
+
+        const nextMonthPricing = calculatePricing(
+          buildPriceData({
+            dateType: "specific",
+            date: nextMonthDateStr,
+            timeSlot:
+              data.date === nextMonthDateStr
+                ? data.timeSlot
+                : ""
+          })
+        );
+
+        const nextMonthHasSurcharge =
+          nextMonthPricing.breakdown?.some(
+            item =>
+              item.label
+                .toLowerCase()
+                .includes("surcharge")
+          );
+
+        days.push({
+          day,
+          dateStr: nextMonthDateStr,
+
+          // Let the normal UK date rules decide
+          disabled: isDateDisabled(nextMonthDateStr),
+
+          // Show actual price
+          price: nextMonthPricing.total,
+
+          hasSurcharge: nextMonthHasSurcharge,
+
+          // Keep these dates visually normal
+          isCurrentMonth: true,
+
+          // Show "Sep", "Oct", etc. only on date 1
+          monthLabel:
+            day === 1
+              ? nextMonthName
+              : null
+        });
+      }
     }
 
     return days;
@@ -594,40 +636,45 @@ export default function StepDatePrice({
                 <div className="flex gap-1">
                   <button
                     type="button"
-                    onClick={() =>
+                    disabled={!canGoPrevious}
+                    onClick={() => {
+                      if (!canGoPrevious) return;
+
                       setCurrentMonth(
                         new Date(
                           currentMonth.getFullYear(),
-                          currentMonth.getMonth() -
-                          1,
+                          currentMonth.getMonth() - 1,
                           1
                         )
-                      )
-                    }
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B]"
+                      );
+                    }}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white transition ${!canGoPrevious
+                      ? "cursor-not-allowed opacity-40"
+                      : "hover:border-[#C0392B] hover:text-[#C0392B]"
+                      }`}
                   >
-                    <FiChevronLeft
-                      size={15}
-                    />
+                    <FiChevronLeft size={15} />
                   </button>
-
                   <button
                     type="button"
-                    onClick={() =>
+                    disabled={!canGoNext}
+                    onClick={() => {
+                      if (!canGoNext) return;
+
                       setCurrentMonth(
                         new Date(
                           currentMonth.getFullYear(),
-                          currentMonth.getMonth() +
-                          1,
+                          currentMonth.getMonth() + 1,
                           1
                         )
-                      )
-                    }
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white transition hover:border-[#C0392B] hover:text-[#C0392B]"
+                      );
+                    }}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white transition ${!canGoNext
+                      ? "cursor-not-allowed opacity-40"
+                      : "hover:border-[#C0392B] hover:text-[#C0392B]"
+                      }`}
                   >
-                    <FiChevronRight
-                      size={15}
-                    />
+                    <FiChevronRight size={15} />
                   </button>
                 </div>
               </div>
@@ -681,11 +728,9 @@ export default function StepDatePrice({
                             day.disabled
                           )
                         }
-                        disabled={
-                          day.disabled
-                        }
-                        className={`relative flex h-11 flex-col justify-between border-r border-b border-gray-200 bg-white px-2 py-1 transition ${day.disabled
-                          ? "cursor-not-allowed border-transparent text-gray-300 opacity-40"
+                        aria-disabled={day.disabled}
+                        className={`relative flex h-11 flex-col justify-between border-r border-b border-gray-200 px-2 py-1 transition ${day.disabled
+                          ? "cursor-not-allowed border-transparent bg-white text-gray-300 opacity-40"
                           : isSelected
                             ? "border-2 border-[#C0392B] bg-white shadow-md"
                             : "bg-white hover:bg-gray-50"
@@ -701,14 +746,24 @@ export default function StepDatePrice({
                           </div>
                         )}
 
-                        <span
-                          className={`self-start text-[10px] font-semibold ${isSelected
-                            ? "text-[#1A1A1A]"
-                            : "text-gray-500"
-                            }`}
-                        >
-                          {day.day}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={`self-start text-[10px] font-semibold ${isSelected
+                              ? "text-[#1A1A1A]"
+                              : day.isCurrentMonth
+                                ? "text-gray-500"
+                                : "text-gray-300"
+                              }`}
+                          >
+                            {day.day}
+                          </span>
+
+                          {day.monthLabel && (
+                            <span className="text-[9px] font-bold text-gray-600">
+                              {day.monthLabel}
+                            </span>
+                          )}
+                        </div>
 
                         {!day.disabled && (
                           <span
